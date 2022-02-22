@@ -1,0 +1,8 @@
+sanic==21.12.1
+torch==1.10.2
+yolov5==6.0.6
+onnx==1.11.0
+onnx-simplifier==0.3.6
+openvino==2021.4.2
+openvino-dev==2021.4.2
+blobconverter==1.2.9
