@@ -1,41 +1,49 @@
-from flask import Flask, render_template, request, send_from_directory
+from pathlib import Path
+
+from sanic import Sanic, response
 from yolo.export import YoloV5Exporter
-import time
 import os
+import aiofiles
 
-#from werkzeug import secure_filename
-app = Flask(__name__)
+app = Sanic(__name__)
+static_path = (Path(__file__).parent / './static').resolve().absolute()
+app.static('/static', static_path)
 
-@app.route('/', methods=["GET", "POST"])
-def upload_file():
-   if request.method == 'POST':
+@app.get("/")
+async def index(request):
+    return await response.file(static_path / "index.html")
 
-      # save file
-      f = request.files['file']
-      f.save(f.filename)
-      
-      # load exporter and do conversion process
-      exporter = YoloV5Exporter(f.filename, 416)
-      exporter.export_onnx()
-      exporter.export_openvino()
-      exporter.export_blob()
-      exporter.export_json()
-      zip_file = exporter.make_zip()
 
-      # move zip folder
-      zip_file_new = zip_file.replace("tmp", "export")
-      os.rename(zip_file, zip_file_new)
+@app.post('/upload')
+async def upload_file(request):
+    filename = request.files["file"][0].name
 
-      # clear temporary exports
-      exporter.clear()
+    async with aiofiles.open(filename, 'wb') as f:
+        await f.write(request.files["file"][0].body)
 
-      # remove the weights
-      os.remove(f.filename)
+    await f.close()
 
-      # start downloading
-      return send_from_directory("", zip_file_new)
-   else:
-      return render_template('./index.html')
+    # load exporter and do conversion process
+    exporter = YoloV5Exporter(filename, 416)
+    exporter.export_onnx()
+    exporter.export_openvino()
+    exporter.export_blob()
+    exporter.export_json()
+    zip_file = exporter.make_zip()
+
+    # move zip folder
+    zip_file_new = zip_file.replace("tmp", "export")
+    os.rename(zip_file, zip_file_new)
+
+    # clear temporary exports
+    exporter.clear()
+
+    # remove the weights
+    os.remove(filename)
+
+    # start downloading
+    return await response.file(zip_file_new)
+
 
 if __name__ == '__main__':
-   app.run(debug = True)
+    app.run(host="0.0.0.0", debug=True)
