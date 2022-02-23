@@ -156,7 +156,7 @@ class YoloV5Exporter:
         self.f_bin = f"{DIR_TMP}/{self.model_name}.bin"
         self.f_mapping = f"{DIR_TMP}/{self.model_name}.mapping"
 
-        return self.f_xml, self.f_mapping, self.bin
+        return self.f_xml, self.f_mapping, self.f_bin
 
     def export_blob(self):
 
