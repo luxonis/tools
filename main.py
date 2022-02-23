@@ -16,6 +16,7 @@ async def index(request):
 
 @app.post('/upload')
 async def upload_file(request):
+    input_shape = int(request.form["inputshape"][0])
     filename = request.files["file"][0].name
 
     async with aiofiles.open(filename, 'wb') as f:
@@ -24,7 +25,7 @@ async def upload_file(request):
     await f.close()
 
     # load exporter and do conversion process
-    exporter = YoloV5Exporter(filename, 416)
+    exporter = YoloV5Exporter(filename, input_shape)
     exporter.export_onnx()
     exporter.export_openvino()
     exporter.export_blob()
