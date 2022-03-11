@@ -1,10 +1,16 @@
 import './App.css';
+import {useDispatch, useSelector} from "react-redux";
+import {updateConfig, upload} from "./store";
+import {useState} from "react";
 
 function App() {
+  const [file, setFile] = useState('')
+  const config = useSelector((state) => state.app.config)
+  const inProgress = useSelector((state) => state.app.inProgress)
+  const dispatch = useDispatch()
 
- function showProgress() {
-    document.getElementById('progress-active').style.width = "100%";
- }
+  const update = data => dispatch(updateConfig(data))
+
   return (
     <section className="h-100 gradient-form" style={{backgroundColor: "#eee"}}>
       <div className="container py-5 h-100">
@@ -31,33 +37,35 @@ function App() {
                       <h4 className="mt-1 mb-5 pb-1">Upload your model</h4>
                     </div>
 
-                    <form action="/upload" method="POST" encType="multipart/form-data">
+                    <form onSubmit={e => {
+                      e.preventDefault();
+                      dispatch(upload(file));
+                    }}>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="top"
                            title="Currently, only YoloV5 is supported.">
                         <label htmlFor="version">Yolo Version</label>
-                        <select id="version" defaultValue="v5" name="version" className="form-select" aria-label="Default select example"
-                                disabled>
+                        <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"
+                                onChange={e => update({version: e.target.value})}>
                           <option value="v5">YoloV5</option>
                         </select>
                       </div>
                       <div className="mb-3">
                         <label htmlFor="file" className="form-label">File</label>
-                        <input className="form-control" type="file" id="file" name="file"/>
+                        <input className="form-control" type="file" id="file" name="file" onChange={e => setFile(e.target.files[0])}/>
                       </div>
                       <div className="mb-3">
                         <label htmlFor="inputshape" className="form-label">Input shape</label>
-                        <input className="form-control" type="int" id="inputshape" name="inputshape"/>
+                        <input className="form-control" type="int" id="inputshape" name="inputshape" value={config.inputshape} onChange={e => update({inputshape: e.target.value})}/>
                       </div>
                       <div className="text-center mb-3 d-grid">
-                        <button type="submit" className="btn btn-primary fa-lg gradient-custom-2"
-                                onClick={() => showProgress()}>Submit
+                        <button type="submit" className="btn btn-primary fa-lg gradient-custom-2">Submit
                         </button>
                       </div>
                     </form>
                     <div className="progress">
                       <div id="progress-active" className="progress-bar progress-bar-striped progress-bar-animated"
                            role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-                           style={{width: 0}}/>
+                           style={{width: inProgress ? "100%" : 0}}/>
                     </div>
                   </div>
                 </div>
