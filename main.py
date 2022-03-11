@@ -6,12 +6,14 @@ import os
 import aiofiles
 
 app = Sanic(__name__)
-static_path = (Path(__file__).parent / './static').resolve().absolute()
+static_path = (Path(__file__).parent / './client/build/static').resolve().absolute()
+if not static_path.exists():
+    raise RuntimeError("Client was not built. Please run `npm install && npm run build` to build the client")
 app.static('/static', static_path)
 
 @app.get("/")
 async def index(request):
-    return await response.file(static_path / "index.html")
+    return await response.file(static_path / "../index.html")
 
 
 @app.post('/upload')
