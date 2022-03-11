@@ -18,6 +18,7 @@ import numpy as np
 import openvino.inference_engine as ie
 from zipfile import ZipFile
 import os
+from utils.exceptions import YoloExportError
 
 
 DIR_TMP = "./tmp"
@@ -43,6 +44,8 @@ class YoloV5Exporter:
         self.f_blob = None
         self.f_json = None
         self.f_zip = None
+
+        raise YoloExportError("Test", 3)
 
     
     def load_model(self):
