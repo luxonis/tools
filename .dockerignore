@@ -2,3 +2,10 @@ venv
 yolo/YoloV5_export_playground.ipynb
 tmp
 export
+client/node_modules
+client/build
+*.pt
+docker-compose.yml
+Dockerfile
+.gitignore
+.dockerignore
