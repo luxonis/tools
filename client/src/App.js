@@ -1,14 +1,16 @@
 import './App.css';
 import {useDispatch, useSelector} from "react-redux";
-import {updateConfig, upload} from "./store";
+import {fetchProgress, updateConfig, upload} from "./store";
 import {useState} from "react";
 
 function App() {
   const [file, setFile] = useState('')
   const config = useSelector((state) => state.app.config)
   const inProgress = useSelector((state) => state.app.inProgress)
+  const progress = useSelector((state) => state.app.progress)
   const dispatch = useDispatch()
 
+  console.log(progress)
   const update = data => dispatch(updateConfig(data))
 
   return (
@@ -40,6 +42,7 @@ function App() {
                     <form onSubmit={e => {
                       e.preventDefault();
                       dispatch(upload(file));
+                      dispatch(fetchProgress());
                     }}>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="top"
                            title="Currently, only YoloV5 is supported.">

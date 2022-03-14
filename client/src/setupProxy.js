@@ -6,5 +6,9 @@ module.exports = function (app) {
       target: "http://localhost:8000",
       changeOrigin: true,
     }),
+    createProxyMiddleware("/progress", {
+      target: "http://localhost:8000",
+      changeOrigin: true,
+    }),
   );
 };
