@@ -34,20 +34,22 @@ async def index(request, key):
 @app.post('/upload')
 async def upload_file(request):
 
-    conv_id = str(request.form["id"])
+    conv_id = str(request.form["id"][0])
     log.debug("CONVERSION_ID: ", conv_id)
     request.app.ctx.conversions[conv_id] = "new"
     input_shape = int(request.form["inputshape"][0])
     filename = request.files["file"][0].name
 
-    async with aiofiles.open(filename, 'wb') as f:
+    tmp_path = (Path(__file__).parent / "tmp" / conv_id)
+    tmp_path.mkdir(exist_ok=True)
+    async with aiofiles.open(tmp_path / filename, 'wb') as f:
         await f.write(request.files["file"][0].body)
 
     await f.close()
 
     # load exporter and do conversion process
     request.app.ctx.conversions[conv_id] = "read"
-    exporter = YoloV5Exporter(filename, input_shape)
+    exporter = YoloV5Exporter(tmp_path, filename, input_shape, conv_id)
     request.app.ctx.conversions[conv_id] = "initialized"
     exporter.export_onnx()
     request.app.ctx.conversions[conv_id] = "onnx"
