@@ -75,4 +75,8 @@ async def upload_file(request):
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True, workers=4)
+    runtime = os.getenv("RUNTIME", "debug")
+    if runtime == "prod":
+        app.run(host="0.0.0.0", access_log=False, workers=8)
+    else:
+        app.run(host="0.0.0.0", debug=True, workers=4)

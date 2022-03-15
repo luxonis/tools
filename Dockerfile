@@ -20,4 +20,5 @@ ADD client/src /app/client/src
 RUN npm run build
 WORKDIR /app
 ADD . .
+ENV RUNTIME prod
 CMD ["python3", "/app/main.py"]
