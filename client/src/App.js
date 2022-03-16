@@ -3,14 +3,41 @@ import {useDispatch, useSelector} from "react-redux";
 import {fetchProgress, updateConfig, upload} from "./store";
 import {useState} from "react";
 
+function resolveProgressPerc(item) {
+  if (item === "read") { return "10%" }
+  if (item === "initialized") { return "30%" }
+  if (item === "onnx") { return "50%" }
+  if (item === "openvino") { return "65%" }
+  if (item === "blob") { return "80%" }
+  if (item === "json") { return "99%" }
+  if (item === "zip") { return "100%" }
+
+  return "0%"
+}
+
+function resolveProgressString(item) {
+  if (item === "new") { return "Data received." }
+  if (item === "read") { return "Initializing..." }
+  if (item === "initialized") { return "Converting to ONNX..." }
+  if (item === "onnx") { return "Converting to OpenVINO..." }
+  if (item === "openvino") { return "Converting to MyriadX blob..." }
+  if (item === "blob") { return "Exporting JSON config..." }
+  if (item === "json") { return "Preparing zip file..." }
+  if (item === "zip") { return "Conversion complete." }
+
+  return ""
+}
+
 function App() {
   const [file, setFile] = useState('')
   const config = useSelector((state) => state.app.config)
   const inProgress = useSelector((state) => state.app.inProgress)
   const progress = useSelector((state) => state.app.progress)
+  const progressPerc = resolveProgressPerc(progress)
+  const progressString = resolveProgressString(progress)
   const dispatch = useDispatch()
 
-  console.log(progress)
+
   const update = data => dispatch(updateConfig(data))
 
   return (
@@ -65,10 +92,13 @@ function App() {
                         </button>
                       </div>
                     </form>
+                    {
+                      inProgress && <span>{progressString}</span>
+                    }
                     <div className="progress">
                       <div id="progress-active" className="progress-bar progress-bar-striped progress-bar-animated"
                            role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-                           style={{width: inProgress ? "100%" : 0}}/>
+                           style={{width: inProgress ? progressPerc : 0}}/>
                     </div>
                   </div>
                 </div>

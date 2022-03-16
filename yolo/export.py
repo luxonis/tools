@@ -25,13 +25,13 @@ DIR_TMP = "./tmp"
 
 class YoloV5Exporter:
 
-    def __init__(self, tmp_path, weights_path, imgsz, conv_id):
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id):
 
         # set up variables
-        self.tmp_path = tmp_path
-        self.weights_path = weights_path
+        self.conv_path = conv_path
+        self.weights_path = self.conv_path / weights_filename
         self.imgsz = imgsz
-        self.model_name = weights_path.split(".")[0]
+        self.model_name = weights_filename.split(".")[0]
         self.conv_id = conv_id
 
         # load the model
@@ -52,7 +52,7 @@ class YoloV5Exporter:
 
         # code based on export.py from YoloV5 repository
         # load the model
-        model = attempt_load((self.tmp_path / self.weights_path).resolve())  # load FP32 model
+        model = attempt_load((self.conv_path / self.weights_path).resolve())  # load FP32 model
 
         # check num classes and labels
         assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
@@ -84,7 +84,7 @@ class YoloV5Exporter:
 
     def export_onnx(self):
         # export onnx model
-        self.f_onnx = (self.tmp_path / f"{self.model_name}.onnx").resolve()
+        self.f_onnx = (self.conv_path / f"{self.model_name}.onnx").resolve()
         im = torch.zeros(1, 3, *self.imgsz)#.to(device)  # image size(1,3,320,192) BCHW iDetection
         torch.onnx.export(self.model, im, self.f_onnx, verbose=False, opset_version=12,
                         training=torch.onnx.TrainingMode.EVAL,
@@ -134,7 +134,7 @@ class YoloV5Exporter:
         onnx.checker.check_model(onnx_model)  # check onnx model
 
         # save the simplified model
-        self.f_simplified = (self.tmp_path / f"{self.model_name}-simplified.onnx").resolve()
+        self.f_simplified = (self.conv_path / f"{self.model_name}-simplified.onnx").resolve()
         onnx.save(onnx_model, self.f_simplified)
         return self.f_simplified
 
@@ -145,7 +145,7 @@ class YoloV5Exporter:
 
         # export to OpenVINO and prune the model in the process
         cmd = f"mo --input_model {self.f_simplified} " \
-        f"--output_dir {self.tmp_path.resolve()} " \
+        f"--output_dir {self.conv_path.resolve()} " \
         f"--model_name {self.model_name} " \
         '--data_type FP16 ' \
         '--reverse_input_channel ' \
@@ -155,9 +155,9 @@ class YoloV5Exporter:
         subprocess.check_output(cmd, shell=True)
 
         # set paths
-        self.f_xml = (self.tmp_path / f"{self.model_name}.xml").resolve()
-        self.f_bin = (self.tmp_path / f"{self.model_name}.bin").resolve()
-        self.f_mapping = (self.tmp_path / f"{self.model_name}.mapping").resolve()
+        self.f_xml = (self.conv_path / f"{self.model_name}.xml").resolve()
+        self.f_bin = (self.conv_path / f"{self.model_name}.bin").resolve()
+        self.f_mapping = (self.conv_path / f"{self.model_name}.mapping").resolve()
 
         return self.f_xml, self.f_mapping, self.f_bin
 
@@ -175,7 +175,7 @@ class YoloV5Exporter:
             shaves=6,
             version="2021.4",
             use_cache=False,
-            output_dir=self.tmp_path.resolve()
+            output_dir=self.conv_path.resolve()
         )
 
         self.f_blob = blob_path
@@ -213,7 +213,7 @@ class YoloV5Exporter:
         content["mappings"]["labels"] = self.model.names
 
         # save json
-        f_json = (self.tmp_path / f"{self.model_name}.json").resolve()
+        f_json = (self.conv_path / f"{self.model_name}.json").resolve()
         with open(f_json, 'w') as outfile:
             json.dump(content, outfile)
 
@@ -236,7 +236,7 @@ class YoloV5Exporter:
             self.export_json()
 
         #f_zip = f"{DIR_TMP}/{self.model_name}.zip"
-        f_zip = (self.tmp_path / f"{self.model_name}.zip").resolve()
+        f_zip = (self.conv_path / f"{self.model_name}.zip").resolve()
         
         zip_obj = ZipFile(f_zip, 'w')
         zip_obj.write(self.f_simplified)
@@ -266,4 +266,4 @@ class YoloV5Exporter:
             os.remove(self.f_onnx)
         if self.f_simplified is not None:
             os.remove(self.f_simplified)
-        #self.tmp_path.rmdir()
+        #self.conv_path.rmdir()
