@@ -71,7 +71,7 @@ async def upload_file(request):
 async def cleanup(request, response):
     if request.path == "/upload":
         conv_id = str(request.form["id"][0])
-        shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
+        #shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
 
 
 if __name__ == '__main__':

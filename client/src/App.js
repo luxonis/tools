@@ -98,7 +98,7 @@ function App() {
                     <div className="progress">
                       <div id="progress-active" className="progress-bar progress-bar-striped progress-bar-animated"
                            role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-                           style={{width: inProgress ? progressPerc : 0}}/>
+                           style={{width: inProgress ? progressPerc : 0}}>This might take a minute.</div>
                     </div>
                   </div>
                 </div>

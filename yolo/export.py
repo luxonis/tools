@@ -80,7 +80,10 @@ class YoloV5Exporter:
                 if hasattr(m, 'forward_export'):
                     m.forward = m.forward_export  # assign custom forward (optional)
 
-        self.model = model           
+        self.model = model
+
+        m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]
+        self.num_branches = len(m.anchor_grid)           
 
     def export_onnx(self):
         # export onnx model
@@ -107,29 +110,15 @@ class YoloV5Exporter:
             if "Conv" in n.name:
                 conv_indices.append(i)
 
-        input1, input2, input3 = conv_indices[-3:]
+        inputs = conv_indices[-self.num_branches:]
 
-        sigmoid1 = onnx.helper.make_node(
-            'Sigmoid',
-            inputs=[onnx_model.graph.node[input1].output[0]],
-            outputs=['output1_yolov5'],
-        )
-
-        sigmoid2 = onnx.helper.make_node(
-            'Sigmoid',
-            inputs=[onnx_model.graph.node[input2].output[0]],
-            outputs=['output2_yolov5'],
-        )
-
-        sigmoid3 = onnx.helper.make_node(
-            'Sigmoid',
-            inputs=[onnx_model.graph.node[input3].output[0]],
-            outputs=['output3_yolov5'],
-        )
-
-        onnx_model.graph.node.append(sigmoid1)
-        onnx_model.graph.node.append(sigmoid2)
-        onnx_model.graph.node.append(sigmoid3)
+        for i, inp in enumerate(inputs):
+            sigmoid = onnx.helper.make_node(
+                'Sigmoid',
+                inputs=[onnx_model.graph.node[inp].output[0]],
+                outputs=[f'output{i+1}_yolov5'],
+            )
+            onnx_model.graph.node.append(sigmoid)
 
         onnx.checker.check_model(onnx_model)  # check onnx model
 
@@ -142,6 +131,9 @@ class YoloV5Exporter:
 
         if self.f_simplified is None:
             self.export_onnx()
+        
+        output_list = [f"output{i+1}_yolov5" for i in range(self.num_branches)]
+        output_list = ",".join(output_list)
 
         # export to OpenVINO and prune the model in the process
         cmd = f"mo --input_model {self.f_simplified} " \
@@ -150,7 +142,7 @@ class YoloV5Exporter:
         '--data_type FP16 ' \
         '--reverse_input_channel ' \
         '--scale 255 ' \
-        '--output "output1_yolov5,output2_yolov5,output3_yolov5"'
+        f'--output "{output_list}"'
 
         subprocess.check_output(cmd, shell=True)
 
@@ -193,16 +185,17 @@ class YoloV5Exporter:
         # generate anchors and sides
         anchors, sides = [], []
         m = self.model.module.model[-1] if hasattr(self.model, 'module') else self.model.model[-1]
-        for i in range(3):
+        for i in range(self.num_branches):
             sides.append(m.anchor_grid[i].size()[2])
-            for j in range(3):
+            for j in range(m.anchor_grid[i].size()[1]):
                 anchors.extend(m.anchor_grid[i][0, j, 0, 0].numpy())
         anchors = [float(x) for x in anchors]
-        sides.sort()
+        #sides.sort()
 
         # generate masks
         masks = dict()
-        for i, num in enumerate(sides[::-1]):
+        #for i, num in enumerate(sides[::-1]):
+        for i, num in enumerate(sides):
             masks[f"side{num}"] = list(range(i*3, i*3+3))
 
         # set parameters
