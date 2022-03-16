@@ -36,9 +36,9 @@ export const fetchProgress = createAsyncThunk(
     const id = thunk.getState().app.config.id
     const inProgress = thunk.getState().app.inProgress
     const response = await request(GET, `/progress/${id}`);
-    const progress = response.data.progress || 0
+    const progress = response.data.progress || "unknown"
     thunk.dispatch(updateProgress(progress))
-    if(progress < 100 && inProgress) {
+    if(progress !== "zip" && inProgress) {
       setTimeout(() => {
         thunk.dispatch(fetchProgress())
       }, 1000)
@@ -55,7 +55,7 @@ export const appSlice = createSlice({
       file: '',
       inputshape: '',
     },
-    progress: 0,
+    progress: null,
     inProgress: false,
     error: null,
   },

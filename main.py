@@ -1,77 +1,77 @@
-import logging
+import shutil
+from multiprocessing import Manager
 from pathlib import Path
 
 from sanic import Sanic, response
 from sanic.config import Config
+from sanic.log import logger
 
 from yolo.export import YoloV5Exporter
 import os
 import aiofiles
 
-log = logging.getLogger(__name__)
-
 Config.KEEP_ALIVE = False
 Config.RESPONSE_TIMEOUT = 1000
 app = Sanic(__name__)
-static_path = (Path(__file__).parent / './client/build/static').resolve().absolute()
-if not static_path.exists():
+app.config.static_path = (Path(__file__).parent / './client/build/static').resolve().absolute()
+if not app.config.static_path.exists():
     raise RuntimeError("Client was not built. Please run `npm install && npm run build` to build the client")
-app.static('/static', static_path)
-app.ctx.conversions = dict()
-(Path(__file__).parent / "tmp").mkdir(exist_ok=True)
-(Path(__file__).parent / "export").mkdir(exist_ok=True)
+app.static('/static', app.config.static_path)
+manager = Manager()
+conversions = manager.dict()
+app.config.workdir = Path(__file__).parent / "tmp"
+app.config.workdir.mkdir(exist_ok=True)
+
 
 @app.get("/")
 async def index(request):
-    return await response.file(static_path / "../index.html")
+    return await response.file(app.config.static_path / "../index.html")
 
 
 @app.get("/progress/<key>")
 async def index(request, key):
-    return response.json({"progress": request.app.ctx.conversions})
+    return response.json({"progress": conversions.get(key, "none")})
 
 
 @app.post('/upload')
 async def upload_file(request):
+    conv_id = str(request.form["id"][0])
+    logger.info(f"CONVERSION_ID: {conv_id}")
+    conversions[conv_id] = "new"
 
-    conv_id = str(request.form["id"])
-    log.debug("CONVERSION_ID: ", conv_id)
-    request.app.ctx.conversions[conv_id] = "new"
     input_shape = int(request.form["inputshape"][0])
     filename = request.files["file"][0].name
 
-    async with aiofiles.open(filename, 'wb') as f:
+    conv_path = app.config.workdir / conv_id
+    conv_path.mkdir(exist_ok=True)
+    async with aiofiles.open(conv_path / filename, 'wb') as f:
         await f.write(request.files["file"][0].body)
 
-    await f.close()
-
     # load exporter and do conversion process
-    request.app.ctx.conversions[conv_id] = "read"
-    exporter = YoloV5Exporter(filename, input_shape)
-    request.app.ctx.conversions[conv_id] = "initialized"
+    conversions[conv_id] = "read"
+    exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
+    conversions[conv_id] = "initialized"
     exporter.export_onnx()
-    request.app.ctx.conversions[conv_id] = "onnx"
+    conversions[conv_id] = "onnx"
     exporter.export_openvino()
-    request.app.ctx.conversions[conv_id] = "openvino"
+    conversions[conv_id] = "openvino"
     exporter.export_blob()
-    request.app.ctx.conversions[conv_id] = "blob"
+    conversions[conv_id] = "blob"
     exporter.export_json()
-    request.app.ctx.conversions[conv_id] = "json"
+    conversions[conv_id] = "json"
+    from zipfile import ZipFile
     zip_file = exporter.make_zip()
-
     # move zip folder
-    zip_file_new = zip_file.replace("tmp", "export")
-    os.rename(zip_file, zip_file_new)
-    request.app.ctx.conversions[conv_id] = "zip"
-
-    # clear temporary exports
-    exporter.clear()
-
-    # remove the weights
-    os.remove(filename)
-
+    conversions[conv_id] = "zip"
     # start downloading
-    return await response.file(zip_file_new)
+    return await response.file(zip_file)
+
+
+@app.on_response
+async def cleanup(request, response):
+    if request.path == "/upload":
+        conv_id = str(request.form["id"][0])
+        shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
 
 
 if __name__ == '__main__':
