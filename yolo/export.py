@@ -52,7 +52,7 @@ class YoloV5Exporter:
 
         # code based on export.py from YoloV5 repository
         # load the model
-        model = attempt_load((self.conv_path / self.weights_path).resolve())  # load FP32 model
+        model = attempt_load(self.weights_path.resolve())  # load FP32 model
 
         # check num classes and labels
         assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
@@ -232,11 +232,11 @@ class YoloV5Exporter:
         f_zip = (self.conv_path / f"{self.model_name}.zip").resolve()
         
         zip_obj = ZipFile(f_zip, 'w')
-        zip_obj.write(self.f_simplified)
-        zip_obj.write(self.f_xml)
-        zip_obj.write(self.f_bin)
-        zip_obj.write(self.f_blob)
-        zip_obj.write(self.f_json)
+        zip_obj.write(self.f_simplified, self.f_simplified.name)
+        zip_obj.write(self.f_xml, self.f_xml.name)
+        zip_obj.write(self.f_bin, self.f_bin.name)
+        zip_obj.write(self.f_blob, self.f_blob.name)
+        zip_obj.write(self.f_json, self.f_json.name)
         zip_obj.close()
 
         self.f_zip = f_zip
@@ -259,4 +259,8 @@ class YoloV5Exporter:
             os.remove(self.f_onnx)
         if self.f_simplified is not None:
             os.remove(self.f_simplified)
-        #self.conv_path.rmdir()
+        if self.weights_path is not None:
+            os.remove(self.weights_path)
+        if self.f_zip is not None:
+            os.remove(self.f_zip)
+        self.conv_path.rmdir()
