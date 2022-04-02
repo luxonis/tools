@@ -2,6 +2,7 @@ import {configureStore, createSlice, createAsyncThunk} from '@reduxjs/toolkit'
 import request, {GET, POST} from "./request";
 import _ from 'lodash';
 import {v4 as uuidv4} from 'uuid';
+import { saveAs } from 'file-saver';
 
 export const upload = createAsyncThunk(
   'config/send',
@@ -19,14 +20,9 @@ export const upload = createAsyncThunk(
         'Content-Type': 'multipart/form-data'
       },
       timeout: 1500000,
+      responseType: 'arraybuffer',
     })
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.style.display = "none"
-    link.setAttribute('download', 'result.zip'); //or any other extension
-    document.body.appendChild(link);
-    link.click();
+    saveAs(new Blob([response.data]), 'result.zip')
   }
 )
 
