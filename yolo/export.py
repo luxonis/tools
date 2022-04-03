@@ -52,7 +52,7 @@ class YoloV5Exporter:
 
         # code based on export.py from YoloV5 repository
         # load the model
-        model = attempt_load((self.conv_path / self.weights_path).resolve())  # load FP32 model
+        model = attempt_load(self.weights_path.resolve())  # load FP32 model
 
         # check num classes and labels
         assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
@@ -167,10 +167,9 @@ class YoloV5Exporter:
             self.export_openvino()
         
         # export blob from generate bin and xml
-        print(self.f_xml)
         blob_path = blobconverter.from_openvino(
-            xml=self.f_xml.as_posix(),
-            bin=self.f_bin.as_posix(),
+            xml=str(self.f_xml.resolve()),#as_posix(),
+            bin=str(self.f_bin.resolve()),#as_posix(),
             data_type="FP16",
             shaves=6,
             version="2021.4",
@@ -215,7 +214,7 @@ class YoloV5Exporter:
         # save json
         f_json = (self.conv_path / f"{self.model_name}.json").resolve()
         with open(f_json, 'w') as outfile:
-            json.dump(content, outfile)
+            json.dump(content, outfile, ensure_ascii=False, indent=4)
 
         self.f_json = f_json
 
