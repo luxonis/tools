@@ -88,8 +88,11 @@ function App() {
                         <input className="form-control" type="int" id="inputshape" name="inputshape" value={config.inputshape} onChange={e => update({inputshape: e.target.value})}/>
                       </div>
                       <div className="text-center mb-3 d-grid">
-                        <button type="submit" className="btn btn-primary fa-lg gradient-custom-2">Submit
-                        </button>
+                        {
+                          inProgress
+                            ? <button type="button" className="btn btn-primary disabled fa-lg gradient-custom-2">Submit</button>
+                            : <button type="submit" className="btn btn-primary fa-lg gradient-custom-2">Submit</button>
+                        }
                       </div>
                     </form>
                     {
