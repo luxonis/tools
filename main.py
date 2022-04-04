@@ -6,8 +6,6 @@ from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
 
-import asyncio
-
 from yolo.export import YoloV5Exporter
 import os
 import aiofiles
@@ -66,23 +64,17 @@ async def upload_file(request):
     # move zip folder
     conversions[conv_id] = "zip"
 
-    # cleanup
-    #request.app.add_task(cleanup_callback(str(request.form["id"][0])))
-
-    #return await response.file_stream(zip_file.resolve())
     return await response.file_stream(
         location = zip_file.resolve(),
         mime_type = "application/zip"
     )
 
-#@app.on_response
-#async def cleanup(request, response):
-#    if request.path == "/upload":
-#        conv_id = str(request.form["id"][0])
-#        #shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
+@app.on_response
+async def cleanup(request, response):
+   if request.path == "/upload":
+       conv_id = str(request.form["id"][0])
+       shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
 
-async def cleanup_callback(conv_id):
-    shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
 
 if __name__ == '__main__':
     runtime = os.getenv("RUNTIME", "debug")
