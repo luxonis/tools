@@ -28,6 +28,14 @@ function resolveProgressString(item) {
   return ""
 }
 
+function resolveHintString(item) {
+
+  if (item === "onnx" || item === "openvino" || item === "blob" || item === "json" || item === "zip") {
+     return "This might take a few minutes." }
+
+  return ""
+}
+
 function App() {
   const [file, setFile] = useState('')
   const config = useSelector((state) => state.app.config)
@@ -35,6 +43,7 @@ function App() {
   const progress = useSelector((state) => state.app.progress)
   const progressPerc = resolveProgressPerc(progress)
   const progressString = resolveProgressString(progress)
+  const hintString = resolveHintString(progress)
   const dispatch = useDispatch()
 
 
@@ -98,7 +107,7 @@ function App() {
                     <div className="progress">
                       <div id="progress-active" className="progress-bar progress-bar-striped progress-bar-animated"
                            role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-                           style={{width: inProgress ? progressPerc : 0}}/>
+                           style={{width: inProgress ? progressPerc : 0}}>{hintString}</div>
                     </div>
                   </div>
                 </div>

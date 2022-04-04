@@ -6,6 +6,8 @@ from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
 
+import asyncio
+
 from yolo.export import YoloV5Exporter
 import os
 import aiofiles
@@ -59,20 +61,28 @@ async def upload_file(request):
     conversions[conv_id] = "blob"
     exporter.export_json()
     conversions[conv_id] = "json"
-    from zipfile import ZipFile
+    #from zipfile import ZipFile
     zip_file = exporter.make_zip()
     # move zip folder
     conversions[conv_id] = "zip"
-    # start downloading
-    return await response.file(zip_file)
 
+    # cleanup
+    #request.app.add_task(cleanup_callback(str(request.form["id"][0])))
 
-@app.on_response
-async def cleanup(request, response):
-    if request.path == "/upload":
-        conv_id = str(request.form["id"][0])
-        shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
+    #return await response.file_stream(zip_file.resolve())
+    return await response.file_stream(
+        location = zip_file.resolve(),
+        mime_type = "application/zip"
+    )
 
+#@app.on_response
+#async def cleanup(request, response):
+#    if request.path == "/upload":
+#        conv_id = str(request.form["id"][0])
+#        #shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
+
+async def cleanup_callback(conv_id):
+    shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
 
 if __name__ == '__main__':
     runtime = os.getenv("RUNTIME", "debug")
