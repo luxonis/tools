@@ -240,26 +240,3 @@ class YoloV5Exporter:
 
         self.f_zip = f_zip
         return f_zip
-
-    def clear(self):
-        
-        # remove all files except zip
-        if self.f_json is not None:
-            os.remove(self.f_json)
-        if self.f_blob is not None:
-            os.remove(self.f_blob)
-        if self.f_bin is not None:
-            os.remove(self.f_bin)
-        if self.f_xml is not None:
-            os.remove(self.f_xml)
-        if self.f_mapping is not None:
-            os.remove(self.f_mapping)
-        if self.f_onnx is not None:
-            os.remove(self.f_onnx)
-        if self.f_simplified is not None:
-            os.remove(self.f_simplified)
-        if self.weights_path is not None:
-            os.remove(self.weights_path)
-        if self.f_zip is not None:
-            os.remove(self.f_zip)
-        self.conv_path.rmdir()

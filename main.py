@@ -59,14 +59,12 @@ async def upload_file(request):
     conversions[conv_id] = "blob"
     exporter.export_json()
     conversions[conv_id] = "json"
-    #from zipfile import ZipFile
     zip_file = exporter.make_zip()
-    # move zip folder
     conversions[conv_id] = "zip"
 
-    return await response.file_stream(
-        location = zip_file.resolve(),
-        mime_type = "application/zip"
+    return await response.file(
+        location=zip_file.resolve(),
+        mime_type="application/zip"
     )
 
 @app.on_response
