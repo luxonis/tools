@@ -31,7 +31,7 @@ class YoloV5Exporter:
         self.conv_path = conv_path
         self.weights_path = self.conv_path / weights_filename
         self.imgsz = imgsz
-        self.model_name = weights_filename.split(".")[0]
+        self.model_name = "result"#weights_filename.split(".")[0]
         self.conv_id = conv_id
 
         # load the model
@@ -136,9 +136,9 @@ class YoloV5Exporter:
         output_list = ",".join(output_list)
 
         # export to OpenVINO and prune the model in the process
-        cmd = f"mo --input_model {self.f_simplified} " \
-        f"--output_dir {self.conv_path.resolve()} " \
-        f"--model_name {self.model_name} " \
+        cmd = f"mo --input_model '{self.f_simplified}' " \
+        f"--output_dir '{self.conv_path.resolve()}' " \
+        f"--model_name '{self.model_name}' " \
         '--data_type FP16 ' \
         '--reverse_input_channel ' \
         '--scale 255 ' \
