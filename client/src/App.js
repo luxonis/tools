@@ -31,6 +31,7 @@ function resolveProgressString(item) {
 function App() {
   const [file, setFile] = useState('')
   const config = useSelector((state) => state.app.config)
+  const error = useSelector((state) => state.app.error)
   const inProgress = useSelector((state) => state.app.inProgress)
   const progress = useSelector((state) => state.app.progress)
   const progressPerc = resolveProgressPerc(progress)
@@ -63,15 +64,23 @@ function App() {
 
                     <div className="text-center">
                       <img src="https://docs.luxonis.com/en/latest/_static/logo.png" style={{width: 185}} alt="logo"/>
-                      <h4 className="mt-1 mb-5 pb-1">Upload your model</h4>
+                      <h4 className="mt-1 pb-1">Upload your model</h4>
                     </div>
+
+                    {
+                      error && <div className="error-box">
+                        <h3>An error occurred</h3>
+                        <p>{error.message}</p>
+                        <span>Please try again or reach out to <a href="mailto:support@luxonis.com" target="_blank">support@luxonis.com</a></span>
+                      </div>
+                    }
 
                     <form onSubmit={e => {
                       e.preventDefault();
                       dispatch(upload(file));
                       dispatch(fetchProgress());
                     }}>
-                      <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="top"
+                      <div className="mb-3 mt-5" data-bs-toggle="tooltip" data-bs-placement="top"
                            title="Currently, only YoloV5 is supported.">
                         <label htmlFor="version">Yolo Version</label>
                         <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"

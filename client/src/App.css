@@ -41,3 +41,21 @@
   margin-right: auto;
   width: 230px;
 }
+
+.error-box {
+  color: #D8000C;
+  background-color: #FFD2D2;
+  border-radius: 10px;
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, .5);
+  text-align: center;
+  padding: 10px 0;
+
+}
+
+.error-box p {
+  margin-bottom: 0;
+}
+
+.error-box span {
+  font-size: 12px;
+}
