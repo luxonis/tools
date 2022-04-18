@@ -88,7 +88,7 @@ class YoloV5Exporter:
     def export_onnx(self):
         # export onnx model
         self.f_onnx = (self.conv_path / f"{self.model_name}.onnx").resolve()
-        im = torch.zeros(1, 3, *self.imgsz)#.to(device)  # image size(1,3,320,192) BCHW iDetection
+        im = torch.zeros(1, 3, *self.imgsz[::-1])#.to(device)  # image size(1,3,320,192) BCHW iDetection
         torch.onnx.export(self.model, im, self.f_onnx, verbose=False, opset_version=12,
                         training=torch.onnx.TrainingMode.EVAL,
                         do_constant_folding=True,
@@ -189,7 +189,7 @@ class YoloV5Exporter:
         anchors, sides = [], []
         m = self.model.module.model[-1] if hasattr(self.model, 'module') else self.model.model[-1]
         for i in range(self.num_branches):
-            sides.append(m.anchor_grid[i].size()[2])
+            sides.append(m.anchor_grid[i].size()[3])
             for j in range(m.anchor_grid[i].size()[1]):
                 anchors.extend(m.anchor_grid[i][0, j, 0, 0].numpy())
         anchors = [float(x) for x in anchors]
