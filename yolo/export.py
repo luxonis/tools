@@ -144,7 +144,11 @@ class YoloV5Exporter:
         '--scale 255 ' \
         f'--output "{output_list}"'
 
-        subprocess.check_output(cmd, shell=True)
+        try:
+            subprocess.check_output(cmd, shell=True)
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            raise RuntimeError()
 
         # set paths
         self.f_xml = (self.conv_path / f"{self.model_name}.xml").resolve()

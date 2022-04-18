@@ -46,7 +46,7 @@ function App() {
       <div className="container py-5 h-100">
         <div className="row d-flex justify-content-center align-items-center h-100">
           <div className="col-xl-10">
-            <div className="card rounded-3 text-black">
+            <div className="card rounded-3 text-black mb-3">
               <div className="row g-0">
                 <div className="col-lg-6 d-flex align-items-center gradient-custom-2">
                   <div className="text-white px-3 py-4 p-md-5 mx-md-4">
@@ -92,8 +92,8 @@ function App() {
                         <label htmlFor="file" className="form-label">File</label>
                         <input className="form-control" type="file" id="file" name="file" onChange={e => setFile(e.target.files[0])}/>
                       </div>
-                      <div className="mb-3">
-                        <label htmlFor="inputshape" className="form-label">Input shape</label>
+                      <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Integer for square shape, or width and height separated by space. Must be divisible by 32.">
+                        <label htmlFor="inputshape" className="form-label">Input shape <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="int" id="inputshape" name="inputshape" value={config.inputshape} onChange={e => update({inputshape: e.target.value})}/>
                       </div>
                       <div className="text-center mb-3 d-grid">
@@ -117,6 +117,11 @@ function App() {
                     }
                   </div>
                 </div>
+              </div>
+              <div class="card-footer">
+                <p class="small text-center mb-0">
+                  Curious how I work or need to host me on premisses? <a href="https://github.com/luxonis/tools">Check me out on <i class="bi bi-github"></i></a>.
+                </p>
               </div>
             </div>
           </div>
