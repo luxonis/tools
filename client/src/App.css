@@ -1,3 +1,7 @@
+body {
+  background-color: #eee;
+}
+
 .gradient-custom-2 {
   /* fallback for old browsers */
   background: #fccb90;
@@ -19,7 +23,7 @@
 @media (min-width: 769px) {
   .gradient-custom-2 {
     border-top-left-radius: .3rem;
-    border-bottom-left-radius: .3rem;
+    /* border-bottom-left-radius: .3rem; */
   }
 }
 

@@ -39,7 +39,13 @@ async def upload_file(request):
     logger.info(f"CONVERSION_ID: {conv_id}")
     conversions[conv_id] = "new"
 
-    input_shape = int(request.form["inputshape"][0])
+    imgsz = request.form["inputshape"][0]
+    if " " in imgsz:
+        imgsz = imgsz.split(" ")
+        input_shape = [int(imgsz[0]), int(imgsz[1])]
+    else:
+        input_shape = int(imgsz)
+
     filename = request.files["file"][0].name
 
     conv_path = app.config.workdir / conv_id
