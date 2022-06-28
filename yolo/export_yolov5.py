@@ -181,7 +181,7 @@ class YoloV5Exporter:
 
         # load json template
         #f = open("./yolo/json/yolov5.json")
-        f = open((Path(__file__).parent / "json" / "yolov5.json").resolve())
+        f = open((Path(__file__).parent / "json" / "yolo.json").resolve())
         #print(f.resolve())
         content = json.load(f)
 
