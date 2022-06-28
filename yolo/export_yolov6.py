@@ -167,19 +167,17 @@ class YoloV6Exporter:
         content = json.load(f)
 
         # generate anchors and sides
-        anchors = [0,0]
+        anchors, masks = [], {}
 
-        # generate masks
-        masks = dict()
-        for i in range(self.num_branches):
-            masks[f"side{int(self.imgsz[0]/(2 ** (3 + i)))}"] = [0]
+        nc = self.model.model.detect.nc
 
         # set parameters
         content["nn_config"]["input_size"] = "x".join([str(x) for x in self.imgsz])
-        content["nn_config"]["NN_specific_metadata"]["classes"] = self.model.model.detect.nc
+        content["nn_config"]["NN_specific_metadata"]["classes"] = nc
         content["nn_config"]["NN_specific_metadata"]["anchors"] = anchors
         content["nn_config"]["NN_specific_metadata"]["anchor_masks"] = masks
-        content["mappings"]["labels"] = [f"Class_{i}" for i in range(self.model.model.detect.nc)]
+        # use COCO labels if 80 classes, else use a placeholder
+        content["mappings"]["labels"] = content["mappings"]["labels"] if nc == 80 else [f"Class_{i}" for i in range(nc)]
 
         # save json
         f_json = (self.conv_path / f"{self.model_name}.json").resolve()
