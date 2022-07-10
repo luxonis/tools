@@ -6,7 +6,9 @@ from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
 
-from yolo.export import YoloV5Exporter
+from yolo.export_yolov5 import YoloV5Exporter
+from yolo.export_yolov6 import YoloV6Exporter
+
 import os
 import aiofiles
 
@@ -53,9 +55,16 @@ async def upload_file(request):
     async with aiofiles.open(conv_path / filename, 'wb') as f:
         await f.write(request.files["file"][0].body)
 
+    version = request.form["version"][0]
+
     # load exporter and do conversion process
     conversions[conv_id] = "read"
-    exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
+    if version == "v5":
+        exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
+    elif version == "v6":
+        exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
+    else:
+        raise ValueError(f"Yolo version {version} is not supported.")
     conversions[conv_id] = "initialized"
     exporter.export_onnx()
     conversions[conv_id] = "onnx"

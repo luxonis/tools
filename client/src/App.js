@@ -80,12 +80,12 @@ function App() {
                       dispatch(upload(file));
                       dispatch(fetchProgress());
                     }}>
-                      <div className="mb-3 mt-5" data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Currently, only YoloV5 is supported.">
+                      <div className="mb-3 mt-5">
                         <label htmlFor="version">Yolo Version</label>
                         <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"
                                 onChange={e => update({version: e.target.value})}>
                           <option value="v5">YoloV5</option>
+                          <option value="v6">YoloV6</option>
                         </select>
                       </div>
                       <div className="mb-3">

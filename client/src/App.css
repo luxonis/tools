@@ -27,9 +27,11 @@ body {
   }
 }
 
+/*
 #version:hover {
   cursor: not-allowed;
 }
+*/
 
 .config-col {
   position: relative;
