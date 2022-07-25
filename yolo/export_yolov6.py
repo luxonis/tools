@@ -5,7 +5,8 @@ sys.path.append("./yolo/YOLOv6")
 import torch
 import json
 import warnings
-from yolov6.layers.common import DetectBackend
+from yolov6.layers.common import RepVGGBlock
+from yolov6.utils.checkpoint import load_checkpoint
 import torch.nn as nn
 import onnx
 import onnxsim
@@ -50,9 +51,14 @@ class YoloV6Exporter:
 
         # code based on export.py from YoloV5 repository
         # load the model
-        model = DetectBackend(str(self.weights_path.resolve()), device="cpu")
+        #model = DetectBackend(str(self.weights_path.resolve()), device="cpu")
+        model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
+        for layer in model.modules():
+            #print(type(layer))
+            if isinstance(layer, RepVGGBlock):
+                layer.switch_to_deploy()
 
-        self.num_branches = len(model.model.detect.grid)          
+        self.num_branches = len(model.detect.grid)          
 
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32
@@ -66,6 +72,12 @@ class YoloV6Exporter:
         if len(self.imgsz) != 2:
             raise ValueError(f"Image size must be of length 1 or 2.")
         
+        # fuse RepVGG blocks
+        #for layer in model.modules():
+        #    print(type(layer))
+        #    if isinstance(layer, RepVGGBlock):
+        #        layer.switch_to_deploy()
+
         model.eval()
         self.model = model
 
@@ -169,7 +181,7 @@ class YoloV6Exporter:
         # generate anchors and sides
         anchors, masks = [], {}
 
-        nc = self.model.model.detect.nc
+        nc = self.model.detect.nc
 
         # set parameters
         content["nn_config"]["input_size"] = "x".join([str(x) for x in self.imgsz])
