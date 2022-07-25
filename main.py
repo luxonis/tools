@@ -65,8 +65,8 @@ async def upload_file(request):
         exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
     elif version == "v6":
         exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
-    elif version == "v7":
-        exporter = YoloV7Exporter(conv_path, filename, input_shape, conv_id)
+    #elif version == "v7":
+    #    exporter = YoloV7Exporter(conv_path, filename, input_shape, conv_id)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     conversions[conv_id] = "initialized"
