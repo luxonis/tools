@@ -20,6 +20,6 @@ ADD client/src /app/client/src
 RUN npm run build
 WORKDIR /app
 ADD . .
-RUN python3 -m pip install -r yolo/yolov5/requirements.txt
+#RUN python3 -m pip install -r yolo/yolov5/requirements.txt
 ENV RUNTIME prod
 CMD ["python3", "/app/main.py"]
