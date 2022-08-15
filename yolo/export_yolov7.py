@@ -1,12 +1,15 @@
 import sys
-#sys.path.append("YOLOv6")
-#sys.path.append("./yolo/YOLOv6")
+#sys.path.append("yolov7")
+#sys.path.append("./yolo/yolov7")
+#sys.path.append("/home/matija/Luxonis/model-export/yolo/yolov7/utils")
+print(sys.path)
 
 import torch
 import json
 import warnings
-from yolov6.layers.common import RepVGGBlock
-from yolov6.utils.checkpoint import load_checkpoint
+from yolov7.models.experimental import attempt_load
+from yolov7.models.common import Conv
+from yolov7.models.yolo import Detect
 import torch.nn as nn
 import onnx
 import onnxsim
@@ -22,7 +25,7 @@ from pathlib import Path
 
 DIR_TMP = "./tmp"
 
-class YoloV6Exporter:
+class YoloV7Exporter:
 
     def __init__(self, conv_path, weights_filename, imgsz, conv_id):
 
@@ -51,17 +54,12 @@ class YoloV6Exporter:
 
         # code based on export.py from YoloV5 repository
         # load the model
-        #model = DetectBackend(str(self.weights_path.resolve()), device="cpu")
-        model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
-        for layer in model.modules():
-            #print(type(layer))
-            if isinstance(layer, RepVGGBlock):
-                layer.switch_to_deploy()
-
-        self.num_branches = len(model.detect.grid)          
+        model = attempt_load(self.weights_path.resolve(), map_location=torch.device('cpu')).fuse().eval()
+        # check num classes and labels
+        assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
 
         # check if image size is suitable
-        gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32
+        gs = int(max(model.stride))  # grid size (max stride)
         if isinstance(self.imgsz, int):
             self.imgsz = [self.imgsz, self.imgsz]
         for sz in self.imgsz:
@@ -72,14 +70,21 @@ class YoloV6Exporter:
         if len(self.imgsz) != 2:
             raise ValueError(f"Image size must be of length 1 or 2.")
         
-        # fuse RepVGG blocks
-        #for layer in model.modules():
-        #    print(type(layer))
-        #    if isinstance(layer, RepVGGBlock):
-        #        layer.switch_to_deploy()
-
         model.eval()
+        for k, m in model.named_modules():
+            if isinstance(m, Conv):  # assign export-friendly activations
+                if isinstance(m.act, nn.SiLU):
+                    m.act = SiLU()
+            elif isinstance(m, Detect):
+                m.inplace = inplace
+                m.onnx_dynamic = False
+                if hasattr(m, 'forward_export'):
+                    m.forward = m.forward_export  # assign custom forward (optional)
+
         self.model = model
+
+        m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]
+        self.num_branches = len(m.anchor_grid)           
 
     def export_onnx(self):
         # export onnx model
@@ -100,18 +105,21 @@ class YoloV6Exporter:
         onnx_model, check = onnxsim.simplify(model_onnx)
         assert check, 'assert check failed'
 
-        # get contacts ready for parsing
-        conc_idx = []
+        # add named sigmoids for prunning in OpenVINO
+        conv_indices = []
         for i, n in enumerate(onnx_model.graph.node):
-            if "Concat" in n.name:
-                conc_idx.append(i)
+            if "Conv" in n.name:
+                conv_indices.append(i)
 
-        outputs = conc_idx[-(self.num_branches+1):-1]
+        inputs = conv_indices[-self.num_branches:]
 
-        #output_names = []
-        for i, idx in enumerate(outputs):
-            onnx_model.graph.node[idx].name = f"output{i+1}_yolov6"
-            #output_names.append(onnx_model.graph.node[idx].name)
+        for i, inp in enumerate(inputs):
+            sigmoid = onnx.helper.make_node(
+                'Sigmoid',
+                inputs=[onnx_model.graph.node[inp].output[0]],
+                outputs=[f'output{i+1}_yolov7'],
+            )
+            onnx_model.graph.node.append(sigmoid)
 
         onnx.checker.check_model(onnx_model)  # check onnx model
 
@@ -125,7 +133,7 @@ class YoloV6Exporter:
         if self.f_simplified is None:
             self.export_onnx()
         
-        output_list = [f"output{i+1}_yolov6" for i in range(self.num_branches)]
+        output_list = [f"output{i+1}_yolov7" for i in range(self.num_branches)]
         output_list = ",".join(output_list)
 
         # export to OpenVINO and prune the model in the process
@@ -179,17 +187,27 @@ class YoloV6Exporter:
         content = json.load(f)
 
         # generate anchors and sides
-        anchors, masks = [], {}
+        anchors, sides = [], []
+        m = self.model.module.model[-1] if hasattr(self.model, 'module') else self.model.model[-1]
+        for i in range(self.num_branches):
+            sides.append(m.anchor_grid[i].size()[3])
+            for j in range(m.anchor_grid[i].size()[1]):
+                anchors.extend(m.anchor_grid[i][0, j, 0, 0].numpy())
+        anchors = [float(x) for x in anchors]
+        #sides.sort()
 
-        nc = self.model.detect.nc
+        # generate masks
+        masks = dict()
+        #for i, num in enumerate(sides[::-1]):
+        for i, num in enumerate(sides):
+            masks[f"side{num}"] = list(range(i*3, i*3+3))
 
         # set parameters
         content["nn_config"]["input_size"] = "x".join([str(x) for x in self.imgsz])
-        content["nn_config"]["NN_specific_metadata"]["classes"] = nc
+        content["nn_config"]["NN_specific_metadata"]["classes"] = self.model.nc
         content["nn_config"]["NN_specific_metadata"]["anchors"] = anchors
         content["nn_config"]["NN_specific_metadata"]["anchor_masks"] = masks
-        # use COCO labels if 80 classes, else use a placeholder
-        content["mappings"]["labels"] = content["mappings"]["labels"] if nc == 80 else [f"Class_{i}" for i in range(nc)]
+        content["mappings"]["labels"] = self.model.names
 
         # save json
         f_json = (self.conv_path / f"{self.model_name}.json").resolve()

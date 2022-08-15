@@ -4,3 +4,6 @@
 [submodule "YOLOv6"]
     path = yolo/YOLOv6
     url = https://github.com/meituan/YOLOv6
+[submodule "yolov7"]
+    path = yolo/yolov7
+    url = https://github.com/WongKinYiu/yolov7
