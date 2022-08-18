@@ -1,8 +1,8 @@
 import sys
-#sys.path.append("yolov7")
-#sys.path.append("./yolo/yolov7")
+
+from yolo.yolov5.utils.downloads import attempt_download
+sys.path.append("./yolo/yolov7")
 #sys.path.append("/home/matija/Luxonis/model-export/yolo/yolov7/utils")
-print(sys.path)
 
 import torch
 import json
@@ -22,6 +22,7 @@ from zipfile import ZipFile
 import os
 from pathlib import Path
 
+sys.path.remove("./yolo/yolov7")
 
 DIR_TMP = "./tmp"
 

@@ -1,5 +1,4 @@
 import sys
-sys.path.append("yolov5")
 sys.path.append("./yolo/yolov5")
 
 from pathlib import Path
@@ -25,6 +24,8 @@ from zipfile import ZipFile
 import os
 from pathlib import Path
 
+sys.path.remove("/app/yolo/yolov5")
+sys.path.remove("./yolo/yolov5")
 
 DIR_TMP = "./tmp"
 
@@ -179,7 +180,6 @@ class YoloV5Exporter:
         )
 
         self.f_blob = blob_path
-
         return blob_path
 
     def export_json(self):

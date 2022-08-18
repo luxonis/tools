@@ -1,6 +1,5 @@
 import sys
-#sys.path.append("YOLOv6")
-#sys.path.append("./yolo/YOLOv6")
+sys.path.append("./yolo/YOLOv6")
 
 import torch
 import json
@@ -19,6 +18,7 @@ from zipfile import ZipFile
 import os
 from pathlib import Path
 
+sys.path.remove('./yolo/YOLOv6')
 
 DIR_TMP = "./tmp"
 
