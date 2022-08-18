@@ -72,7 +72,7 @@ async def upload_file(request):
     conversions[conv_id] = "initialized"
     exporter.export_onnx()
     conversions[conv_id] = "onnx"
-    exporter.export_openvino()
+    exporter.export_openvino(version)
     conversions[conv_id] = "openvino"
     exporter.export_blob()
     conversions[conv_id] = "blob"
