@@ -24,7 +24,7 @@ class YoloV5Exporter(Exporter):
 
         # code based on export.py from YoloV5 repository
         # load the model
-        model = attempt_load(self.weights_path.resolve(), map_location=torch.device('cpu'))  # load FP32 model
+        model = attempt_load(self.weights_path.resolve(), device=torch.device('cpu'))  # load FP32 model
 
         # check num classes and labels
         assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
