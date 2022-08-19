@@ -14,7 +14,7 @@ class Exporter:
         self.conv_path = conv_path
         self.weights_path = self.conv_path / weights_filename
         self.imgsz = imgsz
-        self.model_name = "result"
+        self.model_name = weights_filename.split(".")[0] #"result"
         self.conv_id = conv_id
 
         # set up file paths

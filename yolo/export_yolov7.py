@@ -89,7 +89,7 @@ class YoloV7Exporter(Exporter):
         anchors, sides = [], []
         m = self.model.module.model[-1] if hasattr(self.model, 'module') else self.model.model[-1]
         for i in range(self.num_branches):
-            sides.append(m.anchor_grid[i].size()[3])
+            sides.append(int(self.imgsz[0] // m.stride[i]))
             for j in range(m.anchor_grid[i].size()[1]):
                 anchors.extend(m.anchor_grid[i][0, j, 0, 0].numpy())
         anchors = [float(x) for x in anchors]
