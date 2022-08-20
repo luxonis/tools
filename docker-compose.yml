@@ -5,6 +5,10 @@ services:
     build: .
     ports:
       - 8000:8000
+  yolov7:
+    build: ./yolov7
+    ports:
+      - 8001:8001
   nginx:
     build: ./nginx
     ports:
@@ -12,6 +16,7 @@ services:
       - 443:443
     depends_on:
       - api
+      - yolov7
     volumes:
       - ./log:/log:z
       - /etc/letsencrypt/live/tools.luxonis.com/privkey.pem:/ssl/key.pem

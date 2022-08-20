@@ -7,8 +7,6 @@ from yolov6.utils.checkpoint import load_checkpoint
 import onnx
 from exporter import Exporter
 
-sys.path.remove('./yolo/YOLOv6')
-
 DIR_TMP = "./tmp"
 
 class YoloV6Exporter(Exporter):

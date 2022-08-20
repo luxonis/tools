@@ -1,11 +1,14 @@
 import shutil
-import time
+import sys
 from multiprocessing import Manager
 from pathlib import Path
 
 from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
+
+from yolo.export_yolov5 import YoloV5Exporter
+from yolo.export_yolov6 import YoloV6Exporter
 
 import os
 import aiofiles
@@ -57,15 +60,14 @@ async def upload_file(request):
     
     # load exporter and do conversion process
     conversions[conv_id] = "read"
+    try:
+        sys.path.remove("/app/yolo/yolov5")
+    except:
+        pass
     if version == "v5":
-        from yolo.export_yolov5 import YoloV5Exporter
         exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
     elif version == "v6":
-        from yolo.export_yolov6 import YoloV6Exporter
         exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
-    elif version == "v7":
-        from yolo.export_yolov7 import YoloV7Exporter
-        exporter = YoloV7Exporter(conv_path, filename, input_shape, conv_id)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     
@@ -80,13 +82,6 @@ async def upload_file(request):
     conversions[conv_id] = "json"
     zip_file = exporter.make_zip()
     conversions[conv_id] = "zip"
-
-    if version == "v5":
-        del YoloV5Exporter
-    elif version == "v6":
-        del YoloV6Exporter
-    else:
-        del YoloV7Exporter
 
     return await response.file(
         location=zip_file.resolve(),

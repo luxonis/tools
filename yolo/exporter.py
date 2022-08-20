@@ -77,10 +77,8 @@ class Exporter:
         return self.f_xml, self.f_mapping, self.f_bin
     
     def export_blob(self):
-
         if self.f_xml is None or self.f_bin is None:
             self.export_openvino()
-        
         # export blob from generate bin and xml
         blob_path = blobconverter.from_openvino(
             xml=str(self.f_xml.resolve()),#as_posix(),
@@ -91,7 +89,6 @@ class Exporter:
             use_cache=False,
             output_dir=self.conv_path.resolve()
         )
-
         self.f_blob = blob_path
 
         return blob_path

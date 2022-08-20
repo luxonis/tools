@@ -10,9 +10,6 @@ import torch.nn as nn
 import onnx
 from exporter import Exporter
 
-sys.path.remove("/app/yolo/yolov5")
-sys.path.remove("./yolo/yolov5")
-
 DIR_TMP = "./tmp"
 
 class YoloV5Exporter(Exporter):
