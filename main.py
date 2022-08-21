@@ -1,4 +1,5 @@
 import shutil
+import sys
 from multiprocessing import Manager
 from pathlib import Path
 
@@ -8,8 +9,6 @@ from sanic.log import logger
 
 from yolo.export_yolov5 import YoloV5Exporter
 from yolo.export_yolov6 import YoloV6Exporter
-#from yolo.export_yolov7 import YoloV7Exporter
-
 
 import os
 import aiofiles
@@ -58,21 +57,24 @@ async def upload_file(request):
         await f.write(request.files["file"][0].body)
 
     version = request.form["version"][0]
-
+    
     # load exporter and do conversion process
     conversions[conv_id] = "read"
+    try:
+        sys.path.remove("/app/yolo/yolov5")
+    except:
+        pass
     if version == "v5":
         exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
     elif version == "v6":
         exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
-    #elif version == "v7":
-    #    exporter = YoloV7Exporter(conv_path, filename, input_shape, conv_id)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
+    
     conversions[conv_id] = "initialized"
     exporter.export_onnx()
     conversions[conv_id] = "onnx"
-    exporter.export_openvino()
+    exporter.export_openvino(version)
     conversions[conv_id] = "openvino"
     exporter.export_blob()
     conversions[conv_id] = "blob"

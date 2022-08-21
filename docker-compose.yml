@@ -3,8 +3,14 @@ version: '2'
 services:
   api:
     build: .
+    image: ghcr.io/luxonis/tools_api:latest
     ports:
       - 8000:8000
+  yolov7:
+    build: ./yolov7
+    image: ghcr.io/luxonis/tools_yolov7:latest 
+    ports:
+      - 8001:8001
   nginx:
     build: ./nginx
     ports:
@@ -12,6 +18,7 @@ services:
       - 443:443
     depends_on:
       - api
+      - yolov7
     volumes:
       - ./log:/log:z
       - /etc/letsencrypt/live/tools.luxonis.com/privkey.pem:/ssl/key.pem

@@ -14,14 +14,24 @@ export const upload = createAsyncThunk(
     }
     console.log(act)
     formData.append("file", act)
-
-    const response = await request(POST, `/upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      timeout: 1500000,
-      responseType: 'arraybuffer',
-    })
+    var response;
+    if (config['version'] == 'v7') {
+      response = await request(POST, `/yolov7/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 1500000,
+        responseType: 'arraybuffer',
+      })
+    } else {
+      response = await request(POST, `/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 1500000,
+        responseType: 'arraybuffer',
+      })
+    }
     saveAs(new Blob([response.data]), 'result.zip')
   }
 )
@@ -31,7 +41,13 @@ export const fetchProgress = createAsyncThunk(
   async (act, thunk) => {
     const id = thunk.getState().app.config.id
     const inProgress = thunk.getState().app.inProgress
-    const response = await request(GET, `/progress/${id}`);
+    const config = thunk.getState().app.config
+    var response;
+    if (config['version'] == 'v7') {
+      response = await request(GET, `/yolov7/progress/${id}`);
+    } else {
+      response = await request(GET, `/progress/${id}`);
+    }
     const progress = response.data.progress || "unknown"
     thunk.dispatch(updateProgress(progress))
     if(progress !== "zip" && inProgress) {
