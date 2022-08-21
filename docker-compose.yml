@@ -3,10 +3,12 @@ version: '2'
 services:
   api:
     build: .
+    image: ghcr.io/slavivo/tools_api:latest
     ports:
       - 8000:8000
   yolov7:
     build: ./yolov7
+    image: ghcr.io/slavivo/tools_yolov7:latest 
     ports:
       - 8001:8001
   nginx:
