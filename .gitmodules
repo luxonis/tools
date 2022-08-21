@@ -6,6 +6,6 @@
     url = https://github.com/meituan/YOLOv6
     branch = main
 [submodule "yolov7"]
-    path = yolo/yolov7
+    path = yolov7/yolo/yolov7
     url = https://github.com/WongKinYiu/yolov7
     branch = main
