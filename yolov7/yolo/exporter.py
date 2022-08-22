@@ -109,7 +109,7 @@ class Exporter:
             # use COCO labels if 80 classes, else use a placeholder
             content["mappings"]["labels"] = content["mappings"]["labels"] if nc == 80 else names
         else:
-            content["mappings"]["labels"] = self.model.names
+            content["mappings"]["labels"] = self.model.names if isinstance(self.model.names, list) else list(self.model.names.values())
 
         # save json
         f_json = (self.conv_path / f"{self.model_name}.json").resolve()

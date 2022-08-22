@@ -6,6 +6,7 @@ import subprocess
 import blobconverter
 from zipfile import ZipFile
 from pathlib import Path
+import logging
 
 class Exporter:
     def __init__(self, conv_path, weights_filename, imgsz, conv_id):
@@ -89,8 +90,9 @@ class Exporter:
             use_cache=False,
             output_dir=self.conv_path.resolve()
         )
+        
         self.f_blob = blob_path
-
+        logging.warning('Im here!!!!')
         return blob_path
 
     def write_json(self, anchors, masks, nc = None, names = None):
@@ -109,7 +111,7 @@ class Exporter:
             # use COCO labels if 80 classes, else use a placeholder
             content["mappings"]["labels"] = content["mappings"]["labels"] if nc == 80 else names
         else:
-            content["mappings"]["labels"] = self.model.names
+            content["mappings"]["labels"] = self.model.names if isinstance(self.model.names, list) else list(self.model.names.values())
 
         # save json
         f_json = (self.conv_path / f"{self.model_name}.json").resolve()
