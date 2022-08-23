@@ -50,7 +50,7 @@ function App() {
               <div className="row g-0">
                 <div className="col-lg-6 d-flex align-items-center gradient-custom-2">
                   <div className="text-white px-3 py-4 p-md-5 mx-md-4">
-                    <h4 className="mb-4">Automatic Yolo export for OAK-D</h4>
+                    <h4 className="mb-4">Automatic Yolo export for OAKs</h4>
                     <p className="small mb-2">With the goal of simplifying the export process of the most popular object
                       detectors, we developed this tool. Simply upload the weights of the pre-trained model, and we'll
                       compile a blob and JSON configuration for you.</p>
