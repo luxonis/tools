@@ -6,7 +6,6 @@ import subprocess
 import blobconverter
 from zipfile import ZipFile
 from pathlib import Path
-import logging
 
 class Exporter:
     def __init__(self, conv_path, weights_filename, imgsz, conv_id):
@@ -92,7 +91,6 @@ class Exporter:
         )
         
         self.f_blob = blob_path
-        logging.warning('Im here!!!!')
         return blob_path
 
     def write_json(self, anchors, masks, nc = None, names = None):
@@ -100,6 +98,8 @@ class Exporter:
         f = open((Path(__file__).parent / "json" / "yolo.json").resolve())
         content = json.load(f)
 
+        content["model"]["xml"] = f"{self.model_name}.xml"
+        content["model"]["bin"] = f"{self.model_name}.bin"
         content["nn_config"]["input_size"] = "x".join([str(x) for x in self.imgsz])
         if nc:
             content["nn_config"]["NN_specific_metadata"]["classes"] = nc
@@ -112,6 +112,7 @@ class Exporter:
             content["mappings"]["labels"] = content["mappings"]["labels"] if nc == 80 else names
         else:
             content["mappings"]["labels"] = self.model.names if isinstance(self.model.names, list) else list(self.model.names.values())
+        content["version"] = 1
 
         # save json
         f_json = (self.conv_path / f"{self.model_name}.json").resolve()

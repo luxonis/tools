@@ -52,7 +52,7 @@ function App() {
                   <div className="text-white px-3 py-4 p-md-5 mx-md-4">
                     <h4 className="mb-4">Automatic Yolo export for OAKs</h4>
                     <p className="small mb-2">With the goal of simplifying the export process of the most popular object
-                      detectors, we developed this tool. Simply upload the weights of the pre-trained model, and we'll
+                      detectors, we developed this tool. Simply upload the weights of the pre-trained model (.pt file), and we'll
                       compile a blob and JSON configuration for you.</p>
                     <p className="small mb-2">Run your object detector on our devices by using the compiled blob and
                       generated JSON file at</p>
@@ -89,8 +89,8 @@ function App() {
                           <option value="v7">YoloV7 (detection only)</option>
                         </select>
                       </div>
-                      <div className="mb-3">
-                        <label htmlFor="file" className="form-label">File</label>
+                      <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file).">
+                        <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="file" id="file" name="file" onChange={e => setFile(e.target.files[0])}/>
                       </div>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Integer for square shape, or width and height separated by space. Must be divisible by 32.">

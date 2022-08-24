@@ -1,4 +1,9 @@
 {
+    "model":
+    {
+        "xml": "custom_model_name.xml",
+        "bin": "custom_model_name.bin"
+    },
     "nn_config":
     {
         "output_format" : "detection",
@@ -99,5 +104,6 @@
             "hair drier",
             "toothbrush"
         ]
-    }
+    },
+    "version": 1
 }
