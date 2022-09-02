@@ -15,6 +15,9 @@ export const upload = createAsyncThunk(
     if (!act["name"].endsWith(".pt")) {
       throw Error("File does not end with .pt");
     }
+    if (!(/^[a-z0-9]+$/i.test(act["name"].slice(0, -3)))) {
+      throw Error("File is not alphanumerical");
+    }
     const shape = config['inputshape'].split(" ");
     shape.forEach((n, i) => {
       if (parseInt(n) % 32 !== 0 || i > 1) {
