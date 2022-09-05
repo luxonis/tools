@@ -1,6 +1,5 @@
 import shutil
 import sys
-import re
 from multiprocessing import Manager
 from pathlib import Path
 
@@ -40,7 +39,7 @@ async def upload_file(request):
     else:
         input_shape = int(imgsz)
     
-    filename = re.sub(r"[\[{\}]]",'', request.files["file"][0].name)
+    filename = request.files["file"][0].name
 
     conv_path = app.config.workdir / conv_id
     conv_path.mkdir(exist_ok=True)

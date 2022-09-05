@@ -1,6 +1,6 @@
 import {configureStore, createSlice, createAsyncThunk} from '@reduxjs/toolkit'
 import request, {GET, POST} from "./request";
-import _ from 'lodash';
+import _, { parseInt } from 'lodash';
 import {v4 as uuidv4} from 'uuid';
 import { saveAs } from 'file-saver';
 
@@ -12,7 +12,19 @@ export const upload = createAsyncThunk(
     for (const key in config) {
       formData.append(key, config[key]);
     }
-    console.log(act)
+    if (!act["name"].endsWith(".pt")) {
+      throw Error("File does not end with .pt");
+    }
+    if (!(/^[a-z0-9]+$/i.test(act["name"].slice(0, -3)))) {
+      throw Error("Filename is not alphanumerical");
+    }
+    const shape = config['inputshape'].split(" ");
+    shape.forEach((n, i) => {
+      if (parseInt(n) % 32 !== 0 || i > 1) {
+        throw Error("Invalid input shape");
+      }
+    });
+    console.log(config)
     formData.append("file", act)
     var response;
     if (config['version'] == 'v7') {
