@@ -89,7 +89,7 @@ function App() {
                           <option value="v7">YoloV7 (detection only)</option>
                         </select>
                       </div>
-                      <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file).">
+                      <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file), size needs to be smaller than 100Mb.">
                         <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="file" id="file" name="file" onChange={e => setFile(e.target.files[0])}/>
                       </div>
