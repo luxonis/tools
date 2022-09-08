@@ -12,6 +12,10 @@ export const upload = createAsyncThunk(
     for (const key in config) {
       formData.append(key, config[key]);
     }
+    console.log(act.size);
+    if (act.size > 99000000) {
+      throw Error("File size exceeds 100Mb");
+    }
     if (!act["name"].endsWith(".pt")) {
       throw Error("File does not end with .pt");
     }
