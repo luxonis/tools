@@ -12,7 +12,6 @@ export const upload = createAsyncThunk(
     for (const key in config) {
       formData.append(key, config[key]);
     }
-    console.log(act.size);
     if (act.size > 99000000) {
       throw Error("File size exceeds 100Mb");
     }
