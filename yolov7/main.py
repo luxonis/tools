@@ -39,7 +39,7 @@ async def upload_file(request):
     else:
         input_shape = int(imgsz)
     
-    filename = request.files["file"][0].name
+    filename = request.files["file"][0].name.lower()
 
     conv_path = app.config.workdir / conv_id
     conv_path.mkdir(exist_ok=True)
