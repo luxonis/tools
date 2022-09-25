@@ -85,7 +85,8 @@ function App() {
                         <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"
                                 onChange={e => update({version: e.target.value})}>
                           <option value="v5">YoloV5</option>
-                          <option value="v6">YoloV6</option>
+                          <option value="v6_1.0">YoloV6 (release 1.0)</option>
+                          <option value="v6_2.0">YoloV6 (release 2.0)</option>
                           <option value="v7">YoloV7 (detection only)</option>
                         </select>
                       </div>

@@ -8,7 +8,8 @@ from sanic.config import Config
 from sanic.log import logger
 
 from yolo.export_yolov5 import YoloV5Exporter
-from yolo.export_yolov6 import YoloV6Exporter
+# from yolo.export_yolov6 import YoloV6Exporter
+
 
 import os
 import aiofiles
@@ -66,8 +67,34 @@ async def upload_file(request):
         pass
     if version == "v5":
         exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
-    elif version == "v6":
-        exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
+    # elif version == "v6":
+    #     try:
+    #         exporter = YoloV6R1Exporter(conv_path, filename, input_shape, conv_id)
+    #     except:
+    #         from yolo.export_yolov6_r2 import YoloV6R2Exporter
+            
+    #         exporter = YoloV6R2Exporter(conv_path, filename, input_shape, conv_id)
+    elif version == "v6_1.0":
+        try:
+            # sys.path.remove("./yolo/YOLOv6R2")
+            sys.path.remove("./yolo/newer/YOLOv6R2")
+            sys.path.append("./yolo/YOLOv6R1")
+            # sys.path.append("./yolo/newer/YOLOv6R2/yolov6")
+        except:
+            pass
+        from yolo.export_yolov6_r1 import YoloV6R1Exporter
+        version = "v6"
+        exporter = YoloV6R1Exporter(conv_path, filename, input_shape, conv_id)
+    elif version == "v6_2.0":
+        try:
+            sys.path.remove("./yolo/YOLOv6R1")
+            sys.path.append("./yolo/newer/YOLOv6R2")
+            # sys.path.remove("./yolo/newer/YOLOv6R2/yolov6")
+        except:
+            pass
+        from yolo.export_yolov6_r2 import YoloV6R2Exporter
+        version = "v6"
+        exporter = YoloV6R2Exporter(conv_path, filename, input_shape, conv_id)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     
