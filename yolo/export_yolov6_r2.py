@@ -30,34 +30,58 @@ import subprocess
 
 
 class YoloV6R2(nn.Module):
-    def __init__(self, weights):
+    def __init__(self, weights, input_shape):
         super().__init__()
         self.model = load_checkpoint(weights, map_location="cpu", inplace=True, fuse=True)  # load FP32 model
         self.model.eval()
         self.stride = self.model.stride
 
+        self.input_shape = input_shape
+        self.grids = []
+        self.total_shape = 0
+        self.channel_shapes = []
+        self.boundaries = []
+        if isinstance(self.input_shape, int):
+            for channel_shape in [self.input_shape//8, self.input_shape//16, self.input_shape//32]:
+                self.channel_shapes.append((channel_shape, channel_shape))
+                self.total_shape += channel_shape*channel_shape
+                self.boundaries.append(self.total_shape)
+                yv, xv = torch.meshgrid([torch.arange(channel_shape), torch.arange(channel_shape)])
+                self.grids.append(torch.stack((xv, yv), 2).view(1, channel_shape, channel_shape, 2).float())
+        elif isinstance(self.input_shape, list) and len(self.input_shape) == 2:
+            self.input_shape = np.array(self.input_shape)
+
+            for channel_shape_x, channel_shape_y in [self.input_shape//8, self.input_shape//16, self.input_shape//32]:
+                self.channel_shapes.append((channel_shape_y, channel_shape_x))
+                self.total_shape += channel_shape_x*channel_shape_y
+                self.boundaries.append(self.total_shape)
+                yv, xv = torch.meshgrid([torch.arange(channel_shape_y), torch.arange(channel_shape_x)])
+                self.grids.append(torch.stack((xv, yv), 2).view(1, channel_shape_y, channel_shape_x, 2).float())
+        
         for layer in self.model.modules():
             if isinstance(layer, RepVGGBlock):
                 layer.switch_to_deploy()
 
     def forward(self, im, val=False):
         y = self.model(im)[0]
-        if y.shape[0] == 8400:
+        if y.shape[0] == self.boundaries[2]:
             y = y.unsqueeze(0)
         if isinstance(y, np.ndarray):
             y = torch.tensor(y)
-        result1, result2, result3 = y[0, :6400].view((1, 80, 80, -1)), y[0, 6400:8000].view((1, 40, 40, -1)), y[0, 8000:].view((1, 20, 20, -1))
+        result1, result2, result3 = y[0, :self.boundaries[0]].view((1, *self.channel_shapes[0], -1)), y[0, self.boundaries[0]:self.boundaries[1]].view((1, *self.channel_shapes[1], -1)), y[0, self.boundaries[1]:].view((1, *self.channel_shapes[2], -1))
+        # result1, result2, result3 = y[0, :6400].view((1, 80, 80, -1)), y[0, 6400:8000].view((1, 40, 40, -1)), y[0, 8000:].view((1, 20, 20, -1))
         
-        def inverse_opperations(channel, stride): # , grid):
-            _, ny, nx, _ = channel.shape
-            yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
-            xy = (channel[..., 0:2]/stride) - torch.stack((xv, yv), 2).view(1, ny, nx, 2).float()
+        def inverse_opperations(channel, stride, grid):
+            # _, ny, nx, _ = channel.shape
+            # yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+            # xy = (channel[..., 0:2]/stride) - torch.stack((xv, yv), 2).view(1, ny, nx, 2).float()
+            xy = (channel[..., 0:2]/stride) - grid
             wh = torch.log(channel[..., 2:4]/stride)
             return torch.cat((xy, wh, channel[..., 4:]), -1)
         
-        output1 = inverse_opperations(result1, self.stride[0]) # , grids[0])
-        output2 = inverse_opperations(result2, self.stride[1]) # , grids[1])
-        output3 = inverse_opperations(result3, self.stride[2]) # , grids[2])
+        output1 = inverse_opperations(result1, self.stride[0], self.grids[0])
+        output2 = inverse_opperations(result2, self.stride[1], self.grids[1])
+        output3 = inverse_opperations(result3, self.stride[2], self.grids[2])
 
         return output1.permute(0, 3, 1, 2), output2.permute(0, 3, 1, 2), output3.permute(0, 3, 1, 2)
 
@@ -66,15 +90,15 @@ class YoloV6R2Exporter(Exporter):
 
     def __init__(self, conv_path, weights_filename, imgsz, conv_id):
         super().__init__(conv_path, weights_filename, imgsz, conv_id)
+        self.input_shape = imgsz
         self.load_model()
-    
 
     def load_model(self):
         # code based on export.py from YoloV5 repository
         # load the model
         #model = DetectBackend(str(self.weights_path.resolve()), device="cpu")
         # model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
-        model = YoloV6R2(weights=str(self.weights_path.resolve()))
+        model = YoloV6R2(weights=str(self.weights_path.resolve()), input_shape=self.input_shape)
         for layer in model.model.modules():
             #print(type(layer))
             if isinstance(layer, RepVGGBlock):
@@ -111,14 +135,13 @@ class YoloV6R2Exporter(Exporter):
         # check if the arhcitecture is correct
         model_onnx = onnx.load(self.f_onnx)  # load onnx model
         onnx.checker.check_model(model_onnx)  # check onnx model
-
         # simplify the moodel
         return onnxsim.simplify(model_onnx)
     
     def export_onnx(self):
         onnx_model, check = self.get_onnx()
         assert check, 'assert check failed'
-
+        
         onnx.checker.check_model(onnx_model)  # check onnx model
 
         # save the simplified model
