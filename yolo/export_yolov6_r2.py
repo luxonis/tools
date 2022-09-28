@@ -1,14 +1,14 @@
 import sys
 # sys.path.append("./yolo/")
 
-try:
-    sys.path.remove("./yolo/YOLOv6R1")
-    # sys.path.remove("./yolo/newer/YOLOv6R2/yolov6")
-except:
-    pass
+# try:
+#     sys.path.remove("./yolo/YOLOv6R1")
+#     # sys.path.remove("./yolo/newer/YOLOv6R2/yolov6")
+# except:
+#     pass
 
-sys.path.append("./yolo/newer/YOLOv6R2")
-# sys.path.append("./yolo/YOLOv6R2")
+# sys.path.append("./yolo/newer/YOLOv6R2")
+sys.path.append("./yolo/YOLOv6R2")
 # sys.path.append("./yolo/newer/YOLOv6R2/yolov6")
 
 import torch

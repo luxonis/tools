@@ -1,14 +1,5 @@
 import sys
-
-try:
-    # sys.path.remove("./yolo/YOLOv6R2")
-    sys.path.remove("./yolo/newer/YOLOv6R2")
-    # sys.path.append("./yolo/newer/YOLOv6R2/yolov6")
-except:
-    pass
-
 sys.path.append("./yolo/YOLOv6R1")
-# sys.path.append("./yolo/YOLOv6R1/yolov6")
 
 import torch
 from yolov6.layers.common import RepVGGBlock
@@ -36,9 +27,6 @@ class YoloV6R1Exporter(Exporter):
                 layer.switch_to_deploy()
 
         self.num_branches = len(model.detect.grid)
-
-        # if not hasattr(model.detect, 'obj_preds'):
-        #     raise ValueError('Model is a V2.')
 
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32
