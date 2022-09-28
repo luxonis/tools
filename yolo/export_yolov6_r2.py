@@ -94,13 +94,9 @@ class YoloV6R2Exporter(Exporter):
         self.load_model()
 
     def load_model(self):
-        # code based on export.py from YoloV5 repository
         # load the model
-        #model = DetectBackend(str(self.weights_path.resolve()), device="cpu")
-        # model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
         model = YoloV6R2(weights=str(self.weights_path.resolve()), input_shape=self.input_shape)
         for layer in model.model.modules():
-            #print(type(layer))
             if isinstance(layer, RepVGGBlock):
                 layer.switch_to_deploy()
 
@@ -154,17 +150,13 @@ class YoloV6R2Exporter(Exporter):
         if self.f_simplified is None:
             self.export_onnx()
         
-        # output_list = [f"output{i+1}_yolo{version}" for i in range(self.num_branches)]
-        # output_list = ",".join(output_list)
-
         # export to OpenVINO and prune the model in the process
         cmd = f"mo --input_model '{self.f_simplified}' " \
         f"--output_dir '{self.conv_path.resolve()}' " \
         f"--model_name '{self.model_name}' " \
         '--data_type FP16 ' \
         '--reverse_input_channel ' \
-        '--scale 255 ' # \
-        # f'--output "{output_list}"'
+        '--scale 255 '
 
         try:
             subprocess.check_output(cmd, shell=True)

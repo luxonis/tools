@@ -39,7 +39,6 @@ export const upload = createAsyncThunk(
         responseType: 'arraybuffer',
       })
     } else if (config['version'] == 'v6_1.0') {
-      // console.log('Ahoj')
       response = await request(POST, `/yolov6r1/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
