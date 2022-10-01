@@ -1,4 +1,6 @@
 import sys
+
+from yolo.detect_head import DetectV2
 # sys.path.append("./yolo/")
 
 # try:
@@ -29,61 +31,61 @@ import onnxsim
 import subprocess
 
 
-class YoloV6R2(nn.Module):
-    def __init__(self, weights, input_shape):
-        super().__init__()
-        self.model = load_checkpoint(weights, map_location="cpu", inplace=True, fuse=True)  # load FP32 model
-        self.model.eval()
-        self.stride = self.model.stride
+# class YoloV6R2(nn.Module):
+#     def __init__(self, weights, input_shape):
+#         super().__init__()
+#         self.model = load_checkpoint(weights, map_location="cpu", inplace=True, fuse=True)  # load FP32 model
+#         self.model.eval()
+#         self.stride = self.model.stride
 
-        self.input_shape = input_shape
-        self.grids = []
-        self.total_shape = 0
-        self.channel_shapes = []
-        self.boundaries = []
-        if isinstance(self.input_shape, int):
-            for channel_shape in [self.input_shape//8, self.input_shape//16, self.input_shape//32]:
-                self.channel_shapes.append((channel_shape, channel_shape))
-                self.total_shape += channel_shape*channel_shape
-                self.boundaries.append(self.total_shape)
-                yv, xv = torch.meshgrid([torch.arange(channel_shape), torch.arange(channel_shape)])
-                self.grids.append(torch.stack((xv, yv), 2).view(1, channel_shape, channel_shape, 2).float())
-        elif isinstance(self.input_shape, list) and len(self.input_shape) == 2:
-            self.input_shape = np.array(self.input_shape)
+#         self.input_shape = input_shape
+#         self.grids = []
+#         self.total_shape = 0
+#         self.channel_shapes = []
+#         self.boundaries = []
+#         if isinstance(self.input_shape, int):
+#             for channel_shape in [self.input_shape//8, self.input_shape//16, self.input_shape//32]:
+#                 self.channel_shapes.append((channel_shape, channel_shape))
+#                 self.total_shape += channel_shape*channel_shape
+#                 self.boundaries.append(self.total_shape)
+#                 yv, xv = torch.meshgrid([torch.arange(channel_shape), torch.arange(channel_shape)])
+#                 self.grids.append(torch.stack((xv, yv), 2).view(1, channel_shape, channel_shape, 2).float())
+#         elif isinstance(self.input_shape, list) and len(self.input_shape) == 2:
+#             self.input_shape = np.array(self.input_shape)
 
-            for channel_shape_x, channel_shape_y in [self.input_shape//8, self.input_shape//16, self.input_shape//32]:
-                self.channel_shapes.append((channel_shape_y, channel_shape_x))
-                self.total_shape += channel_shape_x*channel_shape_y
-                self.boundaries.append(self.total_shape)
-                yv, xv = torch.meshgrid([torch.arange(channel_shape_y), torch.arange(channel_shape_x)])
-                self.grids.append(torch.stack((xv, yv), 2).view(1, channel_shape_y, channel_shape_x, 2).float())
+#             for channel_shape_x, channel_shape_y in [self.input_shape//8, self.input_shape//16, self.input_shape//32]:
+#                 self.channel_shapes.append((channel_shape_y, channel_shape_x))
+#                 self.total_shape += channel_shape_x*channel_shape_y
+#                 self.boundaries.append(self.total_shape)
+#                 yv, xv = torch.meshgrid([torch.arange(channel_shape_y), torch.arange(channel_shape_x)])
+#                 self.grids.append(torch.stack((xv, yv), 2).view(1, channel_shape_y, channel_shape_x, 2).float())
         
-        for layer in self.model.modules():
-            if isinstance(layer, RepVGGBlock):
-                layer.switch_to_deploy()
+#         for layer in self.model.modules():
+#             if isinstance(layer, RepVGGBlock):
+#                 layer.switch_to_deploy()
 
-    def forward(self, im, val=False):
-        y = self.model(im)[0]
-        if y.shape[0] == self.boundaries[2]:
-            y = y.unsqueeze(0)
-        if isinstance(y, np.ndarray):
-            y = torch.tensor(y)
-        result1, result2, result3 = y[0, :self.boundaries[0]].view((1, *self.channel_shapes[0], -1)), y[0, self.boundaries[0]:self.boundaries[1]].view((1, *self.channel_shapes[1], -1)), y[0, self.boundaries[1]:].view((1, *self.channel_shapes[2], -1))
-        # result1, result2, result3 = y[0, :6400].view((1, 80, 80, -1)), y[0, 6400:8000].view((1, 40, 40, -1)), y[0, 8000:].view((1, 20, 20, -1))
+#     def forward(self, im, val=False):
+#         y = self.model(im)[0]
+#         if y.shape[0] == self.boundaries[2]:
+#             y = y.unsqueeze(0)
+#         if isinstance(y, np.ndarray):
+#             y = torch.tensor(y)
+#         result1, result2, result3 = y[0, :self.boundaries[0]].view((1, *self.channel_shapes[0], -1)), y[0, self.boundaries[0]:self.boundaries[1]].view((1, *self.channel_shapes[1], -1)), y[0, self.boundaries[1]:].view((1, *self.channel_shapes[2], -1))
+#         # result1, result2, result3 = y[0, :6400].view((1, 80, 80, -1)), y[0, 6400:8000].view((1, 40, 40, -1)), y[0, 8000:].view((1, 20, 20, -1))
         
-        def inverse_opperations(channel, stride, grid):
-            # _, ny, nx, _ = channel.shape
-            # yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
-            # xy = (channel[..., 0:2]/stride) - torch.stack((xv, yv), 2).view(1, ny, nx, 2).float()
-            xy = (channel[..., 0:2]/stride) - grid
-            wh = torch.log(channel[..., 2:4]/stride)
-            return torch.cat((xy, wh, channel[..., 4:]), -1)
+#         def inverse_opperations(channel, stride, grid):
+#             # _, ny, nx, _ = channel.shape
+#             # yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+#             # xy = (channel[..., 0:2]/stride) - torch.stack((xv, yv), 2).view(1, ny, nx, 2).float()
+#             xy = (channel[..., 0:2]/stride) - grid
+#             wh = torch.log(channel[..., 2:4]/stride)
+#             return torch.cat((xy, wh, channel[..., 4:]), -1)
         
-        output1 = inverse_opperations(result1, self.stride[0], self.grids[0])
-        output2 = inverse_opperations(result2, self.stride[1], self.grids[1])
-        output3 = inverse_opperations(result3, self.stride[2], self.grids[2])
+#         output1 = inverse_opperations(result1, self.stride[0], self.grids[0])
+#         output2 = inverse_opperations(result2, self.stride[1], self.grids[1])
+#         output3 = inverse_opperations(result3, self.stride[2], self.grids[2])
 
-        return output1.permute(0, 3, 1, 2), output2.permute(0, 3, 1, 2), output3.permute(0, 3, 1, 2)
+#         return output1.permute(0, 3, 1, 2), output2.permute(0, 3, 1, 2), output3.permute(0, 3, 1, 2)
 
 
 class YoloV6R2Exporter(Exporter):
@@ -95,12 +97,18 @@ class YoloV6R2Exporter(Exporter):
 
     def load_model(self):
         # load the model
-        model = YoloV6R2(weights=str(self.weights_path.resolve()), input_shape=self.input_shape)
-        for layer in model.model.modules():
+        # model = YoloV6R2(weights=str(self.weights_path.resolve()), input_shape=self.input_shape)
+        model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
+        print(model.detect.cls_convs[0].conv.weight[0, 0])
+        # print(model.detect.cls_convs[0].conv.weight.shape) # torch.Size([32, 32, 3, 3])
+        model.detect = DetectV2(model.detect)
+        print(model.detect.cls_convs[0].conv.weight[0, 0])
+        
+        for layer in model.modules():
             if isinstance(layer, RepVGGBlock):
                 layer.switch_to_deploy()
 
-        self.num_branches = len(model.model.detect.grid)          
+        self.num_branches = len(model.detect.grid)          
 
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32
@@ -175,7 +183,7 @@ class YoloV6R2Exporter(Exporter):
         # generate anchors and sides
         anchors, masks = [], {}
 
-        nc = self.model.model.detect.nc
+        nc = self.model.detect.nc
         names = [f"Class_{i}" for i in range(nc)]
 
         return self.write_json(anchors, masks, nc, names)
