@@ -2,11 +2,7 @@
     path = yolo/yolov5
     url = https://github.com/ultralytics/yolov5
 [submodule "YOLOv6"]
-    path = yolo/YOLOv6R2
-    url = https://github.com/meituan/YOLOv6
-    branch = main
-[submodule "YOLOv6"]
-    path = yolov6r1/yolo/YOLOv6R1
+    path = yolo/YOLOv6
     url = https://github.com/meituan/YOLOv6
     branch = main
 [submodule "yolov7"]

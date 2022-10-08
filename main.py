@@ -8,8 +8,8 @@ from sanic.config import Config
 from sanic.log import logger
 
 from yolo.export_yolov5 import YoloV5Exporter
-# from yolo.export_yolov6 import YoloV6Exporter
-from yolo.export_yolov6_r2 import YoloV6R2Exporter
+from yolo.export_yolov6 import YoloV6Exporter
+# from yolo.export_yolov6_r2 import YoloV6R2Exporter
 
 
 import os
@@ -68,9 +68,8 @@ async def upload_file(request):
         pass
     if version == "v5":
         exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
-    elif version == "v6_2.0":
-        version = "v6"
-        exporter = YoloV6R2Exporter(conv_path, filename, input_shape, conv_id)
+    elif version == "v6":
+        exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     
