@@ -9,6 +9,8 @@ from sanic.log import logger
 
 from yolo.export_yolov5 import YoloV5Exporter
 from yolo.export_yolov6 import YoloV6Exporter
+# from yolo.export_yolov6_r2 import YoloV6R2Exporter
+
 
 import os
 import aiofiles
