@@ -11,7 +11,7 @@ import numpy as np
 import onnxsim
 import subprocess
 
-from yolo.detect_head import DetectV2
+from yolo.detect_head import DetectV2, DetectV1
 
 DIR_TMP = "./tmp"
 R1_VERSION = 1
@@ -28,7 +28,6 @@ class YoloV6Exporter(Exporter):
         # code based on export.py from YoloV5 repository
         # load the model
         model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
-        self.selected_release = R1_VERSION
         
         for layer in model.modules():
             if isinstance(layer, RepVGGBlock):
@@ -37,6 +36,9 @@ class YoloV6Exporter(Exporter):
         if not hasattr(model.detect, 'obj_preds'):
             self.selected_release = R2_VERSION
             model.detect = DetectV2(model.detect)
+        else: 
+            self.selected_release = R1_VERSION
+            model.detect = DetectV1(model.detect)
         
         self.num_branches = len(model.detect.grid)
 
