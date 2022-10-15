@@ -73,11 +73,11 @@ services:
 
 **Note: It's better to create a copy of the `docker-compose.yml` file before rewriting it.**
 
-#### Step 3: Building
+### Step 3: Building
 ```sudo docker-compose build```
 
-#### Step 4: Running
+### Step 4: Running
 ```sudo docker-compose up```
 
-#### Step 5: Open browser
-```open browser at http://0.0.0.0/```
+### Step 5: Open browser
+```Open browser at http://0.0.0.0/```
