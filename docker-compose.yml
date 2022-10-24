@@ -6,11 +6,15 @@ services:
     image: ghcr.io/luxonis/tools_api:latest
     ports:
       - 8000:8000
+    environment:
+      SENTRY_TOKEN: ${SENTRY_TOKEN}
   yolov7:
     build: ./yolov7
     image: ghcr.io/luxonis/tools_yolov7:latest 
     ports:
       - 8001:8001
+    environment:
+      SENTRY_TOKEN: ${SENTRY_TOKEN}
   nginx:
     build: ./nginx
     ports:
