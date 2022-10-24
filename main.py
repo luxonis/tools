@@ -6,7 +6,7 @@ from pathlib import Path
 from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
-from sanic.exceptions import SanicException
+from sanic.exceptions import ServerError
 
 import sentry_sdk
 
@@ -74,13 +74,13 @@ async def upload_file(request):
         except Exception as e:
             print(e)
             sentry_sdk.capture_exception(e)
-            raise SanicException(message="Error while loading model", status_code=520)
+            raise ServerError(message="Error while loading model", status_code=520)
     elif version == "v6":
         try:
             exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            raise SanicException(message="Error while loading model", status_code=520)
+            raise ServerError(message="Error while loading model", status_code=520)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     
@@ -89,35 +89,35 @@ async def upload_file(request):
         exporter.export_onnx()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise SanicException(message="Error while converting to onnx", status_code=521)
+        raise ServerError(message="Error while converting to onnx", status_code=521)
 
     conversions[conv_id] = "onnx"
     try:
         exporter.export_openvino(version)
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise SanicException(message="Error while converting to openvino", status_code=522)
+        raise ServerError(message="Error while converting to openvino", status_code=522)
 
     conversions[conv_id] = "openvino"
     try:
         exporter.export_blob()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise SanicException(message="Error while converting to blob", status_code=523)
+        raise ServerError(message="Error while converting to blob", status_code=523)
 
     conversions[conv_id] = "blob"
     try:
         exporter.export_json()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise SanicException(message="Error while making json", status_code=524)
+        raise ServerError(message="Error while making json", status_code=524)
 
     conversions[conv_id] = "json"
     try:
         zip_file = exporter.make_zip()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise SanicException(message="Error while making zip", status_code=525)
+        raise ServerError(message="Error while making zip", status_code=525)
 
     conversions[conv_id] = "zip"
 
