@@ -6,7 +6,9 @@ from pathlib import Path
 from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
-from sanic.exceptions import ServerError 
+from sanic.exceptions import ServerError
+  
+import sentry_sdk
 
 from yolo.export_yolov5 import YoloV5Exporter
 from yolo.export_yolov6 import YoloV6Exporter
@@ -70,11 +72,13 @@ async def upload_file(request):
         try:
             exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
     elif version == "v6":
         try:
             exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
@@ -83,30 +87,35 @@ async def upload_file(request):
     try:
         exporter.export_onnx()
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         raise ServerError(message="Error while converting to onnx", status_code=521)
 
     conversions[conv_id] = "onnx"
     try:
         exporter.export_openvino(version)
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         raise ServerError(message="Error while converting to openvino", status_code=522)
 
     conversions[conv_id] = "openvino"
     try:
         exporter.export_blob()
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         raise ServerError(message="Error while converting to blob", status_code=523)
 
     conversions[conv_id] = "blob"
     try:
         exporter.export_json()
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         raise ServerError(message="Error while making json", status_code=524)
 
     conversions[conv_id] = "json"
     try:
         zip_file = exporter.make_zip()
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         raise ServerError(message="Error while making zip", status_code=525)
 
     conversions[conv_id] = "zip"
@@ -125,6 +134,13 @@ async def cleanup(request, response):
 
 if __name__ == '__main__':
     runtime = os.getenv("RUNTIME", "debug")
+    SENTRY_TOKEN = os.getenv("SENTRY_TOKEN")
+    logger.info(f"SENTRY_TOKEN: {SENTRY_TOKEN}")
+    if SENTRY_TOKEN is not None:
+        sentry_sdk.init(
+            dsn=SENTRY_TOKEN
+        )
+    
     if runtime == "prod":
         app.run(host="0.0.0.0", access_log=False, workers=8)
     else:
