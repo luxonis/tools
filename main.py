@@ -7,7 +7,7 @@ from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
 from sanic.exceptions import ServerError
-
+  
 import sentry_sdk
 
 from yolo.export_yolov5 import YoloV5Exporter

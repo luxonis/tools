@@ -48,7 +48,14 @@ export const upload = createAsyncThunk(
         })
       }}
     catch (error) {
-      let status = error.response.status;
+      let status;
+      if (error.response !== undefined) {
+        status = error.response.status;
+      } else {
+        status = 999;
+        console.log("Unexpected error status, error:");
+        console.log(JSON.stringify(error, null, 4));
+      }
       switch (status) {
         case 520:
           throw Error("Error while loading model");
