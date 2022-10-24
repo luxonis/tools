@@ -6,6 +6,7 @@ from pathlib import Path
 from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
+from sanic.exceptions import ServerError 
 
 from yolo.export_yolov7 import YoloV7Exporter
 
@@ -19,6 +20,7 @@ manager = Manager()
 conversions = manager.dict()
 app.config.workdir = Path(__file__).parent / "tmp"
 app.config.workdir.mkdir(exist_ok=True)
+app.config.REQUEST_MAX_SIZE = 300_000_000
 
 
 @app.get("/yolov7/progress/<key>")
@@ -55,21 +57,42 @@ async def upload_file(request):
     except:
         pass
     if version == "v7":
-        exporter = YoloV7Exporter(conv_path, filename, input_shape, conv_id)
+        try:
+            exporter = YoloV7Exporter(conv_path, filename, input_shape, conv_id)
+        except Exception as e:
+            raise ServerError(message="Error while loading model", status_code=520)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     
     conversions[conv_id] = "initialized"
-    exporter.export_onnx()
+    try:
+        exporter.export_onnx()
+    except Exception as e:
+        raise ServerError(message="Error while converting to onnx", status_code=521)
+
     conversions[conv_id] = "onnx"
-    exporter.export_openvino(version)
+    try:
+        exporter.export_openvino(version)
+    except Exception as e:
+        raise ServerError(message="Error while converting to openvino", status_code=522)
+
     conversions[conv_id] = "openvino"
-    exporter.export_blob()
+    try:
+        exporter.export_blob()
+    except Exception as e:
+        raise ServerError(message="Error while converting to blob", status_code=523)
+
     conversions[conv_id] = "blob"
-    exporter.export_json()
+    try:
+        exporter.export_json()
+    except Exception as e:
+        raise ServerError(message="Error while making json", status_code=524)
+
     conversions[conv_id] = "json"
-    zip_file = exporter.make_zip()
-    conversions[conv_id] = "zip"
+    try:
+        zip_file = exporter.make_zip()
+    except Exception as e:
+        raise ServerError(message="Error while making zip", status_code=525)
 
     return await response.file(
         location=zip_file.resolve(),

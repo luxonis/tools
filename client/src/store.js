@@ -12,8 +12,8 @@ export const upload = createAsyncThunk(
     for (const key in config) {
       formData.append(key, config[key]);
     }
-    if (act.size > 99000000) {
-      throw Error("File size exceeds 100Mb");
+    if (act.size > 299000000) {
+      throw Error("File size exceeds 300Mb");
     }
     if (!act["name"].endsWith(".pt")) {
       throw Error("File does not end with .pt");
@@ -27,25 +27,51 @@ export const upload = createAsyncThunk(
         throw Error("Invalid input shape");
       }
     });
-    console.log(config)
     formData.append("file", act)
     var response;
-    if (config['version'] == 'v7') {
-      response = await request(POST, `/yolov7/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        timeout: 1500000,
-        responseType: 'arraybuffer',
-      })
-    } else {
-      response = await request(POST, `/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        timeout: 1500000,
-        responseType: 'arraybuffer',
-      })
+    try {
+      if (config['version'] == 'v7') {
+        response = await request(POST, `/yolov7/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 1500000,
+          responseType: 'arraybuffer',
+        })
+      } else {
+        response = await request(POST, `/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 1500000,
+          responseType: 'arraybuffer',
+        })
+      }}
+    catch (error) {
+      let status;
+      if (error.response !== undefined) {
+        status = error.response.status;
+      } else {
+        status = 999;
+        console.log("Unexpected error status, error:");
+        console.log(JSON.stringify(error, null, 4));
+      }
+      switch (status) {
+        case 520:
+          throw Error("Error while loading model");
+        case 521:
+          throw Error("Error while converting to onnx");
+        case 522:
+          throw Error("Error while converting to openvino");
+        case 523:
+          throw Error("Error while converting to blob");
+        case 524:
+          throw Error("Error while makingjson");
+        case 525:
+          throw Error("Error while making zip");
+        default:
+          throw Error(error);
+      }
     }
     saveAs(new Blob([response.data]), 'result.zip')
   }
