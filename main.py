@@ -140,8 +140,7 @@ if __name__ == '__main__':
     if SENTRY_TOKEN is not None:
         # print(SENTRY_TOKEN)
         sentry_sdk.init(
-            dsn=SENTRY_TOKEN,
-            environment="local-dev"
+            dsn=SENTRY_TOKEN
         )
     
     if runtime == "prod":

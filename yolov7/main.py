@@ -120,8 +120,7 @@ if __name__ == '__main__':
     logger.info(f"SENTRY_TOKEN: {SENTRY_TOKEN}")
     if SENTRY_TOKEN is not None:
         sentry_sdk.init(
-            dsn=SENTRY_TOKEN,
-            environment="local-dev"
+            dsn=SENTRY_TOKEN
         )
     
     if runtime == "prod":
