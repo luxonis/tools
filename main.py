@@ -72,7 +72,6 @@ async def upload_file(request):
         try:
             exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
         except Exception as e:
-            print(e)
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
     elif version == "v6":
@@ -138,7 +137,6 @@ if __name__ == '__main__':
     SENTRY_TOKEN = os.getenv("SENTRY_TOKEN")
     logger.info(f"SENTRY_TOKEN: {SENTRY_TOKEN}")
     if SENTRY_TOKEN is not None:
-        # print(SENTRY_TOKEN)
         sentry_sdk.init(
             dsn=SENTRY_TOKEN
         )
