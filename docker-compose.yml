@@ -3,18 +3,18 @@ version: '2'
 services:
   api:
     build: .
-    image: ghcr.io/luxonis/tools_api:latest
     ports:
       - 8000:8000
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
+    restart: always
   yolov7:
     build: ./yolov7
-    image: ghcr.io/luxonis/tools_yolov7:latest 
     ports:
       - 8001:8001
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
+    restart: always
   nginx:
     build: ./nginx
     ports:
@@ -23,6 +23,7 @@ services:
     depends_on:
       - api
       - yolov7
+    restart: always
     volumes:
       - ./log:/log:z
       - /etc/letsencrypt/live/tools.luxonis.com/privkey.pem:/ssl/key.pem
