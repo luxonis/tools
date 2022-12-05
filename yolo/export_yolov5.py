@@ -5,6 +5,7 @@ import torch
 from yolov5.models.experimental import attempt_load
 from yolov5.models.common import Conv
 from yolov5.models.yolo import Detect
+from yolov5.utils.activations import SiLU
 
 import torch.nn as nn
 import onnx
@@ -38,6 +39,8 @@ class YoloV5Exporter(Exporter):
         if len(self.imgsz) != 2:
             raise ValueError(f"Image size must be of length 1 or 2.")
         
+        inplace = True
+
         model.eval()
         for k, m in model.named_modules():
             if isinstance(m, Conv):  # assign export-friendly activations
