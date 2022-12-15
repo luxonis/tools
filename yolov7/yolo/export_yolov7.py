@@ -23,7 +23,7 @@ class YoloV7Exporter(Exporter):
 
         # code based on export.py from YoloV5 repository
         # load the model
-        model = attempt_load(self.weights_path.resolve(), map_location=torch.device('cpu')).fuse().eval()
+        model = attempt_load(self.weights_path.resolve(), map_location=torch.device('cpu'))
         # check num classes and labels
         assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
 
@@ -40,6 +40,7 @@ class YoloV7Exporter(Exporter):
             raise ValueError(f"Image size must be of length 1 or 2.")
         
         model.eval()
+        '''
         for k, m in model.named_modules():
             if isinstance(m, Conv):  # assign export-friendly activations
                 if isinstance(m.act, nn.SiLU):
@@ -49,6 +50,7 @@ class YoloV7Exporter(Exporter):
                 m.onnx_dynamic = False
                 if hasattr(m, 'forward_export'):
                     m.forward = m.forward_export  # assign custom forward (optional)
+        '''
 
         self.model = model
 
