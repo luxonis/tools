@@ -10,6 +10,8 @@ from yolov5.utils.activations import SiLU
 import torch.nn as nn
 import onnx
 from exporter import Exporter
+import sparseml
+
 
 DIR_TMP = "./tmp"
 
