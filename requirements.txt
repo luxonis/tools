@@ -1,9 +1,10 @@
 sanic==21.12.1
-torch==1.10.2
+# torch==1.10.2
+# torchvision==0.11.3
+torch==1.9.1
+torchvision==0.10.1
 
-torchvision==0.11.3
-
-onnx==1.11.0
+onnx==1.10.1
 onnx-simplifier==0.3.6
 openvino==2021.4.2
 openvino-dev==2021.4.2
@@ -17,6 +18,8 @@ requests>=2.23.0
 scipy>=1.4.1
 tqdm>=4.41.0
 
+IPython
+
 tensorboard>=2.4.1
 
 pandas>=1.1.4
@@ -25,3 +28,5 @@ seaborn>=0.11.0
 sentry-sdk # logging
 
 thop  # FLOPs computation
+
+sparseml==1.2.0
