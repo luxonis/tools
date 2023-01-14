@@ -18,7 +18,8 @@ class DetectV2(nn.Module):
         self.nc = old_detect.nc  # number of classes
         self.no = old_detect.no  # number of outputs per anchor
         self.nl = old_detect.nl  # number of detection layers
-        self.anchors = old_detect.anchors
+        if hasattr(old_detect, 'anchors'):
+            self.anchors = old_detect.anchors 
         self.grid = old_detect.grid # [torch.zeros(1)] * self.nl
         self.prior_prob = 1e-2
         self.inplace = old_detect.inplace
