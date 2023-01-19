@@ -3,6 +3,7 @@ sys.path.append("./yolo/YOLOv6")
 
 import torch
 from yolov6.layers.common import RepVGGBlock
+from yolov6.models.efficientrep import EfficientRep, EfficientRep6, CSPBepBackbone, CSPBepBackbone_P6
 from yolov6.utils.checkpoint import load_checkpoint
 import onnx
 from exporter import Exporter
@@ -12,6 +13,8 @@ import onnxsim
 import subprocess
 
 from yolo.detect_head import DetectV2, DetectV1
+from yolo.backbones import EfficientRepV2, EfficientRep6V2, CSPBepBackboneV2, CSPBepBackbone_P6V2
+
 
 DIR_TMP = "./tmp"
 R1_VERSION = 1
@@ -32,6 +35,16 @@ class YoloV6Exporter(Exporter):
         for layer in model.modules():
             if isinstance(layer, RepVGGBlock):
                 layer.switch_to_deploy()
+
+        for n, module in model.named_children():
+            if isinstance(module, EfficientRep):
+                setattr(model, n, EfficientRepV2(module))
+            if isinstance(module, EfficientRep6):
+                setattr(model, n, EfficientRep6V2(module))
+            if isinstance(module, CSPBepBackbone):
+                setattr(model, n, CSPBepBackboneV2(module))
+            if isinstance(module, CSPBepBackbone_P6):
+                setattr(model, n, CSPBepBackbone_P6V2(module))
         
         if not hasattr(model.detect, 'obj_preds'):
             self.selected_release = R2_VERSION

@@ -57,7 +57,10 @@ class DetectV2(nn.Module):
                 reg_output = reg_output.reshape([-1, 4, h, w])
             
             cls_output = torch.sigmoid(cls_output)
-            conf, _ = cls_output.max(1, keepdim=True)
+            # conf, _ = cls_output.max(1, keepdim=True)
+            # conf = 1
+            # conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]))
+            conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
             output = torch.cat([reg_output, conf, cls_output], axis=1)
             outputs.append(output)
 

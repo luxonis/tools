@@ -57,6 +57,8 @@ export const upload = createAsyncThunk(
         console.log(JSON.stringify(error, null, 4));
       }
       switch (status) {
+        case 519:
+          throw Error("Error while loading model (This may be caused by trying to convert too old version of YoloV6 - release 1.0, if that is the case, we are working on that at the moment)");
         case 520:
           throw Error("Error while loading model");
         case 521:

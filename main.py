@@ -79,7 +79,7 @@ async def upload_file(request):
             exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            raise ServerError(message="Error while loading model", status_code=520)
+            raise ServerError(message="Error while loading model (This may be caused by trying to convert too old version of YoloV6 - release 1.0, if that is the case, we are working on that at the moment)", status_code=519)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     
