@@ -1,54 +1,16 @@
 from torch import nn
 
 
-class EfficientRepV2(nn.Module):
-    '''EfficientRep Backbone
-    EfficientRep is handcrafted by hardware-aware neural network design.
-    With rep-style struct, EfficientRep is friendly to high-computation hardware(e.g. GPU).
+class YoloV6BackBone(nn.Module):
     '''
-
-    def __init__(
-        self,
-        old_efficientrep
-    ):
-        super().__init__()
-
-        self.fuse_P2 = old_efficientrep.fuse_P2 if hasattr(old_efficientrep, 'fuse_P2') else False
-
-        self.stem = old_efficientrep.stem
-        self.ERBlock_2 = old_efficientrep.ERBlock_2
-        self.ERBlock_3 = old_efficientrep.ERBlock_3
-        self.ERBlock_4 = old_efficientrep.ERBlock_4
-        self.ERBlock_5 = old_efficientrep.ERBlock_5
-
-    def forward(self, x):
-
-        outputs = []
-        x = self.stem(x)
-        x = self.ERBlock_2(x)
-        if self.fuse_P2:
-            outputs.append(x)
-        x = self.ERBlock_3(x)
-        outputs.append(x)
-        x = self.ERBlock_4(x)
-        outputs.append(x)
-        x = self.ERBlock_5(x)
-        outputs.append(x)
-
-        return tuple(outputs)
-
-
-class EfficientRep6V2(nn.Module):
-    '''EfficientRep+P6 Backbone
-    EfficientRep is handcrafted by hardware-aware neural network design.
-    With rep-style struct, EfficientRep is friendly to high-computation hardware(e.g. GPU).
+    Backbone of YoloV6 model, it takes the model's original backbone and wraps it in this 
+    universal class. This was created for backwards compatibility with R2 models.
     '''
-
-    def __init__(
-        self,
-        old_layer
-    ):
+    def __init__(self, old_layer, uses_fuse_P2=True, uses_6_erblock=False):
         super().__init__()
+        
+        self.uses_fuse_P2 = uses_fuse_P2
+        self.uses_6_erblock = uses_6_erblock
 
         self.fuse_P2 = old_layer.fuse_P2 if hasattr(old_layer, 'fuse_P2') else False
 
@@ -57,14 +19,17 @@ class EfficientRep6V2(nn.Module):
         self.ERBlock_3 = old_layer.ERBlock_3
         self.ERBlock_4 = old_layer.ERBlock_4
         self.ERBlock_5 = old_layer.ERBlock_5
-        self.ERBlock_6 = old_layer.ERBlock_6
+        if uses_6_erblock:
+            self.ERBlock_6 = old_layer.ERBlock_6
 
     def forward(self, x):
 
         outputs = []
         x = self.stem(x)
         x = self.ERBlock_2(x)
-        if self.fuse_P2:
+        if self.uses_fuse_P2 and self.fuse_P2:
+            outputs.append(x)
+        elif not self.uses_fuse_P2:
             outputs.append(x)
         x = self.ERBlock_3(x)
         outputs.append(x)
@@ -72,82 +37,9 @@ class EfficientRep6V2(nn.Module):
         outputs.append(x)
         x = self.ERBlock_5(x)
         outputs.append(x)
-        x = self.ERBlock_6(x)
-        outputs.append(x)
-
-        return tuple(outputs)
-
-
-class CSPBepBackboneV2(nn.Module):
-    """
-    CSPBepBackbone module.
-    """
-
-    def __init__(
-        self,
-        old_layer
-    ):
-        super().__init__()
-
-        self.fuse_P2 = old_layer.fuse_P2 if hasattr(old_layer, 'fuse_P2') else False
-
-        self.stem = old_layer.stem
-        self.ERBlock_2 = old_layer.ERBlock_2
-        self.ERBlock_3 = old_layer.ERBlock_3
-        self.ERBlock_4 = old_layer.ERBlock_4
-        self.ERBlock_5 = old_layer.ERBlock_5
-
-    def forward(self, x):
-
-        outputs = []
-        x = self.stem(x)
-        x = self.ERBlock_2(x)
-        if self.fuse_P2:
+        if self.uses_6_erblock:
+            x = self.ERBlock_6(x)
             outputs.append(x)
-        x = self.ERBlock_3(x)
-        outputs.append(x)
-        x = self.ERBlock_4(x)
-        outputs.append(x)
-        x = self.ERBlock_5(x)
-        outputs.append(x)
 
         return tuple(outputs)
 
-
-class CSPBepBackbone_P6V2(nn.Module):
-    """
-    CSPBepBackbone+P6 module. 
-    """
-
-    def __init__(
-        self,
-        old_layer
-    ):
-        super().__init__()
-
-        self.fuse_P2 = old_layer.fuse_P2 if hasattr(old_layer, 'fuse_P2') else False
-
-        self.stem = old_layer.stem
-        self.ERBlock_2 = old_layer.ERBlock_2
-        self.ERBlock_3 = old_layer.ERBlock_3
-        self.ERBlock_4 = old_layer.ERBlock_4
-        self.ERBlock_5 = old_layer.ERBlock_5
-        self.ERBlock_6 = old_layer.ERBlock_6
-
-    def forward(self, x):
-
-        outputs = []
-        x = self.stem(x)
-        x = self.ERBlock_2(x)
-        outputs.append(x)
-        x = self.ERBlock_3(x)
-        outputs.append(x)
-        x = self.ERBlock_4(x)
-        outputs.append(x)
-        x = self.ERBlock_5(x)
-        outputs.append(x)
-        x = self.ERBlock_6(x)
-        outputs.append(x)
-
-        return tuple(outputs)
-    
