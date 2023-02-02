@@ -7,8 +7,8 @@ import sys
 sys.path.append("./yolo/YOLOv6") # R2")
 
 
-class DetectV2(nn.Module):
-    '''Efficient Decoupled Head
+class DetectV6R2(nn.Module):
+    '''Efficient Decoupled Head for YOLOv6 R2&R3
     With hardware-aware degisn, the decoupled head is optimized with
     hybridchannels methods.
     '''
@@ -64,8 +64,8 @@ class DetectV2(nn.Module):
         return outputs
 
 
-class DetectV1(nn.Module):
-    '''Efficient Decoupled Head
+class DetectV6R1(nn.Module):
+    '''Efficient Decoupled Head for YOLOv6 R1
     With hardware-aware degisn, the decoupled head is optimized with
     hybridchannels methods.
     '''
@@ -119,3 +119,58 @@ class DetectV1(nn.Module):
                 y = torch.cat((xy, wh, y[..., 4:]), -1)
             z.append(y.view(bs, -1, self.no))
         return torch.cat(z, 1)
+
+
+class DetectV8(nn.Module):
+    '''YOLOv8 Detect head for detection models'''
+    dynamic = False  # force grid reconstruction
+    export = False  # export mode
+    shape = None
+    anchors = torch.empty(0)  # init
+    strides = torch.empty(0)  # init
+
+    def __init__(self, old_detect):
+        super().__init__()
+        self.nc = old_detect.nc  # number of classes
+        self.nl = old_detect.nl  # number of detection layers
+        self.reg_max = old_detect.reg_max  # DFL channels (ch[0] // 16 to scale 4/8/12/16/20 for n/s/m/l/x)
+        self.no = old_detect.no  # number of outputs per anchor
+        self.stride = old_detect.stride  # strides computed during build
+
+        self.cv2 = old_detect.cv2
+        self.cv3 = old_detect.cv3
+        self.dfl = old_detect.dfl
+        self.f = old_detect.f
+        self.i = old_detect.i
+
+    def forward(self, x):
+        shape = x[0].shape  # BCHW
+        
+        for i in range(self.nl):
+            x[i] = torch.cat((self.cv2[i](x[i]), self.cv3[i](x[i])), 1)
+        
+        box, cls = torch.cat([xi.view(shape[0], self.no, -1) for xi in x], 2).split((self.reg_max * 4, self.nc), 1)
+        box = self.dfl(box)
+        cls_output = cls.sigmoid()
+        # Get the max
+        conf, _ = cls_output.max(1, keepdim=True)
+        # Concat
+        y = torch.cat([box, conf, cls_output], axis=1)
+        # Split to 3 channels
+        outputs = []
+        start, end = 0, 0
+        for i, xi in enumerate(x):
+          end += xi.shape[-2]*xi.shape[-1]
+          outputs.append(y[:, :, start:end].view(xi.shape[0], -1, xi.shape[-2], xi.shape[-1]))
+          start += xi.shape[-2]*xi.shape[-1]
+
+        return outputs
+
+    def bias_init(self):
+        # Initialize Detect() biases, WARNING: requires stride availability
+        m = self  # self.model[-1]  # Detect() module
+        
+        for a, b, s in zip(m.cv2, m.cv3, m.stride):  # from
+            a[-1].bias.data[:] = 1.0  # box
+            b[-1].bias.data[:m.nc] = math.log(5 / m.nc / (640 / s) ** 2)  # cls (.01 objects, 80 classes, 640 img)
+
