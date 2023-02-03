@@ -59,7 +59,7 @@ class YoloV8Exporter(Exporter):
                         training=torch.onnx.TrainingMode.EVAL,
                         do_constant_folding=True,
                         input_names=['images'],
-                        output_names=['output1_yolov8', 'output2_yolov8', 'output3_yolov8'],
+                        output_names=['output1_yolov6r2', 'output2_yolov6r2', 'output3_yolov6r2'],
                         dynamic_axes=None)
 
         # check if the arhcitecture is correct
@@ -75,6 +75,9 @@ class YoloV8Exporter(Exporter):
         self.f_simplified = (self.conv_path / f"{self.model_name}-simplified.onnx").resolve()
         onnx.save(onnx_model, self.f_simplified)
         return self.f_simplified
+
+    def export_openvino(self, version):
+        return super().export_openvino('v6r2')
 
     def export_json(self):
         # generate anchors and sides
