@@ -9,3 +9,6 @@
     path = yolov7/yolo/yolov7
     url = https://github.com/WongKinYiu/yolov7
     branch = main
+[submodule "yolo/ultralytics"]
+	path = yolo/ultralytics
+	url = https://github.com/ultralytics/ultralytics

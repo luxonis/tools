@@ -12,7 +12,7 @@ import numpy as np
 import onnxsim
 import subprocess
 
-from yolo.detect_head import DetectV2, DetectV1
+from yolo.detect_head import DetectV6R2, DetectV6R1
 from yolo.backbones import YoloV6BackBone
 
 
@@ -46,10 +46,10 @@ class YoloV6Exporter(Exporter):
         
         if not hasattr(model.detect, 'obj_preds'):
             self.selected_release = R2_VERSION
-            model.detect = DetectV2(model.detect)
+            model.detect = DetectV6R2(model.detect)
         else: 
             self.selected_release = R1_VERSION
-            model.detect = DetectV1(model.detect)
+            model.detect = DetectV6R1(model.detect)
         
         self.num_branches = len(model.detect.grid)
 

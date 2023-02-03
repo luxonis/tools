@@ -16,6 +16,8 @@ from yolo.export_yolov6 import YoloV6Exporter
 import os
 import aiofiles
 
+from yolo.export_yolov8 import YoloV8Exporter
+
 Config.KEEP_ALIVE = False
 Config.RESPONSE_TIMEOUT = 1000
 app = Sanic(__name__)
@@ -80,6 +82,12 @@ async def upload_file(request):
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, we are working on a fix at the moment)", status_code=519)
+    elif version == "v8":
+        try:
+            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            raise ServerError(message="Error while loading model", status_code=520)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     
