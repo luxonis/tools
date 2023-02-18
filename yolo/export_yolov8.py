@@ -12,8 +12,6 @@ from yolo.detect_head import DetectV8
 
 
 DIR_TMP = "./tmp"
-R1_VERSION = 1
-R2_VERSION = 2
 
 class YoloV8Exporter(Exporter):
 
@@ -30,11 +28,11 @@ class YoloV8Exporter(Exporter):
         # check num classes and labels
         assert model.nc == len(names), f'Model class count {model.nc} != len(names) {len(names)}'
 
-        self.num_branches = 3
-
         # Replace with the custom Detection Head
         if isinstance(model.model[-1], (Detect)):
             model.model[-1] = DetectV8(model.model[-1])
+
+        self.num_branches = model.model[-1].nl
 
         # check if image size is suitable
         gs = max(int(model.stride.max()), 32)  # model stride
@@ -59,7 +57,7 @@ class YoloV8Exporter(Exporter):
                         training=torch.onnx.TrainingMode.EVAL,
                         do_constant_folding=True,
                         input_names=['images'],
-                        output_names=['output1_yolov6r2', 'output2_yolov6r2', 'output3_yolov6r2'],
+                        output_names=[f"output{i+1}_yolov6r2" for i in range(self.num_branches)],
                         dynamic_axes=None)
 
         # check if the arhcitecture is correct
