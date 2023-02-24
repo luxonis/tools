@@ -11,6 +11,7 @@ from sanic.exceptions import ServerError
 import sentry_sdk
 
 from yolo.export_yolov5 import YoloV5Exporter
+from yolo.export_yolov5lite import YoloV5LiteExporter
 from yolo.export_yolov6 import YoloV6Exporter
 
 import os
@@ -73,6 +74,12 @@ async def upload_file(request):
     if version == "v5":
         try:
             exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            raise ServerError(message="Error while loading model", status_code=520)
+    elif version == "v5lite":
+        try:
+            exporter = YoloV5LiteExporter(conv_path, filename, input_shape, conv_id)
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)

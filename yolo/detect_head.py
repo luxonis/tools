@@ -174,3 +174,32 @@ class DetectV8(nn.Module):
             a[-1].bias.data[:] = 1.0  # box
             b[-1].bias.data[:m.nc] = math.log(5 / m.nc / (640 / s) ** 2)  # cls (.01 objects, 80 classes, 640 img)
 
+
+class DetectV5(nn.Module):
+    # YOLOv5 Detect head for detection models
+    dynamic = False  # force grid reconstruction
+    export = True  # export mode
+
+    def __init__(self, old_detect):  # detection layer
+        super().__init__()
+        self.nc = old_detect.nc  # number of classes
+        self.no = old_detect.no  # number of outputs per anchor
+        self.nl = old_detect.nl  # number of detection layers
+        self.na = old_detect.na
+        self.anchors = old_detect.anchors
+        self.grid = old_detect.grid  # [torch.zeros(1)] * self.nl
+        self.anchor_grid = old_detect.anchor_grid  # anchor grid
+
+        self.stride = old_detect.stride
+        if hasattr(old_detect, "inplace"):
+            self.inplace = old_detect.inplace
+
+        self.f = old_detect.f
+        self.i = old_detect.i
+        self.m = old_detect.m
+
+    def forward(self, x):
+        for i in range(self.nl):
+            x[i] = self.m[i](x[i])  # conv
+            x[i] = x[i].sigmoid()
+        return x
