@@ -109,6 +109,7 @@ export const appSlice = createSlice({
       version: 'v5',
       file: '',
       inputshape: '',
+      nShaves: 6
     },
     progress: null,
     inProgress: false,

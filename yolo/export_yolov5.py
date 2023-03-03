@@ -16,8 +16,8 @@ import sparseml
 DIR_TMP = "./tmp"
 
 class YoloV5Exporter(Exporter):
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves)
         self.load_model()
 
     def load_model(self):

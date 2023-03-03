@@ -48,6 +48,9 @@ async def upload_file(request):
     logger.info(f"CONVERSION_ID: {conv_id}")
     conversions[conv_id] = "new"
 
+    nShaves = request.form["nShaves"][0]
+    logger.info(f"nShaves: {nShaves}")
+
     imgsz = request.form["inputshape"][0]
     if " " in imgsz:
         imgsz = imgsz.split(" ")
@@ -72,19 +75,19 @@ async def upload_file(request):
         pass
     if version == "v5":
         try:
-            exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id)
+            exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id, nShaves)
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
     elif version == "v6":
         try:
-            exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id)
+            exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id, nShaves)
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, we are working on a fix at the moment)", status_code=519)
     elif version == "v8":
         try:
-            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id)
+            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves)
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
