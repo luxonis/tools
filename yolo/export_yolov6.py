@@ -22,8 +22,8 @@ R2_VERSION = 2
 
 class YoloV6Exporter(Exporter):
 
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves)
         self.load_model()
     
     def load_model(self):
@@ -139,7 +139,6 @@ class YoloV6Exporter(Exporter):
         self.f_mapping = (self.conv_path / f"{self.model_name}.mapping").resolve()
 
         return self.f_xml, self.f_mapping, self.f_bin
-
 
     def export_json(self):
         # generate anchors and sides

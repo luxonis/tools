@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from pathlib import Path
 
 class Exporter:
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id):
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves):
 
         # set up variables
         self.conv_path = conv_path
@@ -16,6 +16,7 @@ class Exporter:
         self.imgsz = imgsz
         self.model_name = weights_filename.split(".")[0] #"result"
         self.conv_id = conv_id
+        self.n_shaves = n_shaves
 
         # set up file paths
         self.f_onnx = None
@@ -84,7 +85,7 @@ class Exporter:
             xml=str(self.f_xml.resolve()),#as_posix(),
             bin=str(self.f_bin.resolve()),#as_posix(),
             data_type="FP16",
-            shaves=6,
+            shaves=self.n_shaves,
             version="2021.4",
             use_cache=False,
             output_dir=self.conv_path.resolve()

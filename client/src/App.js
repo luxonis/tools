@@ -30,6 +30,7 @@ function resolveProgressString(item) {
 
 function App() {
   const [file, setFile] = useState('')
+  const [advanced, setAdvanced] = useState(false);
   const config = useSelector((state) => state.app.config)
   const error = useSelector((state) => state.app.error)
   const inProgress = useSelector((state) => state.app.inProgress)
@@ -49,7 +50,7 @@ function App() {
             <div className="card rounded-3 text-black mb-3">
               <div className="row g-0">
                 <div className="col-lg-6 d-flex align-items-center gradient-custom-2">
-                  <div className="text-white px-3 py-4 p-md-5 mx-md-4">
+                  <div className="text-white px-3 py-4 p-md-5 mcustomizablex-md-4">
                     <h4 className="mb-4">Automatic Yolo export for OAKs</h4>
                     <p className="small mb-2">With the goal of simplifying the export process of the most popular object
                       detectors, we developed this tool. Simply upload the weights of the pre-trained model (.pt file), and we'll
@@ -97,6 +98,19 @@ function App() {
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Integer for square shape, or width and height separated by space. Must be divisible by 32.">
                         <label htmlFor="inputshape" className="form-label">Input shape <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="int" id="inputshape" name="inputshape" value={config.inputshape} onChange={e => update({inputshape: e.target.value})}/>
+                      </div>
+                      <div data-bs-toggle="tooltip" data-bs-placement="left" title="Number of shaves (default is 6)" onClick={() => setAdvanced(!advanced)}>
+                        <label className="form-label active">Advanced options { advanced ? <i class="bi bi-caret-up-fill"></i> : <i class="bi bi-caret-down-fill"></i> } </label>
+                      </div>
+                      <div className="mb-3">
+                        <div className={`advanced-option ${advanced ? 'expanded' : ''}`}>
+                          <label htmlFor="nShaves" className="form-label">Shaves: {config.nShaves}</label>
+                          <input type="range" id="nShaves" name="nShaves" min={1} max={16} onChange={e => update({nShaves: e.target.value})} value={config.nShaves}/>
+                          <div className="shaves-ticks">
+                            <span>1</span>
+                            <span>16</span>
+                          </div>
+                        </div>
                       </div>
                       <div className="text-center mb-3 d-grid">
                         {
