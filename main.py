@@ -30,6 +30,7 @@ conversions = manager.dict()
 app.config.workdir = Path(__file__).parent / "tmp"
 app.config.workdir.mkdir(exist_ok=True)
 app.config.REQUEST_MAX_SIZE = 300_000_000
+DEFAULT_NSHAVES = 6
 
 
 @app.get("/")
@@ -48,7 +49,7 @@ async def upload_file(request):
     logger.info(f"CONVERSION_ID: {conv_id}")
     conversions[conv_id] = "new"
 
-    nShaves = request.form["nShaves"][0]
+    nShaves = request.form["nShaves"][0] if "nShaves" in request.form else DEFAULT_NSHAVES
     logger.info(f"nShaves: {nShaves}")
 
     imgsz = request.form["inputshape"][0]
