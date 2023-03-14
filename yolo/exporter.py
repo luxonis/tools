@@ -60,7 +60,7 @@ class Exporter:
         f"--output_dir '{self.conv_path.resolve()}' " \
         f"--model_name '{self.model_name}' " \
         '--data_type FP16 ' \
-        '--reverse_input_channel ' \
+        '--reverse_input_channels ' \
         '--scale 255 ' \
         f'--output "{output_list}"'
 
@@ -86,7 +86,7 @@ class Exporter:
             bin=str(self.f_bin.resolve()),#as_posix(),
             data_type="FP16",
             shaves=self.n_shaves,
-            version="2021.4",
+            version="2022.1",
             use_cache=False,
             output_dir=self.conv_path.resolve()
         )

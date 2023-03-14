@@ -123,7 +123,7 @@ class YoloV6Exporter(Exporter):
         f"--output_dir '{self.conv_path.resolve()}' " \
         f"--model_name '{self.model_name}' " \
         '--data_type FP16 ' \
-        '--reverse_input_channel ' \
+        '--reverse_input_channels ' \
         '--scale 255 '  \
         '--output "output1_yolov6r2,output2_yolov6r2,output3_yolov6r2"'
         
