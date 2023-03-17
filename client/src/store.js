@@ -19,7 +19,7 @@ export const upload = createAsyncThunk(
       throw Error("File does not end with .pt");
     }
     if (!(/^[a-z0-9_-]+$/i.test(act["name"].slice(0, -3)))) {
-      throw Error("Filename is not alphanumerical");
+      throw Error("Filename must be alphanumerical or contain '_' or '-'!");
     }
     const shape = config['inputshape'].split(" ");
     shape.forEach((n, i) => {
@@ -57,6 +57,9 @@ export const upload = createAsyncThunk(
         console.log(JSON.stringify(error, null, 4));
       }
       switch (status) {
+        case 518:
+          let errorData = JSON.parse(String.fromCharCode.apply(String, new Uint8Array(error.response.data)))
+          throw Error(errorData['message']);
         case 519:
           throw Error("Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, we are working on a fix at the moment)");
         case 520:
