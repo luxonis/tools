@@ -65,6 +65,9 @@ async def upload_file(request):
     if version == "v7":
         try:
             exporter = YoloV7Exporter(conv_path, filename, input_shape, conv_id, nShaves)
+        except ValueError as ve:
+            sentry_sdk.capture_exception(ve)
+            raise ServerError(message=str(ve), status_code=518)
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
