@@ -32,3 +32,6 @@ sentry-sdk # logging
 thop  # FLOPs computation
 
 sparseml==1.2.0
+
+websockets==10.4
+openvino-dev[onnx]

@@ -61,6 +61,7 @@ class Exporter:
         f"--model_name '{self.model_name}' " \
         '--data_type FP16 ' \
         '--reverse_input_channels ' \
+        '--use_legacy_frontend ' \
         '--scale 255 ' \
         f'--output "{output_list}"'
 
