@@ -68,12 +68,19 @@ body {
 
 .advanced-option {
   text-align: left;
-  display: flex;
-  flex-direction: column;
   width: 100%;
   height: 0px;
   overflow: hidden;
   transition: height 300ms ease-in-out;
+}
+
+.display-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.mr10 {
+  margin-right: 10px;
 }
 
 .active:hover {
@@ -81,7 +88,7 @@ body {
 }
 
 .expanded {
-  height: 72px;
+  height: 100px;
 }
 
 .shaves-ticks {

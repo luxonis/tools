@@ -8,8 +8,7 @@ from zipfile import ZipFile
 from pathlib import Path
 
 class Exporter:
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves):
-
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend):
         # set up variables
         self.conv_path = conv_path
         self.weights_path = self.conv_path / weights_filename
@@ -27,6 +26,7 @@ class Exporter:
         self.f_blob = None
         self.f_json = None
         self.f_zip = None
+        self.use_legacy_frontend = use_legacy_frontend
 
     def get_onnx(self):
         # export onnx model
@@ -63,6 +63,9 @@ class Exporter:
         '--reverse_input_channels ' \
         '--scale 255 ' \
         f'--output "{output_list}"'
+
+        if self.use_legacy_frontend == 'true':
+            cmd += ' --use_legacy_frontend'
 
         try:
             subprocess.check_output(cmd, shell=True)
