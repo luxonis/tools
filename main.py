@@ -31,6 +31,7 @@ app.config.workdir = Path(__file__).parent / "tmp"
 app.config.workdir.mkdir(exist_ok=True)
 app.config.REQUEST_MAX_SIZE = 300_000_000
 DEFAULT_NSHAVES = 6
+DEFAULT_USE_LEGACY_FRONTEND = 'false'
 
 
 @app.get("/")
@@ -51,6 +52,9 @@ async def upload_file(request):
 
     nShaves = request.form["nShaves"][0] if "nShaves" in request.form else DEFAULT_NSHAVES
     logger.info(f"nShaves: {nShaves}")
+
+    useLegacyFrontend = request.form["useLegacyFrontend"][0] if "useLegacyFrontend" in request.form else DEFAULT_USE_LEGACY_FRONTEND
+    logger.info(f"useLegacyFrontend: {useLegacyFrontend}")
 
     imgsz = request.form["inputshape"][0]
     if " " in imgsz:
@@ -76,7 +80,7 @@ async def upload_file(request):
         pass
     if version == "v5":
         try:
-            exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id, nShaves)
+            exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)
@@ -85,7 +89,7 @@ async def upload_file(request):
             raise ServerError(message="Error while loading model", status_code=520)
     elif version == "v6":
         try:
-            exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id, nShaves)
+            exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)
@@ -94,7 +98,7 @@ async def upload_file(request):
             raise ServerError(message="Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, we are working on a fix at the moment)", status_code=519)
     elif version == "v8":
         try:
-            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves)
+            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)

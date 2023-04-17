@@ -22,8 +22,8 @@ R2_VERSION = 2
 
 class YoloV6Exporter(Exporter):
 
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
         self.load_model()
     
     def load_model(self):
@@ -126,6 +126,9 @@ class YoloV6Exporter(Exporter):
         '--reverse_input_channels ' \
         '--scale 255 '  \
         '--output "output1_yolov6r2,output2_yolov6r2,output3_yolov6r2"'
+
+        if self.use_legacy_frontend == 'true':
+            cmd += ' --use_legacy_frontend'
         
         try:
             subprocess.check_output(cmd, shell=True)

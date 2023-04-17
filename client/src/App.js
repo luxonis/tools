@@ -104,11 +104,17 @@ function App() {
                       </div>
                       <div className="mb-3">
                         <div className={`advanced-option ${advanced ? 'expanded' : ''}`}>
-                          <label htmlFor="nShaves" className="form-label">Shaves: {config.nShaves}</label>
-                          <input type="range" id="nShaves" name="nShaves" min={1} max={16} onChange={e => update({nShaves: e.target.value})} value={config.nShaves}/>
-                          <div className="shaves-ticks">
-                            <span>1</span>
-                            <span>16</span>
+                          <div className="display-column">
+                            <label htmlFor="nShaves" className="form-label">Shaves: {config.nShaves}</label>
+                            <input type="range" id="nShaves" name="nShaves" min={1} max={16} onChange={e => update({nShaves: e.target.value})} value={config.nShaves}/>
+                            <div className="shaves-ticks">
+                              <span>1</span>
+                              <span>16</span>
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="useLegacyFrontend" className="form-label mr10">Use Legacy Front-End flag: </label>
+                            <input type="checkbox" id="useLegacyFrontend" name="useLegacyFrontend" default="false" onChange={e => update({useLegacyFrontend: !config.useLegacyFrontend})} value={config.useLegacyFrontend}/>
                           </div>
                         </div>
                       </div>

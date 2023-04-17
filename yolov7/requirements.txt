@@ -31,4 +31,4 @@ thop  # FLOPs computation
 protobuf==3.19.0
 
 websockets==10.4
-openvino-dev[onnx]
+openvino-dev[onnx]==2022.1.0
