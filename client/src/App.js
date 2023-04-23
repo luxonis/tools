@@ -95,8 +95,8 @@ function App() {
                         <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="file" id="file" name="file" onChange={e => setFile(e.target.files[0])}/>
                       </div>
-                      <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Integer for square shape, or width and height separated by space. Must be divisible by 32.">
-                        <label htmlFor="inputshape" className="form-label">Input shape <i class="bi bi-info-circle-fill"></i></label>
+                      <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Integer for square input image shape, or width and height separated by space. Must be divisible by 32 (or 64 depending on the stride)">
+                        <label htmlFor="inputshape" className="form-label">Input image shape <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="int" id="inputshape" name="inputshape" value={config.inputshape} onChange={e => update({inputshape: e.target.value})}/>
                       </div>
                       <div data-bs-toggle="tooltip" data-bs-placement="left" title="Number of shaves (default is 6)" onClick={() => setAdvanced(!advanced)}>
@@ -105,16 +105,16 @@ function App() {
                       <div className="mb-3">
                         <div className={`advanced-option ${advanced ? 'expanded' : ''}`}>
                           <div className="display-column">
-                            <label htmlFor="nShaves" className="form-label">Shaves: {config.nShaves}</label>
+                            <label htmlFor="nShaves" className="form-label"><a className="form-label-link" href="https://docs.luxonis.com/en/latest/pages/faq/#what-are-the-shaves" target="_blank">Shaves:</a> {config.nShaves}</label>
                             <input type="range" id="nShaves" name="nShaves" min={1} max={16} onChange={e => update({nShaves: e.target.value})} value={config.nShaves}/>
                             <div className="shaves-ticks">
                               <span>1</span>
                               <span>16</span>
                             </div>
                           </div>
-                          <div>
-                            <label htmlFor="useLegacyFrontend" className="form-label mr10">Use Legacy Front-End flag: </label>
-                            <input type="checkbox" id="useLegacyFrontend" name="useLegacyFrontend" default="false" onChange={e => update({useLegacyFrontend: !config.useLegacyFrontend})} value={config.useLegacyFrontend}/>
+                          <div data-bs-toggle="tooltip" data-bs-placement="left" title="If off, defaults to OpenVINO 2022.1. Slight performance degradation noticed with 2022.1.">
+                            <label htmlFor="useLegacyFrontend" className="form-label mr10">Use OpenVINO 2021.4: <i class="bi bi-info-circle-fill"></i></label>
+                            <input type="checkbox" id="useLegacyFrontend" name="useLegacyFrontend" onChange={e => update({useLegacyFrontend: !config.useLegacyFrontend})} checked={config.useLegacyFrontend}/>
                           </div>
                         </div>
                       </div>
