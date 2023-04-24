@@ -113,7 +113,7 @@ export const appSlice = createSlice({
       file: '',
       inputshape: '',
       nShaves: 6,
-      useLegacyFrontend: false
+      useLegacyFrontend: true
     },
     progress: null,
     inProgress: false,

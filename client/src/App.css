@@ -95,3 +95,8 @@ body {
   display: flex;
   justify-content: space-between;
 }
+
+.form-label-link {
+  color: #000000;
+  text-decoration: none;
+}
