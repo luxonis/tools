@@ -1,31 +1,23 @@
 import sys
-sys.path.append("./yolo/YOLOv6")
+
+from yolo.detect_head import DetectV1
+sys.path.append("./yolo/YOLOv6R1")
 
 import torch
 from yolov6.layers.common import RepVGGBlock
-from yolov6.models.efficientrep import EfficientRep, EfficientRep6, CSPBepBackbone, CSPBepBackbone_P6
 from yolov6.utils.checkpoint import load_checkpoint
 import onnx
 from exporter import Exporter
 
-import numpy as np
-import onnxsim
-import subprocess
-
-from yolo.detect_head import DetectV6R2
-from yolo.backbones import YoloV6BackBone
-
-
 DIR_TMP = "./tmp"
 
-class YoloV6Exporter(Exporter):
+class YoloV6R1Exporter(Exporter):
 
     def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
         super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
         self.load_model()
     
     def load_model(self):
-
         # code based on export.py from YoloV5 repository
         # load the model
         model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
@@ -33,17 +25,11 @@ class YoloV6Exporter(Exporter):
         for layer in model.modules():
             if isinstance(layer, RepVGGBlock):
                 layer.switch_to_deploy()
-
-        for n, module in model.named_children():
-            if isinstance(module, EfficientRep) or isinstance(module, CSPBepBackbone):
-                setattr(model, n, YoloV6BackBone(module))
-            elif isinstance(module, EfficientRep6):
-                setattr(model, n, YoloV6BackBone(module, uses_6_erblock=True))
-            elif isinstance(module, CSPBepBackbone_P6):
-                setattr(model, n, YoloV6BackBone(module, uses_fuse_P2=False, uses_6_erblock=True))
         
-        if not hasattr(model.detect, 'obj_preds'):
-            model.detect = DetectV6R2(model.detect)
+        if hasattr(model.detect, 'obj_preds'):
+            model.detect = DetectV1(model.detect)
+        else:
+            raise ValueError(f"Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, try to convert using the `YoloV6 R2 & R3` option).")
         
         self.num_branches = len(model.detect.grid)
 
@@ -63,24 +49,28 @@ class YoloV6Exporter(Exporter):
         self.model = model
 
     def export_onnx(self):
-        # export onnx model
-        self.f_onnx = (self.conv_path / f"{self.model_name}.onnx").resolve()
-        im = torch.zeros(1, 3, *self.imgsz[::-1])#.to(device)  # image size(1,3,320,192) BCHW iDetection
-        torch.onnx.export(self.model, im, self.f_onnx, verbose=False, opset_version=12,
-                        training=torch.onnx.TrainingMode.EVAL,
-                        do_constant_folding=True,
-                        input_names=['images'],
-                        output_names=['output1_yolov6r2', 'output2_yolov6r2', 'output3_yolov6r2'],
-                        dynamic_axes=None)
-
-        # check if the arhcitecture is correct
-        model_onnx = onnx.load(self.f_onnx)  # load onnx model
-        onnx.checker.check_model(model_onnx)  # check onnx model
-        # simplify the moodel
-
-        onnx_model, check = onnxsim.simplify(model_onnx)
+        onnx_model, check = self.get_onnx()
         assert check, 'assert check failed'
-    
+        # get contacts ready for parsing
+        conc_idx = []
+        for i, n in enumerate(onnx_model.graph.node):
+            if "Concat" in n.name:
+                conc_idx.append(i)
+
+        outputs = conc_idx[-(self.num_branches+1):-1]
+        change_inputs = []
+
+        for i, idx in enumerate(outputs):
+            onnx_model.graph.node[idx].name = f"output{i+1}_yolov6"
+            change_inputs.append(onnx_model.graph.node[idx].output[0])
+            onnx_model.graph.node[idx].output[0] = f"output{i+1}_yolov6"
+        
+        for i in range(len(onnx_model.graph.node)):
+            for j in range(len(onnx_model.graph.node[i].input)):
+                if onnx_model.graph.node[i].input[j] in change_inputs:
+                    output_i = change_inputs.index(onnx_model.graph.node[i].input[j])+1
+                    onnx_model.graph.node[i].input[j] = f"output{output_i}_yolov6"
+            
         onnx.checker.check_model(onnx_model)  # check onnx model
 
         # save the simplified model
@@ -96,3 +86,4 @@ class YoloV6Exporter(Exporter):
         names = [f"Class_{i}" for i in range(nc)]
 
         return self.write_json(anchors, masks, nc, names)
+

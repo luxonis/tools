@@ -38,6 +38,14 @@ export const upload = createAsyncThunk(
           timeout: 1500000,
           responseType: 'arraybuffer',
         })
+      } else if (config['version'] == 'v6') {
+        response = await request(POST, `/yolov6r1/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 1500000,
+          responseType: 'arraybuffer',
+        })
       } else {
         response = await request(POST, `/upload`, formData, {
           headers: {
@@ -57,11 +65,13 @@ export const upload = createAsyncThunk(
         console.log(JSON.stringify(error, null, 4));
       }
       switch (status) {
+        case 517:
+          throw Error("Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, try to convert using the `YoloV6 R2 & R3` option).");
         case 518:
           let errorData = JSON.parse(String.fromCharCode.apply(String, new Uint8Array(error.response.data)))
           throw Error(errorData['message']);
         case 519:
-          throw Error("Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, we are working on a fix at the moment)");
+          throw Error("Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, try to convert using the `YoloV6 R1` option).");
         case 520:
           throw Error("Error while loading model");
         case 521:
@@ -91,6 +101,8 @@ export const fetchProgress = createAsyncThunk(
     var response;
     if (config['version'] == 'v7') {
       response = await request(GET, `/yolov7/progress/${id}`);
+    } else if (config['version'] == 'v6') {
+      response = await request(GET, `/yolov6r1/progress/${id}`);
     } else {
       response = await request(GET, `/progress/${id}`);
     }

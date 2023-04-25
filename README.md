@@ -15,6 +15,10 @@ upstream yolov7 {
     server yolov7:8001;
 }
 
+upstream yolov6r1 {
+    server yolov6r1:8002;
+}
+
 server {
   listen 80;
   listen [::]:80;
@@ -25,6 +29,14 @@ server {
 
   location /yolov7 {
     proxy_pass http://yolov7;
+    proxy_redirect off;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Ssl $scheme; 
+  }
+
+  location /yolov6r1 {
+    proxy_pass http://yolov6r1;
     proxy_redirect off;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $http_host;
@@ -57,6 +69,10 @@ services:
     build: ./yolov7
     ports:
       - 8001:8001
+  yolov6r1:
+    build: ./yolov6r1
+    ports:
+      - 8002:8002
   nginx:
     build: ./nginx
     ports:
@@ -65,6 +81,7 @@ services:
     depends_on:
       - api
       - yolov7
+      - yolov6r1
     volumes:
       - ./log:/log:z
       - /etc/letsencrypt/live/tools.luxonis.com/privkey.pem:/ssl/key.pem
