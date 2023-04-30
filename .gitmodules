@@ -5,6 +5,10 @@
     path = yolo/YOLOv6
     url = https://github.com/meituan/YOLOv6
     branch = main
+[submodule "YOLOv6R1"]
+    path = yolov6r1/yolo/YOLOv6R1
+    url = https://github.com/meituan/YOLOv6
+    branch = main
 [submodule "yolov7"]
     path = yolov7/yolo/yolov7
     url = https://github.com/WongKinYiu/yolov7
