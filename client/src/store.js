@@ -66,12 +66,12 @@ export const upload = createAsyncThunk(
       }
       switch (status) {
         case 517:
-          throw Error("Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, try to convert using the `YoloV6 (R2, R3)` option, or by trying to convert the latest release 4.0 that isn't supported yet, we are working on that).");
+          throw Error("Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, try to convert using the `YoloV6 (R2, R3)` option, or by trying to convert the latest release 4.0 that isn't supported yet).");
         case 518:
           let errorData = JSON.parse(String.fromCharCode.apply(String, new Uint8Array(error.response.data)))
           throw Error(errorData['message']);
         case 519:
-          throw Error("Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, try to convert using the `YoloV6 (R1)` option, or by trying to convert the latest release 4.0 that isn't supported yet, we are working on that).");
+          throw Error("Error while loading model (This may be caused by trying to convert an older version of YoloV6 - release 1.0, if that is the case, try to convert using the `YoloV6 (R1)` option, or by trying to convert the latest release 4.0 that isn't supported yet).");
         case 520:
           throw Error("Error while loading model");
         case 521:

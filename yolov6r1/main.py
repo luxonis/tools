@@ -74,7 +74,7 @@ async def upload_file(request):
             raise ServerError(message=str(ve), status_code=518)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            raise ServerError(message="Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, choose the 'YoloV6 (R2, R3)' options, or by trying to convert the latest release 4.0 that isn't supported yet, we are working on that)", status_code=517)
+            raise ServerError(message="Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, choose the 'YoloV6 (R2, R3)' options, or by trying to convert the latest release 4.0 that isn't supported yet)", status_code=517)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     

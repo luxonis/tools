@@ -29,7 +29,7 @@ class YoloV6R1Exporter(Exporter):
         if hasattr(model.detect, 'obj_preds'):
             model.detect = DetectV1(model.detect)
         else:
-            raise ValueError(f"Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, try to convert using the `YoloV6 (R2, R3)` option, or by trying to convert the latest release 4.0 that isn't supported yet, we are working on that).")
+            raise ValueError(f"Error while loading model (This may be caused by trying to convert a newer version of YoloV6 - release 2.0 or 3.0, if that is the case, try to convert using the `YoloV6 (R2, R3)` option, or by trying to convert the latest release 4.0 that isn't supported yet).")
         
         self.num_branches = len(model.detect.grid)
 
