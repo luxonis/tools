@@ -86,10 +86,10 @@ function App() {
                         <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"
                                 onChange={e => update({version: e.target.value})}>
                           <option value="v5">YoloV5</option>
-                          <option value="v6r2">YoloV6 (latest)</option>
+                          <option value="v6r2">YoloV6 (R2, R3)</option>
                           <option value="v7">YoloV7 (detection only)</option>
                           <option value="v8">YoloV8 (detection only)</option>
-                          <option value="v6">YoloV6 (legacy - R1)</option>
+                          <option value="v6">YoloV6 (R1)</option>
                         </select>
                       </div>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file), size needs to be smaller than 100Mb.">
