@@ -91,6 +91,9 @@ function App() {
                           <option value="v8">YoloV8 (detection only)</option>
                           <option value="v6">YoloV6 (R1)</option>
                         </select>
+                        <p class="small">
+                          Have trouble picking the right version? See <a href="https://docs.google.com/spreadsheets/d/16k3P-LxPMFREoePLvoLqDZo0Xu_tRcSpm_BjQE3PHQY/edit?usp=sharing" target="_blank">here</a> for the version overview.
+                        </p>
                       </div>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file), size needs to be smaller than 100Mb.">
                         <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>
