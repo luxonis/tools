@@ -146,7 +146,7 @@ function App() {
               </div>
               <div class="card-footer">
                 <p class="small text-center mb-0">
-                  Curious how I work or need to host me on premisses? <a href="https://github.com/luxonis/tools">Check me out on <i class="bi bi-github"></i></a>.
+                  Curious how I work or need to host me on premises? <a href="https://github.com/luxonis/tools">Check me out on <i class="bi bi-github"></i></a>.
                 </p>
               </div>
             </div>
