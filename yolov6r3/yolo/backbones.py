@@ -42,3 +42,4 @@ class YoloV6BackBone(nn.Module):
             outputs.append(x)
 
         return tuple(outputs)
+

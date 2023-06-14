@@ -2,6 +2,7 @@ import './App.css';
 import {useDispatch, useSelector} from "react-redux";
 import {fetchProgress, updateConfig, upload} from "./store";
 import {useState} from "react";
+import detectVersion from './detect_yolo_version';
 
 function resolveProgressPerc(item) {
   if (item === "read") { return "10%" }
@@ -72,11 +73,14 @@ function App() {
                       error && <div className="error-box">
                         <h3>An error occurred</h3>
                         <p>{error.message}</p>
-                        <span>Please try again or reach out to <a href="mailto:support@luxonis.com" target="_blank">support@luxonis.com</a></span>
+                        <span>Please try again or reach out to us on our <a href="https://discuss.luxonis.com" target="_blank">discord</a> or create an issue on <a href="https://github.com/luxonis/tools/issues" tearget="_blank">GitHub</a></span>
                       </div>
                     }
 
                     <form onSubmit={e => {
+                      detectVersion(file)
+                        .then(result => console.log("Detected version: " + result))
+                        .catch(err => console.error("Error: " + err))
                       e.preventDefault();
                       dispatch(upload(file));
                       dispatch(fetchProgress());
@@ -86,10 +90,11 @@ function App() {
                         <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"
                                 onChange={e => update({version: e.target.value})}>
                           <option value="v5">YoloV5</option>
-                          <option value="v6r2">YoloV6 (R2, R3)</option>
+                          <option value="v6r4">YoloV6 (latest)</option>
                           <option value="v7">YoloV7 (detection only)</option>
                           <option value="v8">YoloV8 (detection only)</option>
                           <option value="v6">YoloV6 (R1)</option>
+                          <option value="v6r2">YoloV6 (R2, R3)</option>
                         </select>
                         <p class="small mt-1">
                           Have trouble picking the right version? See <a href="https://docs.google.com/spreadsheets/d/16k3P-LxPMFREoePLvoLqDZo0Xu_tRcSpm_BjQE3PHQY/edit?usp=sharing" target="_blank">here</a> for the version overview.
@@ -146,7 +151,7 @@ function App() {
               </div>
               <div class="card-footer">
                 <p class="small text-center mb-0">
-                  Curious how I work or need to host me on premises? <a href="https://github.com/luxonis/tools">Check me out on <i class="bi bi-github"></i></a>.
+                  Curious how I work or need to host me on premisses? <a href="https://github.com/luxonis/tools">Check me out on <i class="bi bi-github"></i></a>.
                 </p>
               </div>
             </div>
