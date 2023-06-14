@@ -73,7 +73,7 @@ function App() {
                       error && <div className="error-box">
                         <h3>An error occurred</h3>
                         <p>{error.message}</p>
-                        <span>Please try again or reach out to us on our <a href="https://discuss.luxonis.com" target="_blank">discord</a> or create an issue on <a href="https://github.com/luxonis/tools/issues" tearget="_blank">GitHub</a></span>
+                        <span>Please try again or reach out to us on our <a href="https://discuss.luxonis.com" target="_blank">Discuss</a> or create an issue on <a href="https://github.com/luxonis/tools/issues" tearget="_blank">GitHub</a></span>
                       </div>
                     }
 
