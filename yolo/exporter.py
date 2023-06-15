@@ -32,11 +32,18 @@ class Exporter:
         # export onnx model
         self.f_onnx = (self.conv_path / f"{self.model_name}.onnx").resolve()
         im = torch.zeros(1, 3, *self.imgsz[::-1])#.to(device)  # image size(1,3,320,192) BCHW iDetection
+
+        # check if it's a segmentation model
+        # works fine for yolov5 instance segmentation model, not sure about other models
+        out_names = ['output']
+        if 'Segmentation' in type(self.model).__name__:
+            out_names += ['protos_output']
+
         torch.onnx.export(self.model, im, self.f_onnx, verbose=False, opset_version=12,
                         training=torch.onnx.TrainingMode.EVAL,
                         do_constant_folding=True,
                         input_names=['images'],
-                        output_names=['output'],
+                        output_names=out_names,
                         dynamic_axes=None)
 
         # check if the arhcitecture is correct
@@ -53,12 +60,14 @@ class Exporter:
             self.export_onnx()
         
         output_list = [f"output{i+1}_yolo{version}" for i in range(self.num_branches)]
+        if 'Segmentation' in type(self.model).__name__:
+            output_list += ["protos_output"]
         output_list = ",".join(output_list)
 
         # export to OpenVINO and prune the model in the process
-        cmd = f"mo --input_model '{self.f_simplified}' " \
-        f"--output_dir '{self.conv_path.resolve()}' " \
-        f"--model_name '{self.model_name}' " \
+        cmd = f'mo --input_model "{self.f_simplified}" ' \
+        f'--output_dir "{self.conv_path.resolve()}" ' \
+        f'--model_name "{self.model_name}" ' \
         '--data_type FP16 ' \
         '--reverse_input_channels ' \
         '--scale 255 ' \
