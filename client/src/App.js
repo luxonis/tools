@@ -2,6 +2,7 @@ import './App.css';
 import {useDispatch, useSelector} from "react-redux";
 import {fetchProgress, updateConfig, upload} from "./store";
 import {useState} from "react";
+import detectVersion, {version2text} from './detect_yolo_version';
 
 function resolveProgressPerc(item) {
   if (item === "read") { return "10%" }
@@ -31,6 +32,7 @@ function resolveProgressString(item) {
 function App() {
   const [file, setFile] = useState('')
   const [advanced, setAdvanced] = useState(false);
+  const [detectedVersion, setDetectedVersion] = useState('');
   const config = useSelector((state) => state.app.config)
   const error = useSelector((state) => state.app.error)
   const inProgress = useSelector((state) => state.app.inProgress)
@@ -41,6 +43,12 @@ function App() {
 
 
   const update = data => dispatch(updateConfig(data))
+  const uploadFile = file => {
+    setFile(file)
+    detectVersion(file)
+      .then(result => {if (result !== 'none') {update({version: result}); setDetectedVersion(version2text[result])}})
+      .catch(err => {console.error("Error while detecting yolo version: " + err); setDetectedVersion('')})
+  }
 
   return (
     <section className="h-100 gradient-form" style={{backgroundColor: "#eee"}}>
@@ -72,7 +80,7 @@ function App() {
                       error && <div className="error-box">
                         <h3>An error occurred</h3>
                         <p>{error.message}</p>
-                        <span>Please try again or reach out to <a href="mailto:support@luxonis.com" target="_blank">support@luxonis.com</a></span>
+                        <span>Please try again or reach out to us on our <a href="https://discuss.luxonis.com" target="_blank">Discuss</a> or create an issue on <a href="https://github.com/luxonis/tools/issues" tearget="_blank">GitHub</a></span>
                       </div>
                     }
 
@@ -86,18 +94,23 @@ function App() {
                         <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"
                                 onChange={e => update({version: e.target.value})}>
                           <option value="v5">YoloV5</option>
-                          <option value="v6r2">YoloV6 (R2, R3)</option>
+                          <option value="v6r4">YoloV6 (latest)</option>
                           <option value="v7">YoloV7 (detection only)</option>
                           <option value="v8">YoloV8 (detection only)</option>
                           <option value="v6">YoloV6 (R1)</option>
+                          <option value="v6r2">YoloV6 (R2, R3)</option>
                         </select>
+                        {
+                          (detectedVersion !== '') &&
+                          <label class="small mt-1">Automatic version detected: <i>{detectedVersion}</i></label>
+                        }
                         <p class="small mt-1">
                           Have trouble picking the right version? See <a href="https://docs.google.com/spreadsheets/d/16k3P-LxPMFREoePLvoLqDZo0Xu_tRcSpm_BjQE3PHQY/edit?usp=sharing" target="_blank">here</a> for the version overview.
                         </p>
                       </div>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file), size needs to be smaller than 100Mb.">
                         <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>
-                        <input className="form-control" type="file" id="file" name="file" onChange={e => setFile(e.target.files[0])}/>
+                        <input className="form-control" type="file" id="file" name="file" onChange={e => uploadFile(e.target.files[0])}/>
                       </div>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Integer for square input image shape, or width and height separated by space. Must be divisible by 32 (or 64 depending on the stride)">
                         <label htmlFor="inputshape" className="form-label">Input image shape <i class="bi bi-info-circle-fill"></i></label>
@@ -146,7 +159,7 @@ function App() {
               </div>
               <div class="card-footer">
                 <p class="small text-center mb-0">
-                  Curious how I work or need to host me on premises? <a href="https://github.com/luxonis/tools">Check me out on <i class="bi bi-github"></i></a>.
+                  Curious how I work or need to host me on premisses? <a href="https://github.com/luxonis/tools">Check me out on <i class="bi bi-github"></i></a>.
                 </p>
               </div>
             </div>

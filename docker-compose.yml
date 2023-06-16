@@ -22,6 +22,13 @@ services:
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
     restart: always
+  yolov6r3:
+    build: ./yolov6r3
+    ports:
+      - 8003:8003
+    environment:
+      SENTRY_TOKEN: ${SENTRY_TOKEN}
+    restart: always
   nginx:
     build: ./nginx
     ports:
@@ -31,6 +38,7 @@ services:
       - api
       - yolov7
       - yolov6r1
+      - yolov6r3
     restart: always
     volumes:
       - ./log:/log:z

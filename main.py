@@ -11,7 +11,7 @@ from sanic.exceptions import ServerError
 import sentry_sdk
 
 from yolo.export_yolov5 import YoloV5Exporter
-from yolo.export_yolov6 import YoloV6Exporter
+from yolo.export_yolov6 import YoloV6R4Exporter
 
 import os
 import aiofiles
@@ -87,15 +87,15 @@ async def upload_file(request):
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
-    elif version == "v6r2":
+    elif version == "v6r4":
         try:
-            exporter = YoloV6Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
+            exporter = YoloV6R4Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            raise ServerError(message="Error while loading model (This may be caused by trying to convert either the latest release 4.0 that isn't supported yet, or by release 1.0, in which case, try to convert using the `YoloV6 (R1)` option).", status_code=519)
+            raise ServerError(message="Error while loading model (This may be caused by trying to convert older releases 1.0, 2.0 or 3.0, in which case, try to convert using the 'YoloV6 (R1)' or 'YoloV6 (R2, R3)' option).", status_code=516)
     elif version == "v8":
         try:
             exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)

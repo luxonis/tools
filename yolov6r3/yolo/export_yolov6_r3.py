@@ -1,22 +1,23 @@
 import sys
-sys.path.append("./yolo/YOLOv6")
+sys.path.append("./yolo/YOLOv6R3")
 
 import torch
-from yolov6.models.heads.effidehead_distill_ns import Detect
 from yolov6.layers.common import RepVGGBlock
+from yolov6.models.efficientrep import EfficientRep, EfficientRep6, CSPBepBackbone, CSPBepBackbone_P6
 from yolov6.utils.checkpoint import load_checkpoint
 import onnx
 from exporter import Exporter
 
+import numpy as np
 import onnxsim
 
-from yolo.detect_head import DetectV6R4s, DetectV6R4m
+from yolo.detect_head import DetectV6R3
 from yolo.backbones import YoloV6BackBone
 
 
 DIR_TMP = "./tmp"
 
-class YoloV6R4Exporter(Exporter):
+class YoloV6R3Exporter(Exporter):
 
     def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
         super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
@@ -32,10 +33,16 @@ class YoloV6R4Exporter(Exporter):
             if isinstance(layer, RepVGGBlock):
                 layer.switch_to_deploy()
 
-        if isinstance(model.detect, Detect):
-            model.detect = DetectV6R4s(model.detect)
-        else:
-            model.detect = DetectV6R4m(model.detect)
+        for n, module in model.named_children():
+            if isinstance(module, EfficientRep) or isinstance(module, CSPBepBackbone):
+                setattr(model, n, YoloV6BackBone(module))
+            elif isinstance(module, EfficientRep6):
+                setattr(model, n, YoloV6BackBone(module, uses_6_erblock=True))
+            elif isinstance(module, CSPBepBackbone_P6):
+                setattr(model, n, YoloV6BackBone(module, uses_fuse_P2=False, uses_6_erblock=True))
+        
+        if not hasattr(model.detect, 'obj_preds'):
+            model.detect = DetectV6R3(model.detect)
         
         self.num_branches = len(model.detect.grid)
 
@@ -79,9 +86,6 @@ class YoloV6R4Exporter(Exporter):
         self.f_simplified = (self.conv_path / f"{self.model_name}-simplified.onnx").resolve()
         onnx.save(onnx_model, self.f_simplified)
         return self.f_simplified
-    
-    def export_openvino(self, version):
-        return super().export_openvino('v6r2')
 
     def export_json(self):
         # generate anchors and sides
