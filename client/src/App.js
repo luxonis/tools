@@ -2,7 +2,7 @@ import './App.css';
 import {useDispatch, useSelector} from "react-redux";
 import {fetchProgress, updateConfig, upload} from "./store";
 import {useState} from "react";
-import detectVersion from './detect_yolo_version';
+import detectVersion, {version2text} from './detect_yolo_version';
 
 function resolveProgressPerc(item) {
   if (item === "read") { return "10%" }
@@ -32,6 +32,7 @@ function resolveProgressString(item) {
 function App() {
   const [file, setFile] = useState('')
   const [advanced, setAdvanced] = useState(false);
+  const [detectedVersion, setDetectedVersion] = useState('');
   const config = useSelector((state) => state.app.config)
   const error = useSelector((state) => state.app.error)
   const inProgress = useSelector((state) => state.app.inProgress)
@@ -42,6 +43,12 @@ function App() {
 
 
   const update = data => dispatch(updateConfig(data))
+  const uploadFile = file => {
+    setFile(file)
+    detectVersion(file)
+      .then(result => {if (result !== 'none') {update({version: result}); setDetectedVersion(version2text[result])}})
+      .catch(err => {console.error("Error while detecting yolo version: " + err); setDetectedVersion('')})
+  }
 
   return (
     <section className="h-100 gradient-form" style={{backgroundColor: "#eee"}}>
@@ -78,9 +85,6 @@ function App() {
                     }
 
                     <form onSubmit={e => {
-                      detectVersion(file)
-                        .then(result => console.log("Detected version: " + result))
-                        .catch(err => console.error("Error: " + err))
                       e.preventDefault();
                       dispatch(upload(file));
                       dispatch(fetchProgress());
@@ -96,13 +100,17 @@ function App() {
                           <option value="v6">YoloV6 (R1)</option>
                           <option value="v6r2">YoloV6 (R2, R3)</option>
                         </select>
+                        {
+                          (detectedVersion !== '') &&
+                          <label class="small mt-1">Automatic version detected: <i>{detectedVersion}</i></label>
+                        }
                         <p class="small mt-1">
                           Have trouble picking the right version? See <a href="https://docs.google.com/spreadsheets/d/16k3P-LxPMFREoePLvoLqDZo0Xu_tRcSpm_BjQE3PHQY/edit?usp=sharing" target="_blank">here</a> for the version overview.
                         </p>
                       </div>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file), size needs to be smaller than 100Mb.">
                         <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>
-                        <input className="form-control" type="file" id="file" name="file" onChange={e => setFile(e.target.files[0])}/>
+                        <input className="form-control" type="file" id="file" name="file" onChange={e => uploadFile(e.target.files[0])}/>
                       </div>
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Integer for square input image shape, or width and height separated by space. Must be divisible by 32 (or 64 depending on the stride)">
                         <label htmlFor="inputshape" className="form-label">Input image shape <i class="bi bi-info-circle-fill"></i></label>

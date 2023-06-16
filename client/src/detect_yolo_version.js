@@ -1,12 +1,20 @@
 import * as zip from "@zip.js/zip.js";
 
-export const YOLOV5_CONVERSION = 'YoloV5';
-export const YOLOV6R1_CONVERSION = 'YoloV6R1';
-export const YOLOV6R3_CONVERSION = 'YoloV6R3';
-export const YOLOV6R4_CONVERSION = 'YoloV6R4';
-export const YOLOV7_CONVERSION = 'YoloV7';
-export const YOLOV8_CONVERSION = 'YoloV8';
+export const YOLOV5_CONVERSION = 'v5';
+export const YOLOV6R1_CONVERSION = 'v6';
+export const YOLOV6R3_CONVERSION = 'v6r2';
+export const YOLOV6R4_CONVERSION = 'v6r4';
+export const YOLOV7_CONVERSION = 'v7';
+export const YOLOV8_CONVERSION = 'v8';
 export const UNRECOGNIZED = 'none';
+export const version2text = {
+    'v5': 'YoloV5',
+    'v6': 'YoloV6 (R1)',
+    'v6r2': 'YoloV6 (R2, R3)',
+    'v6r4': 'YoloV6 (latest)',
+    'v7': 'YoloV7 (detection only)',
+    'v8': 'YoloV8 (detection only)'
+}
 
 async function detectVersion(file) {
     // Creates a BlobReader object used to read `zipFileBlob`.
