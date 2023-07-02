@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from pathlib import Path
 
 class Exporter:
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend):
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2):
         # set up variables
         self.conv_path = conv_path
         self.weights_path = self.conv_path / weights_filename
@@ -27,6 +27,7 @@ class Exporter:
         self.f_json = None
         self.f_zip = None
         self.use_legacy_frontend = use_legacy_frontend
+        self.use_rvc2 = use_rvc2 == 'true'
 
     def get_onnx(self):
         # export onnx model
@@ -91,7 +92,9 @@ class Exporter:
             shaves=self.n_shaves,
             version="2022.1",
             use_cache=False,
-            output_dir=self.conv_path.resolve()
+            output_dir=self.conv_path.resolve(),
+            url="https://blobconverter.luxonis.com" if self.use_rvc2 else \
+                "https://dev-blobconverter.luxonis.com"
         )
         
         self.f_blob = blob_path

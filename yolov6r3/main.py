@@ -25,6 +25,7 @@ app.config.workdir.mkdir(exist_ok=True)
 app.config.REQUEST_MAX_SIZE = 300_000_000
 DEFAULT_NSHAVES = 6
 DEFAULT_USE_LEGACY_FRONTEND = 'false'
+DEFAULT_USE_RVC2 = 'true'
 
 
 @app.get("/yolov6r3/progress/<key>")
@@ -44,6 +45,9 @@ async def upload_file(request):
     useLegacyFrontend = request.form["useLegacyFrontend"][0] if "useLegacyFrontend" in request.form else DEFAULT_USE_LEGACY_FRONTEND
     logger.info(f"useLegacyFrontend: {useLegacyFrontend}")
 
+    useRVC2 = request.form["useRVC2"][0] if "useRVC2" in request.form else DEFAULT_USE_LEGACY_FRONTEND
+    logger.info(f"useRVC2: {useRVC2}")
+    
     imgsz = request.form["inputshape"][0]
     if " " in imgsz:
         imgsz = imgsz.split(" ")
@@ -68,7 +72,7 @@ async def upload_file(request):
         pass
     if version == "v6r2":
         try:
-            exporter = YoloV6R3Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
+            exporter = YoloV6R3Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)

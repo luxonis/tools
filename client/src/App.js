@@ -50,6 +50,8 @@ function App() {
       .catch(err => {console.error("Error while detecting yolo version: " + err); setDetectedVersion('')})
   }
 
+  console.log(config.useRVC2)
+
   return (
     <section className="h-100 gradient-form" style={{backgroundColor: "#eee"}}>
       <div className="container py-5 h-100">
@@ -108,6 +110,13 @@ function App() {
                           Have trouble picking the right version? See <a href="https://docs.google.com/spreadsheets/d/16k3P-LxPMFREoePLvoLqDZo0Xu_tRcSpm_BjQE3PHQY/edit?usp=sharing" target="_blank">here</a> for the version overview.
                         </p>
                       </div>
+                      <div className="mb-3 btn-group" role="group" aria-label="Basic radio toggle button group">
+                        <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" onChange={e => update({useRVC2: true})} checked={config.useRVC2}/>
+                        <label className="btn btn-outline-primary" for="btnradio1">RVC2</label>
+
+                        <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" onChange={e => update({useRVC2: false})} checked={!config.useRVC2} />
+                        <label className="btn btn-outline-primary" for="btnradio3">RVC3 (Experimental)</label>
+                      </div>  
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file), size needs to be smaller than 100Mb.">
                         <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="file" id="file" name="file" onChange={e => uploadFile(e.target.files[0])}/>

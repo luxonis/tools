@@ -13,8 +13,8 @@ DIR_TMP = "./tmp"
 
 class YoloV6R1Exporter(Exporter):
 
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='false'):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
         self.load_model()
     
     def load_model(self):

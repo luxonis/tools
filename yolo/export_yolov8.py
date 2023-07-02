@@ -15,8 +15,8 @@ DIR_TMP = "./tmp"
 
 class YoloV8Exporter(Exporter):
 
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='false'):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
         self.load_model()
     
     def load_model(self):
@@ -30,7 +30,7 @@ class YoloV8Exporter(Exporter):
 
         # Replace with the custom Detection Head
         if isinstance(model.model[-1], (Detect)):
-            model.model[-1] = DetectV8(model.model[-1])
+            model.model[-1] = DetectV8(model.model[-1], self.use_rvc2)
 
         self.num_branches = model.model[-1].nl
 

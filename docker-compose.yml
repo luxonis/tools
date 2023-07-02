@@ -8,27 +8,27 @@ services:
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
     restart: always
-  yolov7:
-    build: ./yolov7
-    ports:
-      - 8001:8001
-    environment:
-      SENTRY_TOKEN: ${SENTRY_TOKEN}
-    restart: always
-  yolov6r1:
-    build: ./yolov6r1
-    ports:
-      - 8002:8002
-    environment:
-      SENTRY_TOKEN: ${SENTRY_TOKEN}
-    restart: always
-  yolov6r3:
-    build: ./yolov6r3
-    ports:
-      - 8003:8003
-    environment:
-      SENTRY_TOKEN: ${SENTRY_TOKEN}
-    restart: always
+  # yolov7:
+  #   build: ./yolov7
+  #   ports:
+  #     - 8001:8001
+  #   environment:
+  #     SENTRY_TOKEN: ${SENTRY_TOKEN}
+  #   restart: always
+  # yolov6r1:
+  #   build: ./yolov6r1
+  #   ports:
+  #     - 8002:8002
+  #   environment:
+  #     SENTRY_TOKEN: ${SENTRY_TOKEN}
+  #   restart: always
+  # yolov6r3:
+  #   build: ./yolov6r3
+  #   ports:
+  #     - 8003:8003
+  #   environment:
+  #     SENTRY_TOKEN: ${SENTRY_TOKEN}
+  #   restart: always
   nginx:
     build: ./nginx
     ports:
@@ -36,9 +36,9 @@ services:
       - 443:443
     depends_on:
       - api
-      - yolov7
-      - yolov6r1
-      - yolov6r3
+      # - yolov7
+      # - yolov6r1
+      # - yolov6r3
     restart: always
     volumes:
       - ./log:/log:z

@@ -10,7 +10,8 @@ openvino==2022.1.0
 openvino-dev==2022.1.0
 # openvino==2021.4.2
 # openvino-dev==2021.4.2
-blobconverter==1.2.9
+# blobconverter==1.2.9
+blobconverter>=1.4.2
 opencv-python>=4.1.2
 
 matplotlib>=3.2.2
