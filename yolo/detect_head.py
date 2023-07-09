@@ -5,7 +5,7 @@ import math
 
 import sys
 sys.path.append("./yolo/YOLOv6") # R2")
-
+from sanic.log import logger
 
 class DetectV6R4s(nn.Module):
     '''Efficient Decoupled Head for YOLOv6 R4 nano & small
@@ -61,7 +61,10 @@ class DetectV6R4s(nn.Module):
             
             if self.use_rvc2:
                 conf, _ = cls_output.max(1, keepdim=True)
+                logger.info(f"\nMax!!!\n")
             else:
+                print('\nUsing ones!!!\n')
+                logger.info(f"\nUsing ones!!!\n")
                 conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
             output = torch.cat([reg_output, conf, cls_output], axis=1)
             outputs.append(output)
@@ -127,6 +130,7 @@ class DetectV6R4m(nn.Module):
             if self.use_rvc2:
                 conf, _ = cls_output.max(1, keepdim=True)
             else:
+                print('\nUsing ones!!!\n')
                 conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
             output = torch.cat([reg_output, conf, cls_output], axis=1)
             outputs.append(output)
@@ -171,8 +175,11 @@ class DetectV8(nn.Module):
         # conf, _ = cls_output.max(1, keepdim=True)
         if self.use_rvc2:
             conf, _ = cls_output.max(1, keepdim=True)
+            print(f'\nconf={conf.shape}, cls_output={cls_output.shape}\n')
         else:
-            conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
+            print('\nUsing ones!!!\n')
+            conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2]), device=cls_output.device)
+            print(f'\nconf={conf.shape}, cls_output={cls_output.shape}\n')
         # Concatrange
         y = torch.cat([box, conf, cls_output], axis=1)
         # Split to 3 channels

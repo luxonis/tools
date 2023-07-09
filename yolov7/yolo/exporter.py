@@ -94,7 +94,7 @@ class Exporter:
             use_cache=False,
             output_dir=self.conv_path.resolve(),
             url="https://blobconverter.luxonis.com" if self.use_rvc2 else \
-                "https://dev-blobconverter.luxonis.com"
+                "http://dev-blobconverter.luxonis.com"
         )
         self.f_blob = blob_path
 
