@@ -29,7 +29,6 @@ class Exporter:
         self.f_zip = None
         self.use_legacy_frontend = use_legacy_frontend
         self.use_rvc2 = use_rvc2 == 'true'
-        logger.info(f"useRVC2: {self.use_rvc2}")
 
     def get_onnx(self):
         # export onnx model
