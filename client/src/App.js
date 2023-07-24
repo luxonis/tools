@@ -50,8 +50,6 @@ function App() {
       .catch(err => {console.error("Error while detecting yolo version: " + err); setDetectedVersion('')})
   }
 
-  console.log(config.useRVC2)
-
   return (
     <section className="h-100 gradient-form" style={{backgroundColor: "#eee"}}>
       <div className="container py-5 h-100">
@@ -86,6 +84,14 @@ function App() {
                       </div>
                     }
 
+                    {
+                      (!error && (detectedVersion == 'YoloV6 (R2, R3)' || detectedVersion == 'YoloV6 (latest)') && !config.useRVC2)
+                      && <div className="warning-box">
+                        <h3>Warning</h3>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of medium size YoloV6. The RVC3 export of these models is likely to fail.</p>
+                      </div>
+                    }
+
                     <form onSubmit={e => {
                       e.preventDefault();
                       dispatch(upload(file));
@@ -110,12 +116,15 @@ function App() {
                           Have trouble picking the right version? See <a href="https://docs.google.com/spreadsheets/d/16k3P-LxPMFREoePLvoLqDZo0Xu_tRcSpm_BjQE3PHQY/edit?usp=sharing" target="_blank">here</a> for the version overview.
                         </p>
                       </div>
-                      <div className="mb-3 btn-group" role="group" aria-label="Basic radio toggle button group">
-                        <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" onChange={e => update({useRVC2: true})} checked={config.useRVC2}/>
-                        <label className="btn btn-outline-primary" for="btnradio1">RVC2</label>
-
-                        <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" onChange={e => update({useRVC2: false})} checked={!config.useRVC2} />
-                        <label className="btn btn-outline-primary" for="btnradio3">RVC3 (Experimental)</label>
+                      <div className="mb-3 btn-group btn-radio-group" role="group" aria-label="Basic radio toggle button group">
+                        <div>
+                          <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" onChange={e => update({useRVC2: true})} checked={config.useRVC2}/>
+                          <label className="btn btn-outline-primary btn-radio" for="btnradio1">RVC2</label>
+                        </div>
+                        <div>
+                          <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" onChange={e => update({useRVC2: false})} checked={!config.useRVC2} />
+                          <label className="btn btn-outline-primary btn-radio" for="btnradio2">RVC3 (Experimental)</label>
+                        </div>
                       </div>  
                       <div className="mb-3" data-bs-toggle="tooltip" data-bs-placement="left" title="Weights of a pre-trained model (.pt file), size needs to be smaller than 100Mb.">
                         <label htmlFor="file" className="form-label">File <i class="bi bi-info-circle-fill"></i></label>

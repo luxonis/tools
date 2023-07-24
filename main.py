@@ -131,7 +131,8 @@ async def upload_file(request):
         exporter.export_blob()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise ServerError(message="Error while converting to blob", status_code=523)
+        raise ServerError(message="Error while exporting to blob (this may be caused by trying to using the RVC3 export in which we are experiencing issues, we are working on them).", status_code=526)
+        # raise ServerError(message="Error while converting to blob", status_code=523)
 
     conversions[conv_id] = "blob"
     try:

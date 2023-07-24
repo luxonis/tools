@@ -57,10 +57,11 @@ class Exporter:
         output_list = ",".join(output_list)
 
         # export to OpenVINO and prune the model in the process
+        # '--data_type FP16 ' \
         cmd = f"mo --input_model '{self.f_simplified}' " \
         f"--output_dir '{self.conv_path.resolve()}' " \
         f"--model_name '{self.model_name}' " \
-        '--data_type FP16 ' \
+        '--compress_to_fp16 ' \
         '--reverse_input_channels ' \
         '--scale 255 ' \
         f'--output "{output_list}"'
@@ -90,7 +91,7 @@ class Exporter:
             bin=str(self.f_bin.resolve()),#as_posix(),
             data_type="FP16",
             shaves=self.n_shaves,
-            version="2022.1",
+            version="2022.1" if self.use_rvc2 else "2022.3_RVC3",
             use_cache=False,
             output_dir=self.conv_path.resolve(),
             url="https://blobconverter.luxonis.com" if self.use_rvc2 else \

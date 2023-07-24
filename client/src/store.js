@@ -94,6 +94,8 @@ export const upload = createAsyncThunk(
           throw Error("Error while makingjson");
         case 525:
           throw Error("Error while making zip");
+        case 526:
+          throw Error("Error while exporting to blob (this may be caused by trying to using the RVC3 export in which we are experiencing issues, we are working on them).");
         default:
           throw Error(error);
       }

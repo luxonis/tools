@@ -83,15 +83,40 @@ async def upload_file(request):
         raise ValueError(f"Yolo version {version} is not supported.")
     
     conversions[conv_id] = "initialized"
-    exporter.export_onnx()
+    try:
+        exporter.export_onnx()
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        raise ServerError(message="Error while converting to onnx", status_code=521)
+
     conversions[conv_id] = "onnx"
-    exporter.export_openvino(version)
+    try:
+        exporter.export_openvino(version)
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        raise ServerError(message="Error while converting to openvino", status_code=522)
+
     conversions[conv_id] = "openvino"
-    exporter.export_blob()
+    try:
+        exporter.export_blob()
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        raise ServerError(message="Error while exporting to blob (this may be caused by trying to using the RVC3 export in which we are experiencing issues, we are working on them).", status_code=526)
+
     conversions[conv_id] = "blob"
-    exporter.export_json()
+    try:
+        exporter.export_json()
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        raise ServerError(message="Error while making json", status_code=524)
+
     conversions[conv_id] = "json"
-    zip_file = exporter.make_zip()
+    try:
+        zip_file = exporter.make_zip()
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        raise ServerError(message="Error while making zip", status_code=525)
+
     conversions[conv_id] = "zip"
 
     return await response.file(
