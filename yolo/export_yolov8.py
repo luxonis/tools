@@ -1,6 +1,7 @@
 import sys
 sys.path.append("./yolo/ultralytics")
 
+import re
 import torch
 import onnxsim
 import onnx
@@ -75,7 +76,22 @@ class YoloV8Exporter(Exporter):
         return self.f_simplified
 
     def export_openvino(self, version):
-        return super().export_openvino('v6r2')
+        super().export_openvino('v6r2')
+
+        if not self.use_rvc2:
+            # Replace opset8 with opset1 for Softmax layers
+            # Read the content of the file
+            with open(self.f_xml, 'r') as file:
+                content = file.read()
+
+            # Use the re.sub() function to replace the pattern with the new version
+            new_content = re.sub(r'type="SoftMax" version="opset8"', 'type="SoftMax" version="opset1"', content)
+
+            # Write the updated content back to the file
+            with open(self.f_xml, 'w') as file:
+                file.write(new_content)
+
+        return self.f_xml, self.f_mapping, self.f_bin
 
     def export_json(self):
         # generate anchors and sides

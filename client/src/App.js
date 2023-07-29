@@ -134,8 +134,8 @@ function App() {
                         <label htmlFor="inputshape" className="form-label">Input image shape <i class="bi bi-info-circle-fill"></i></label>
                         <input className="form-control" type="int" id="inputshape" name="inputshape" value={config.inputshape} onChange={e => update({inputshape: e.target.value})}/>
                       </div>
-                      <div data-bs-toggle="tooltip" data-bs-placement="left" title="Number of shaves (default is 6)" onClick={() => setAdvanced(!advanced)}>
-                        <label className="form-label active">Advanced options { advanced ? <i class="bi bi-caret-up-fill"></i> : <i class="bi bi-caret-down-fill"></i> } </label>
+                      <div data-bs-toggle="tooltip" data-bs-placement="left" title="Advanced options for setting number of shaves and whether to use legacy flag or not." onClick={() => setAdvanced(!advanced)}>
+                        <label className="form-label active">Advanced options{ advanced ? <i class="bi bi-caret-up-fill"></i> : <i class="bi bi-caret-down-fill"></i> }</label>
                       </div>
                       <div className="mb-3">
                         <div className={`advanced-option ${advanced ? 'expanded' : ''}`}>
@@ -147,7 +147,7 @@ function App() {
                               <span>16</span>
                             </div>
                           </div>
-                          <div data-bs-toggle="tooltip" data-bs-placement="left" title="If off, defaults to OpenVINO 2022.1. Slight performance degradation noticed with 2022.1.">
+                          <div data-bs-toggle="tooltip" data-bs-placement="left" title="If off, defaults to OpenVINO 2022.3. Slight performance degradation noticed with 2022.3.">
                             <label htmlFor="useLegacyFrontend" className="form-label mr10">Use OpenVINO 2021.4: <i class="bi bi-info-circle-fill"></i></label>
                             <input type="checkbox" id="useLegacyFrontend" name="useLegacyFrontend" onChange={e => update({useLegacyFrontend: !config.useLegacyFrontend})} checked={config.useLegacyFrontend}/>
                           </div>
