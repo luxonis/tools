@@ -95,7 +95,7 @@ export const upload = createAsyncThunk(
         case 525:
           throw Error("Error while making zip");
         case 526:
-          throw Error("Error while exporting to blob (this may be caused by trying to using the RVC3 export in which we are experiencing issues, we are working on them).");
+          throw Error("Error when exporting to blob, likely due to certain operations being unsupported on RVC3. If interested in further information, please open a GitHub issue.");
         default:
           throw Error(error);
       }

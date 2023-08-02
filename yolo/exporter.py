@@ -2,11 +2,12 @@ import json
 import torch
 import onnx
 import onnxsim
+import os
 import subprocess
 import blobconverter
 from zipfile import ZipFile
 from pathlib import Path
-from sanic.log import logger
+
 
 class Exporter:
     def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2):
@@ -96,7 +97,7 @@ class Exporter:
             use_cache=False,
             output_dir=self.conv_path.resolve(),
             url="https://blobconverter.luxonis.com" if self.use_rvc2 else \
-                "http://dev-blobconverter.luxonis.com"
+                os.getenv("RVC3_BLOBCONVERTER", "https://blobconverter.luxonis.com")
         )
         
         self.f_blob = blob_path

@@ -7,6 +7,7 @@ services:
       - 8000:8000
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
+      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
     restart: always
   yolov7:
     build: ./yolov7
@@ -14,6 +15,7 @@ services:
       - 8001:8001
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
+      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
     restart: always
   yolov6r1:
     build: ./yolov6r1
@@ -21,6 +23,7 @@ services:
       - 8002:8002
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
+      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
     restart: always
   yolov6r3:
     build: ./yolov6r3
@@ -28,6 +31,7 @@ services:
       - 8003:8003
     environment:
       SENTRY_TOKEN: ${SENTRY_TOKEN}
+      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
     restart: always
   nginx:
     build: ./nginx
