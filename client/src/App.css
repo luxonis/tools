@@ -48,6 +48,15 @@ body {
   width: 230px;
 }
 
+.warning-box {
+  color: #b38600;
+  background-color: #fcebb8;
+  border-radius: 10px;
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, .5);
+  text-align: center;
+  padding: 10px;
+}
+
 .error-box {
   color: #D8000C;
   background-color: #FFD2D2;
@@ -100,3 +109,27 @@ body {
   color: #000000;
   text-decoration: none;
 }
+
+.btn-radio {
+  width: 160px;
+  text-align: center;
+  font-size: smaller;
+  /* vertical-align: middle; */
+}
+
+.btn-radio-group {
+  display: flex;
+  justify-content: center;
+}
+
+@media only screen and (max-width: 400px) {
+  .btn-radio-group {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .btn-radio {
+    width: 100%;
+  }
+}
+

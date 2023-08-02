@@ -16,8 +16,8 @@ import sparseml
 DIR_TMP = "./tmp"
 
 class YoloV5Exporter(Exporter):
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='true'):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
         self.load_model()
 
     def load_model(self):
@@ -71,13 +71,34 @@ class YoloV5Exporter(Exporter):
 
         inputs = conv_indices[-self.num_branches:]
 
+        # Names of the node outputs you want to set as model outputs
+        node_output_names = []
         for i, inp in enumerate(inputs):
+            node_output_names.append(f'output{i+1}_yolov5')
             sigmoid = onnx.helper.make_node(
                 'Sigmoid',
                 inputs=[onnx_model.graph.node[inp].output[0]],
                 outputs=[f'output{i+1}_yolov5'],
             )
             onnx_model.graph.node.append(sigmoid)
+
+        # Create ValueInfoProto messages for the desired outputs
+        output_value_infos = []
+        for output_name in node_output_names:
+            for node in onnx_model.graph.node:
+                if output_name in node.output:
+                    # Copy information from the output's ValueInfoProto
+                    # (this includes the data type and shape, if they are known)
+                    for value_info in onnx_model.graph.value_info:
+                        if value_info.name == output_name:
+                            output_value_infos.append(value_info)
+
+        # Clear the existing outputs
+        onnx_model.graph.ClearField('output')
+
+        # Add the new outputs
+        for value_info in output_value_infos:
+            onnx_model.graph.output.add().CopyFrom(value_info)
 
         onnx.checker.check_model(onnx_model)  # check onnx model
 

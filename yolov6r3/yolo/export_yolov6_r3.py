@@ -19,8 +19,8 @@ DIR_TMP = "./tmp"
 
 class YoloV6R3Exporter(Exporter):
 
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='true'):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
         self.load_model()
     
     def load_model(self):
@@ -42,7 +42,7 @@ class YoloV6R3Exporter(Exporter):
                 setattr(model, n, YoloV6BackBone(module, uses_fuse_P2=False, uses_6_erblock=True))
         
         if not hasattr(model.detect, 'obj_preds'):
-            model.detect = DetectV6R3(model.detect)
+            model.detect = DetectV6R3(model.detect, self.use_rvc2)
         
         self.num_branches = len(model.detect.grid)
 

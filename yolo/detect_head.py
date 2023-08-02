@@ -13,7 +13,7 @@ class DetectV6R4s(nn.Module):
     hybridchannels methods.
     '''
     # def __init__(self, num_classes=80, anchors=1, num_layers=3, inplace=True, head_layers=None, use_dfl=True, reg_max=16):  # detection layer
-    def __init__(self, old_detect):  # detection layer
+    def __init__(self, old_detect, use_rvc2):  # detection layer
         super().__init__()
         self.nc = old_detect.nc  # number of classes
         self.no = old_detect.no  # number of outputs per anchor
@@ -41,6 +41,8 @@ class DetectV6R4s(nn.Module):
         self.cls_preds = old_detect.cls_preds
         self.reg_preds = old_detect.reg_preds
 
+        self.use_rvc2 = use_rvc2
+
     def forward(self, x):
         outputs = []
 
@@ -57,8 +59,10 @@ class DetectV6R4s(nn.Module):
 
             cls_output = torch.sigmoid(cls_output)
             
-            conf, _ = cls_output.max(1, keepdim=True)
-            # conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
+            if self.use_rvc2:
+                conf, _ = cls_output.max(1, keepdim=True)
+            else:
+                conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
             output = torch.cat([reg_output, conf, cls_output], axis=1)
             outputs.append(output)
 
@@ -70,7 +74,7 @@ class DetectV6R4m(nn.Module):
     hybridchannels methods.
     '''
     # def __init__(self, num_classes=80, anchors=1, num_layers=3, inplace=True, head_layers=None, use_dfl=True, reg_max=16):  # detection layer
-    def __init__(self, old_detect):  # detection layer
+    def __init__(self, old_detect, use_rvc2):  # detection layer
         super().__init__()
         self.nc = old_detect.nc  # number of classes
         self.no = old_detect.no  # number of outputs per anchor
@@ -82,7 +86,7 @@ class DetectV6R4m(nn.Module):
         self.inplace = old_detect.inplace
         self.stride = old_detect.stride
         self.use_dfl = old_detect.use_dfl
-        print(old_detect.use_dfl)
+        # print(old_detect.use_dfl)
         self.reg_max = old_detect.reg_max
         self.proj_conv = old_detect.proj_conv
         self.grid_cell_offset = 0.5
@@ -94,6 +98,8 @@ class DetectV6R4m(nn.Module):
         self.reg_convs = old_detect.reg_convs
         self.cls_preds = old_detect.cls_preds
         self.reg_preds = old_detect.reg_preds
+
+        self.use_rvc2 = use_rvc2
 
     def forward(self, x):
         outputs = []
@@ -110,14 +116,18 @@ class DetectV6R4m(nn.Module):
             reg_output = self.reg_preds[i](reg_feat)
 
             if self.use_dfl:
-                print(f'reg_output before: {reg_output.shape} vs. {(self.reg_max + 1, l)}')
+                # print(f'reg_output before: {reg_output.shape} vs. {(self.reg_max + 1, l)}')
                 reg_output = reg_output.reshape([-1, 4, self.reg_max + 1, l]).permute(0, 2, 1, 3)
                 reg_output = self.proj_conv(F.softmax(reg_output, dim=1)).reshape([-1, 4, h, w])
 
             cls_output = torch.sigmoid(cls_output)
             
-            conf, _ = cls_output.max(1, keepdim=True)
+            # conf, _ = cls_output.max(1, keepdim=True)
             # conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
+            if self.use_rvc2:
+                conf, _ = cls_output.max(1, keepdim=True)
+            else:
+                conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2], cls_output.shape[3]), device=cls_output.device)
             output = torch.cat([reg_output, conf, cls_output], axis=1)
             outputs.append(output)
 
@@ -132,7 +142,7 @@ class DetectV8(nn.Module):
     anchors = torch.empty(0)  # init
     strides = torch.empty(0)  # init
 
-    def __init__(self, old_detect):
+    def __init__(self, old_detect, use_rvc2):
         super().__init__()
         self.nc = old_detect.nc  # number of classes
         self.nl = old_detect.nl  # number of detection layers
@@ -146,6 +156,8 @@ class DetectV8(nn.Module):
         self.f = old_detect.f
         self.i = old_detect.i
 
+        self.use_rvc2 = use_rvc2
+
     def forward(self, x):
         shape = x[0].shape  # BCHW
         
@@ -156,8 +168,14 @@ class DetectV8(nn.Module):
         box = self.dfl(box)
         cls_output = cls.sigmoid()
         # Get the max
-        conf, _ = cls_output.max(1, keepdim=True)
-        # Concat
+        # conf, _ = cls_output.max(1, keepdim=True)
+        if self.use_rvc2:
+            conf, _ = cls_output.max(1, keepdim=True)
+            # print(f'\nconf={conf.shape}, cls_output={cls_output.shape}\n')
+        else:
+            conf = torch.ones((cls_output.shape[0], 1, cls_output.shape[2]), device=cls_output.device)
+            # print(f'\nconf={conf.shape}, cls_output={cls_output.shape}\n')
+        # Concatrange
         y = torch.cat([box, conf, cls_output], axis=1)
         # Split to 3 channels
         outputs = []

@@ -31,7 +31,8 @@ app.config.workdir = Path(__file__).parent / "tmp"
 app.config.workdir.mkdir(exist_ok=True)
 app.config.REQUEST_MAX_SIZE = 300_000_000
 DEFAULT_NSHAVES = 6
-DEFAULT_USE_LEGACY_FRONTEND = 'false'
+DEFAULT_USE_LEGACY_FRONTEND = 'true'
+DEFAULT_USE_RVC2 = 'true'
 
 
 @app.get("/")
@@ -55,6 +56,9 @@ async def upload_file(request):
 
     useLegacyFrontend = request.form["useLegacyFrontend"][0] if "useLegacyFrontend" in request.form else DEFAULT_USE_LEGACY_FRONTEND
     logger.info(f"useLegacyFrontend: {useLegacyFrontend}")
+    
+    useRVC2 = request.form["useRVC2"][0] if "useRVC2" in request.form else DEFAULT_USE_RVC2
+    logger.info(f"useRVC2: {useRVC2}")
 
     imgsz = request.form["inputshape"][0]
     if " " in imgsz:
@@ -80,7 +84,7 @@ async def upload_file(request):
         pass
     if version == "v5":
         try:
-            exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
+            exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)
@@ -89,7 +93,7 @@ async def upload_file(request):
             raise ServerError(message="Error while loading model", status_code=520)
     elif version == "v6r4":
         try:
-            exporter = YoloV6R4Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
+            exporter = YoloV6R4Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)
@@ -98,7 +102,7 @@ async def upload_file(request):
             raise ServerError(message="Error while loading model (This may be caused by trying to convert older releases 1.0, 2.0 or 3.0, in which case, try to convert using the 'YoloV6 (R1)' or 'YoloV6 (R2, R3)' option).", status_code=516)
     elif version == "v8":
         try:
-            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend)
+            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)
@@ -127,7 +131,8 @@ async def upload_file(request):
         exporter.export_blob()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise ServerError(message="Error while converting to blob", status_code=523)
+        raise ServerError(message="Error when exporting to blob, likely due to certain operations being unsupported on RVC3. If interested in further information, please open a GitHub issue.", status_code=526)
+        # raise ServerError(message="Error while converting to blob", status_code=523)
 
     conversions[conv_id] = "blob"
     try:
@@ -161,6 +166,7 @@ if __name__ == '__main__':
     runtime = os.getenv("RUNTIME", "debug")
     SENTRY_TOKEN = os.getenv("SENTRY_TOKEN")
     logger.info(f"SENTRY_TOKEN: {SENTRY_TOKEN}")
+    logger.info(f"RVC3_BLOBCONVERTER: {os.getenv('RVC3_BLOBCONVERTER')}")
     if SENTRY_TOKEN is not None:
         sentry_sdk.init(
             dsn=SENTRY_TOKEN

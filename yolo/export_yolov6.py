@@ -18,8 +18,8 @@ DIR_TMP = "./tmp"
 
 class YoloV6R4Exporter(Exporter):
 
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false'):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend)
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='true'):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
         self.load_model()
     
     def load_model(self):
@@ -33,9 +33,9 @@ class YoloV6R4Exporter(Exporter):
                 layer.switch_to_deploy()
 
         if isinstance(model.detect, Detect):
-            model.detect = DetectV6R4s(model.detect)
+            model.detect = DetectV6R4s(model.detect, self.use_rvc2)
         else:
-            model.detect = DetectV6R4m(model.detect)
+            model.detect = DetectV6R4m(model.detect, self.use_rvc2)
         
         self.num_branches = len(model.detect.grid)
 

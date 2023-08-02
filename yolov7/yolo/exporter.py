@@ -1,5 +1,6 @@
 import json
 import torch
+import os
 import onnx
 import onnxsim
 import subprocess
@@ -7,8 +8,9 @@ import blobconverter
 from zipfile import ZipFile
 from pathlib import Path
 
+
 class Exporter:
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend):
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2):
         # set up variables
         self.conv_path = conv_path
         self.weights_path = self.conv_path / weights_filename
@@ -27,6 +29,7 @@ class Exporter:
         self.f_json = None
         self.f_zip = None
         self.use_legacy_frontend = use_legacy_frontend
+        self.use_rvc2 = use_rvc2 == 'true'
 
     def get_onnx(self):
         # export onnx model
@@ -55,11 +58,12 @@ class Exporter:
         output_list = [f"output{i+1}_yolo{version}" for i in range(self.num_branches)]
         output_list = ",".join(output_list)
 
+        # '--data_type FP16 ' \
         # export to OpenVINO and prune the model in the process
         cmd = f"mo --input_model '{self.f_simplified}' " \
         f"--output_dir '{self.conv_path.resolve()}' " \
         f"--model_name '{self.model_name}' " \
-        '--data_type FP16 ' \
+        '--compress_to_fp16 ' \
         '--reverse_input_channels ' \
         '--scale 255 ' \
         f'--output "{output_list}"'
@@ -89,9 +93,11 @@ class Exporter:
             bin=str(self.f_bin.resolve()),#as_posix(),
             data_type="FP16",
             shaves=self.n_shaves,
-            version="2022.1",
+            version="2022.1" if self.use_rvc2 else "2022.3_RVC3",
             use_cache=False,
-            output_dir=self.conv_path.resolve()
+            output_dir=self.conv_path.resolve(),
+            url="https://blobconverter.luxonis.com" if self.use_rvc2 else \
+                os.getenv("RVC3_BLOBCONVERTER", "https://blobconverter.luxonis.com")
         )
         self.f_blob = blob_path
 

@@ -94,6 +94,8 @@ export const upload = createAsyncThunk(
           throw Error("Error while makingjson");
         case 525:
           throw Error("Error while making zip");
+        case 526:
+          throw Error("Error when exporting to blob, likely due to certain operations being unsupported on RVC3. If interested in further information, please open a GitHub issue.");
         default:
           throw Error(error);
       }
@@ -137,7 +139,8 @@ export const appSlice = createSlice({
       file: '',
       inputshape: '',
       nShaves: 6,
-      useLegacyFrontend: true
+      useLegacyFrontend: true,
+      useRVC2: true
     },
     progress: null,
     inProgress: false,
