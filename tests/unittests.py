@@ -3,7 +3,6 @@ from typing import Union, Tuple, Literal, Dict
 import requests
 from uuid import uuid4
 import os
-import sys
 
 
 # Constants
@@ -65,16 +64,36 @@ class ToolCases(unittest.TestCase):
     DOWNLOAD_WEIGHTS: bool = True
     DELETE_OUTPUT: bool = True
     
+    def _test_yolo(self, model_name: str, source_folder: str, version: str, test_name: str, url: str, use_rvc2: str=DEFAULT_USE_RVC2):
+        """ Template method for conversion testing of a Yolo model. """
+        print(f'Running {test_name}...')
+        # If set, download the weights
+        if self.DOWNLOAD_WEIGHTS:
+            print(f'Downloading {model_name}...')
+            download_model(model_name, source_folder, f'{model_name}.pt')
+        # Initializing output file
+        output_file = f'converted_{model_name}.zip'
+        # Convert the models
+        status_code, output_file = self.convert_yolo(f'{source_folder}{model_name}.pt', version=version, file_name=output_file, url=url, use_rvc2=use_rvc2)
+        # Checking if export was successful
+        self.assertEqual(status_code, STATUS_OK)
+        self.assertEqual(output_file, output_file)
+
 
     def convert_yolo(self, file_path: str, shape: Union[int, Tuple[int, int]]=416, version: Literal["v5"] = "v5", 
-                     url: str=URL, file_name:str=OUTPUT_FILE_NAME, log: bool=False, n_shaves=DEFAULT_NSHAVES, use_legacy=DEFAULT_USE_LEGACY_FRONTEND, use_rvc2=DEFAULT_USE_RVC2):
+                     url: str=URL, file_name:str=OUTPUT_FILE_NAME, log: bool=False, n_shaves: int=DEFAULT_NSHAVES, use_legacy: str=DEFAULT_USE_LEGACY_FRONTEND, use_rvc2: str=DEFAULT_USE_RVC2):
         """ Uploads Yolo weights and receives zip with compiled blob.
         
         :param file_path: Path to .pt weights
         :param shape: Integer or tuple with width and height - must be divisible by 32
         :param version: Version of the Yolo model
-        :returns: Path to downloaded zip file
-        :param file_path: Path to .pt weights
+        :param url: tools' URL
+        :param file_name: Output file
+        :param log: Whether to switch on logging or not
+        :param n_shaves: Number of shaves
+        :param use_legacy: Whether to use the legacy frontend flag while compiling to IR representation or not
+        :param use_rvc2: Whether to use the RVC2 or RVC3 conversion
+        :returns: Status code and Path to downloaded zip file
         """
         # Variables
         with open(file_path,'rb') as input_file:
@@ -115,490 +134,166 @@ class ToolCases(unittest.TestCase):
                 return 500, ""
 
     def test_yolov3tinyu(self):
-        print('Running test_yolov3tinyu...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov3-tinyu...')
-            download_model('yolov3-tinyu', self.V8_SOURCE_FOLDER, "yolov3-tinyu.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov3-tinyu.pt', version='v8', file_name='converted_yolov3-tinyu.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov3-tinyu.zip')
+        self._test_yolo(model_name='yolov3-tinyu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov3tinyu', url=self.URL)
     
     def test_yolov6nr4(self):
-        print('Running test_yolov6nr4...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr4...')
-            download_model('yolov6nr4', self.V6R4_SOURCE_FOLDER, "yolov6nr4.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R4_SOURCE_FOLDER}yolov6nr4.pt', version='v6r4', file_name='converted_yolov6nr4.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr4.zip')
+        self._test_yolo(model_name='yolov6nr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6nr4', url=self.URL)
     
     def test_yolov6sr4(self):
-        print('Running test_yolov6sr4...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr4...')
-            download_model('yolov6sr4', self.V6R4_SOURCE_FOLDER, "yolov6sr4.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R4_SOURCE_FOLDER}yolov6sr4.pt', version='v6r4', file_name='converted_yolov6sr4.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr4.zip')
+        self._test_yolo(model_name='yolov6sr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6sr4', url=self.URL)
 
     def test_yolov6nr2(self):
-        print('Running test_yolov6nr2...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr2...')
-            download_model('yolov6nr2', self.V6R2_SOURCE_FOLDER, "yolov6nr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6nr2.pt', version='v6r2', file_name='converted_yolov6nr2.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr2.zip')
+        self._test_yolo(model_name='yolov6nr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr2', url=f'{self.URL}{URL_V6R3}')
     
     def test_yolov6tr2(self):
-        print('Running test_yolov6tr2...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6tr2...')
-            download_model('yolov6tr2', self.V6R2_SOURCE_FOLDER, "yolov6tr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6tr2.pt', version='v6r2', file_name='converted_yolov6tr2.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6tr2.zip')
+        self._test_yolo(model_name='yolov6tr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6tr2', url=f'{self.URL}{URL_V6R3}')
 
     def test_yolov6sr2(self):
-        print('Running test_yolov6sr2...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr2...')
-            download_model('yolov6sr2', self.V6R2_SOURCE_FOLDER, "yolov6sr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6sr2.pt', version='v6r2', file_name='converted_yolov6sr2.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr2.zip')
+        self._test_yolo(model_name='yolov6sr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr2', url=f'{self.URL}{URL_V6R3}')
     
     def test_yolov6nr21(self):
-        print('Running test_yolov6nr21...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr21...')
-            download_model('yolov6nr21', self.V6R21_SOURCE_FOLDER, "yolov6nr21.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R21_SOURCE_FOLDER}yolov6nr21.pt', version='v6r2', file_name='converted_yolov6nr21.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr21.zip')
+        self._test_yolo(model_name='yolov6nr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr21', url=f'{self.URL}{URL_V6R3}')
     
     def test_yolov6sr21(self):
-        print('Running test_yolov6sr21...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr21...')
-            download_model('yolov6sr21', self.V6R21_SOURCE_FOLDER, "yolov6sr21.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R21_SOURCE_FOLDER}yolov6sr21.pt', version='v6r2', file_name='converted_yolov6sr21.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr21.zip')
+        self._test_yolo(model_name='yolov6sr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr21', url=f'{self.URL}{URL_V6R3}')
     
     def test_yolov6nr3(self):
-        print('Running test_yolov6nr3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr3...')
-            download_model('yolov6nr3', self.V6R3_SOURCE_FOLDER, "yolov6nr3.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R3_SOURCE_FOLDER}yolov6nr3.pt', version='v6r2', file_name='converted_yolov6nr3.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr3.zip')
+        self._test_yolo(model_name='yolov6nr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr3', url=f'{self.URL}{URL_V6R3}')
     
     def test_yolov6sr3(self):
-        print('Running test_yolov6sr3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr3...')
-            download_model('yolov6sr3', self.V6R3_SOURCE_FOLDER, "yolov6sr3.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R3_SOURCE_FOLDER}yolov6sr3.pt', version='v6r2', file_name='converted_yolov6sr3.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr3.zip')
+        self._test_yolo(model_name='yolov6sr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr3', url=f'{self.URL}{URL_V6R3}')
 
     def test_yolov6nr1(self):
-        print('Running test_yolov6nr1...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr1...')
-            download_model('yolov6nr1', self.V6R1_SOURCE_FOLDER, "yolov6nr1.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R1_SOURCE_FOLDER}yolov6nr1.pt', version='v6', file_name='converted_yolov6nr1.zip', url=f'{self.URL}{URL_V6R1}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr1.zip')
+        self._test_yolo(model_name='yolov6nr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6nr1', url=f'{self.URL}{URL_V6R1}')
     
     def test_yolov6tr1(self):
-        print('Running test_yolov6tr1...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6tr1...')
-            download_model('yolov6tr1', self.V6R1_SOURCE_FOLDER, "yolov6tr1.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R1_SOURCE_FOLDER}yolov6tr1.pt', version='v6', file_name='converted_yolov6tr1.zip', url=f'{self.URL}{URL_V6R1}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6tr1.zip')
+        self._test_yolo(model_name='yolov6tr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6tr1', url=f'{self.URL}{URL_V6R1}')
     
     def test_yolov5n(self):
-        print('Running test_yolov5n...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5n...')
-            download_model('yolov5n', self.V5_SOURCE_FOLDER, "yolov5n.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5n.pt', version='v5', file_name='converted_yolov5n.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5n.zip')
+        self._test_yolo(model_name='yolov5n', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n', url=self.URL)
     
     def test_yolov5s(self):
-        print('Running test_yolov5s...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5s...')
-            download_model('yolov5s', self.V5_SOURCE_FOLDER, "yolov5s.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5s.pt', version='v5', file_name='converted_yolov5s.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5s.zip')
+        self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s', url=self.URL)
     
     def test_yolov8n(self):
-        print('Running test_yolov8n...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8n...')
-            download_model('yolov8n', self.V8_SOURCE_FOLDER, "yolov8n.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8n.pt', version='v8', file_name='converted_yolov8n.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8n.zip')
+        self._test_yolo(model_name='yolov8n', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8n', url=self.URL)
     
     def test_yolov8s(self):
-        print('Running test_yolov8s...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8s...')
-            download_model('yolov8s', self.V8_SOURCE_FOLDER, "yolov8s.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8s.pt', version='v8', file_name='converted_yolov8s.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8s.zip')
+        self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s', url=self.URL)
 
     def test_yolov7t(self):
-        print('Running test_yolov7t...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov7t...')
-            download_model('yolov7t', self.V7_SOURCE_FOLDER, "yolov7t.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V7_SOURCE_FOLDER}yolov7t.pt', version='v7', file_name='converted_yolov7t.zip', url=f'{self.URL}{URL_V7}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov7t.zip')
+        self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t', url=f'{self.URL}{URL_V7}')
     
     def test_yolov6mr4(self):
-        print('Running test_yolov6mr4...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr4...')
-            download_model('yolov6mr4', self.V6R4_SOURCE_FOLDER, "yolov6mr4.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R4_SOURCE_FOLDER}yolov6mr4.pt', version='v6r4', file_name='converted_yolov6mr4.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr4.zip')
+        self._test_yolo(model_name='yolov6mr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6mr4', url=self.URL)
 
     def test_yolov6mr2(self):
-        print('Running test_yolov6mr2...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr2...')
-            download_model('yolov6mr2', self.V6R2_SOURCE_FOLDER, "yolov6mr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6mr2.pt', version='v6r2', file_name='converted_yolov6mr2.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr2.zip')
+        self._test_yolo(model_name='yolov6mr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr2', url=f'{self.URL}{URL_V6R3}')
     
     def test_yolov6mr21(self):
-        print('Running test_yolov6mr21...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr21...')
-            download_model('yolov6mr21', self.V6R21_SOURCE_FOLDER, "yolov6mr21.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R21_SOURCE_FOLDER}yolov6mr21.pt', version='v6r2', file_name='converted_yolov6mr21.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr21.zip')
+        self._test_yolo(model_name='yolov6mr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr21', url=f'{self.URL}{URL_V6R3}')
     
     def test_yolov6mr3(self):
-        print('Running test_yolov6mr3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr3...')
-            download_model('yolov6mr3', self.V6R3_SOURCE_FOLDER, "yolov6mr3.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R3_SOURCE_FOLDER}yolov6mr3.pt', version='v6r2', file_name='converted_yolov6mr3.zip', url=f'{self.URL}{URL_V6R3}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr3.zip')
+        self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3', url=f'{self.URL}{URL_V6R3}')
 
     def test_yolov6sr1(self):
-        print('Running test_yolov6sr1...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr1...')
-            download_model('yolov6sr1', self.V6R1_SOURCE_FOLDER, "yolov6sr1.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R1_SOURCE_FOLDER}yolov6sr1.pt', version='v6', file_name='converted_yolov6sr1.zip', url=f'{self.URL}{URL_V6R1}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr1.zip')
+        self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1', url=f'{self.URL}{URL_V6R1}')
     
     def test_yolov5m(self):
-        print('Running test_yolov5m...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5m...')
-            download_model('yolov5m', self.V5_SOURCE_FOLDER, "yolov5m.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5m.pt', version='v5', file_name='converted_yolov5m.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5m.zip')
+        self._test_yolo(model_name='yolov5m', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m', url=self.URL)
     
     def test_yolov8m(self):
-        print('Running test_yolov8m...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8m...')
-            download_model('yolov8m', self.V8_SOURCE_FOLDER, "yolov8m.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8m.pt', version='v8', file_name='converted_yolov8m.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8m.zip')
+        self._test_yolo(model_name='yolov8m', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8m', url=self.URL)
     
     def test_yolov5l(self):
-        print('Running test_yolov5l...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5l...')
-            download_model('yolov5l', self.V5_SOURCE_FOLDER, "yolov5l.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5l.pt', version='v5', file_name='converted_yolov5l.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5l.zip')
+        self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l', url=self.URL)
     
     def test_yolov8l(self):
-        print('Running test_yolov8l...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8l...')
-            download_model('yolov8l', self.V8_SOURCE_FOLDER, "yolov8l.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8l.pt', version='v8', file_name='converted_yolov8l.zip', url=self.URL)
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8l.zip')
+        self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l', url=self.URL)
 
     def test_yolov7(self):
-        print('Running test_yolov7...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov7...')
-            download_model('yolov7', self.V7_SOURCE_FOLDER, "yolov7.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V7_SOURCE_FOLDER}yolov7.pt', version='v7', file_name='converted_yolov7.zip', url=f'{self.URL}{URL_V7}')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov7.zip')
+        self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7', url=f'{self.URL}{URL_V7}')
 
     def test_yolov3tinyu_rvc3(self):
-        print('Running test_yolov3tinyu_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov3-tinyu...')
-            download_model('yolov3-tinyu', self.V8_SOURCE_FOLDER, "yolov3-tinyu.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov3-tinyu.pt', version='v8', file_name='converted_yolov3-tinyu_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov3-tinyu_rvc3.zip')
+        self._test_yolo(model_name='yolov3-tinyu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov3tinyu_rvc3', url=self.URL, use_rvc2='false')
     
     def test_yolov6nr4_rvc3(self):
-        print('Running test_yolov6nr4_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr4...')
-            download_model('yolov6nr4', self.V6R4_SOURCE_FOLDER, "yolov6nr4.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R4_SOURCE_FOLDER}yolov6nr4.pt', version='v6r4', file_name='converted_yolov6nr4_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr4_rvc3.zip')
-
-    def test_yolov6nr2_rvc3(self):
-        print('Running test_yolov6nr2_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr2...')
-            download_model('yolov6nr2', self.V6R2_SOURCE_FOLDER, "yolov6nr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6nr2.pt', version='v6r2', file_name='converted_yolov6nr2_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr2_rvc3.zip')
-    
-    def test_yolov6nr21_rvc3(self):
-        print('Running test_yolov6nr21_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr21...')
-            download_model('yolov6nr21', self.V6R21_SOURCE_FOLDER, "yolov6nr21.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R21_SOURCE_FOLDER}yolov6nr21.pt', version='v6r2', file_name='converted_yolov6nr21_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr21_rvc3.zip')
-    
-    def test_yolov6nr3_rvc3(self):
-        print('Running test_yolov6nr3_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr3...')
-            download_model('yolov6nr3', self.V6R3_SOURCE_FOLDER, "yolov6nr3.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R3_SOURCE_FOLDER}yolov6nr3.pt', version='v6r2', file_name='converted_yolov6nr3_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr3_rvc3.zip')
-
-    def test_yolov6nr1_rvc3(self):
-        print('Running test_yolov6nr1_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6nr1...')
-            download_model('yolov6nr1', self.V6R1_SOURCE_FOLDER, "yolov6nr1.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R1_SOURCE_FOLDER}yolov6nr1.pt', version='v6', file_name='converted_yolov6nr1_rvc3.zip', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6nr1_rvc3.zip')
-    
-    def test_yolov5n_rvc3(self):
-        print('Running test_yolov5n_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5n...')
-            download_model('yolov5n', self.V5_SOURCE_FOLDER, "yolov5n.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5n.pt', version='v5', file_name='converted_yolov5n_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5n_rvc3.zip')
-    
-    def test_yolov8n_rvc3(self):
-        print('Running test_yolov8n_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8n...')
-            download_model('yolov8n', self.V8_SOURCE_FOLDER, "yolov8n.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8n.pt', version='v8', file_name='converted_yolov8n_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8n_rvc3.zip')
+        self._test_yolo(model_name='yolov6nr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6nr4_rvc3', url=self.URL, use_rvc2='false')
     
     def test_yolov6sr4_rvc3(self):
-        print('Running test_yolov6sr4_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr4...')
-            download_model('yolov6sr4', self.V6R4_SOURCE_FOLDER, "yolov6sr4.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R4_SOURCE_FOLDER}yolov6sr4.pt', version='v6r4', file_name='converted_yolov6sr4_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr4_rvc3.zip')
+        self._test_yolo(model_name='yolov6sr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6sr4_rvc3', url=self.URL, use_rvc2='false')
 
-    def test_yolov6tr2_rvc3(self):
-        print('Running test_yolov6tr2_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6tr2...')
-            download_model('yolov6tr2', self.V6R2_SOURCE_FOLDER, "yolov6tr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6tr2.pt', version='v6r2', file_name='converted_yolov6tr2_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6tr2_rvc3.zip')
+    def test_yolov6nr2_rvc3(self):
+        self._test_yolo(model_name='yolov6nr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
+    def test_yolov6tr2_rvc3(self):
+        self._test_yolo(model_name='yolov6tr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6tr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+
     def test_yolov6sr2_rvc3(self):
-        print('Running test_yolov6sr2_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr2...')
-            download_model('yolov6sr2', self.V6R2_SOURCE_FOLDER, "yolov6sr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6sr2.pt', version='v6r2', file_name='converted_yolov6sr2_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr2_rvc3.zip')
+        self._test_yolo(model_name='yolov6sr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    
+    def test_yolov6nr21_rvc3(self):
+        self._test_yolo(model_name='yolov6nr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
     def test_yolov6sr21_rvc3(self):
-        print('Running test_yolov6sr21_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr21...')
-            download_model('yolov6sr21', self.V6R21_SOURCE_FOLDER, "yolov6sr21.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R21_SOURCE_FOLDER}yolov6sr21.pt', version='v6r2', file_name='converted_yolov6sr21_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr21_rvc3.zip')
+        self._test_yolo(model_name='yolov6sr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    
+    def test_yolov6nr3_rvc3(self):
+        self._test_yolo(model_name='yolov6nr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
     def test_yolov6sr3_rvc3(self):
-        print('Running test_yolov6sr3_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr3...')
-            download_model('yolov6sr3', self.V6R3_SOURCE_FOLDER, "yolov6sr3.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R3_SOURCE_FOLDER}yolov6sr3.pt', version='v6r2', file_name='converted_yolov6sr3_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr3_rvc3.zip')
+        self._test_yolo(model_name='yolov6sr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
 
+    def test_yolov6nr1_rvc3(self):
+        self._test_yolo(model_name='yolov6nr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6nr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
+    
     def test_yolov6tr1_rvc3(self):
-        print('Running test_yolov6tr1_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6tr1...')
-            download_model('yolov6tr1', self.V6R1_SOURCE_FOLDER, "yolov6tr1.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R1_SOURCE_FOLDER}yolov6tr1.pt', version='v6', file_name='converted_yolov6tr1_rvc3.zip', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6tr1_rvc3.zip')
+        self._test_yolo(model_name='yolov6tr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6tr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
+    
+    def test_yolov5n_rvc3(self):
+        self._test_yolo(model_name='yolov5n', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n_rvc3', url=self.URL, use_rvc2='false')
     
     def test_yolov5s_rvc3(self):
-        print('Running test_yolov5s_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5s...')
-            download_model('yolov5s', self.V5_SOURCE_FOLDER, "yolov5s.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5s.pt', version='v5', file_name='converted_yolov5s_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5s_rvc3.zip')
+        self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s_rvc3', url=self.URL, use_rvc2='false')
+    
+    def test_yolov8n_rvc3(self):
+        self._test_yolo(model_name='yolov8n', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8n_rvc3', url=self.URL, use_rvc2='false')
     
     def test_yolov8s_rvc3(self):
-        print('Running test_yolov8s_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8s...')
-            download_model('yolov8s', self.V8_SOURCE_FOLDER, "yolov8s.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8s.pt', version='v8', file_name='converted_yolov8s_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8s_rvc3.zip')
+        self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s_rvc3', url=self.URL, use_rvc2='false')
 
     def test_yolov7t_rvc3(self):
-        print('Running test_yolov7t_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov7t...')
-            download_model('yolov7t', self.V7_SOURCE_FOLDER, "yolov7t.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V7_SOURCE_FOLDER}yolov7t.pt', version='v7', file_name='converted_yolov7t_rvc3.zip', url=f'{self.URL}{URL_V7}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov7t_rvc3.zip')
+        self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
     
     def test_yolov6mr4_rvc3(self):
-        print('Running test_yolov6mr4_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr4...')
-            download_model('yolov6mr4', self.V6R4_SOURCE_FOLDER, "yolov6mr4.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R4_SOURCE_FOLDER}yolov6mr4.pt', version='v6r4', file_name='converted_yolov6mr4_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr4_rvc3.zip')
+        self._test_yolo(model_name='yolov6mr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6mr4_rvc3', url=self.URL, use_rvc2='false')
 
     def test_yolov6mr2_rvc3(self):
-        print('Running test_yolov6mr2_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr2...')
-            download_model('yolov6mr2', self.V6R2_SOURCE_FOLDER, "yolov6mr2.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R2_SOURCE_FOLDER}yolov6mr2.pt', version='v6r2', file_name='converted_yolov6mr2_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr2_rvc3.zip')
+        self._test_yolo(model_name='yolov6mr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
     def test_yolov6mr21_rvc3(self):
-        print('Running test_yolov6mr21_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr21...')
-            download_model('yolov6mr21', self.V6R21_SOURCE_FOLDER, "yolov6mr21.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R21_SOURCE_FOLDER}yolov6mr21.pt', version='v6r2', file_name='converted_yolov6mr21_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr21_rvc3.zip')
+        self._test_yolo(model_name='yolov6mr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
     def test_yolov6mr3_rvc3(self):
-        print('Running test_yolov6mr3_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6mr3...')
-            download_model('yolov6mr3', self.V6R3_SOURCE_FOLDER, "yolov6mr3.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R3_SOURCE_FOLDER}yolov6mr3.pt', version='v6r2', file_name='converted_yolov6mr3_rvc3.zip', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6mr3_rvc3.zip')
+        self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
 
     def test_yolov6sr1_rvc3(self):
-        print('Running test_yolov6sr1_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov6sr1...')
-            download_model('yolov6sr1', self.V6R1_SOURCE_FOLDER, "yolov6sr1.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V6R1_SOURCE_FOLDER}yolov6sr1.pt', version='v6', file_name='converted_yolov6sr1_rvc3.zip', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov6sr1_rvc3.zip')
+        self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
     
     def test_yolov5m_rvc3(self):
-        print('Running test_yolov5m_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5m...')
-            download_model('yolov5m', self.V5_SOURCE_FOLDER, "yolov5m.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5m.pt', version='v5', file_name='converted_yolov5m_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5m_rvc3.zip')
+        self._test_yolo(model_name='yolov5m', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m_rvc3', url=self.URL, use_rvc2='false')
     
     def test_yolov8m_rvc3(self):
-        print('Running test_yolov8m_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8m...')
-            download_model('yolov8m', self.V8_SOURCE_FOLDER, "yolov8m.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8m.pt', version='v8', file_name='converted_yolov8m_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8m_rvc3.zip')
+        self._test_yolo(model_name='yolov8m', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8m_rvc3', url=self.URL, use_rvc2='false')
     
     def test_yolov5l_rvc3(self):
-        print('Running test_yolov5l_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov5l...')
-            download_model('yolov5l', self.V5_SOURCE_FOLDER, "yolov5l.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V5_SOURCE_FOLDER}yolov5l.pt', version='v5', file_name='converted_yolov5l_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov5l_rvc3.zip')
+        self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l_rvc3', url=self.URL, use_rvc2='false')
     
     def test_yolov8l_rvc3(self):
-        print('Running test_yolov8l_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov8l...')
-            download_model('yolov8l', self.V8_SOURCE_FOLDER, "yolov8l.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V8_SOURCE_FOLDER}yolov8l.pt', version='v8', file_name='converted_yolov8l_rvc3.zip', url=self.URL, use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov8l_rvc3.zip')
+        self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l_rvc3', url=self.URL, use_rvc2='false')
 
     def test_yolov7_rvc3(self):
-        print('Running test_yolov7_rvc3...')
-        if self.DOWNLOAD_WEIGHTS:
-            print('Downloading yolov7...')
-            download_model('yolov7', self.V7_SOURCE_FOLDER, "yolov7.pt")
-        status_code, output_file = self.convert_yolo(f'{self.V7_SOURCE_FOLDER}yolov7.pt', version='v7', file_name='converted_yolov7_rvc3.zip', url=f'{self.URL}{URL_V7}', use_rvc2='false')
-        self.assertEqual(status_code, STATUS_OK)
-        self.assertEqual(output_file, 'converted_yolov7_rvc3.zip')
+        self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
 
     def tearDown(self):
         if self.DELETE_OUTPUT:
@@ -616,7 +311,8 @@ class ToolCases(unittest.TestCase):
                     print(f"Deleted {file_path}")
 
 
-def download_file(url, folder_path, new_filename=None):
+def download_file(url: str, folder_path: str, new_filename: str=None):
+    """ An util function for downloading file from the given URL and saving it in the given folder. """
     # Create the folder if it doesn't exist
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
@@ -643,7 +339,8 @@ def download_file(url, folder_path, new_filename=None):
         print("Failed to download the file")
 
 
-def download_model(model_type, output_folder, name):
+def download_model(model_type: str, output_folder: str, name: str):
+    """ An util function for downloading a Yolo model. """
     # Get the URL based on the model type
     url = model_type2url[model_type]
     # Call a function for downloading the weights
@@ -651,6 +348,7 @@ def download_model(model_type, output_folder, name):
 
 
 def set_the_args():
+    """ Function for setting the arguments. """
     ToolCases.URL = os.environ.get("tools_url")
     ToolCases.DOWNLOAD_WEIGHTS = os.environ.get("DOWNLOAD_WEIGHTS", True).lower() == 'true'
     ToolCases.DELETE_OUTPUT = os.environ.get("DELETE_OUTPUT", True).lower() == 'true'

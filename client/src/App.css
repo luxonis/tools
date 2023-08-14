@@ -114,7 +114,14 @@ body {
   width: 160px;
   text-align: center;
   font-size: smaller;
-  /* vertical-align: middle; */
+}
+
+.btn-radio-left {
+  border-radius: 0.25rem 0 0 0.25rem;
+}
+
+.btn-radio-right {
+  border-radius: 0 0.25rem 0.25rem 0;
 }
 
 .btn-radio-group {
