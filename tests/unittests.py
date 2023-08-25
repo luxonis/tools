@@ -44,8 +44,22 @@ model_type2url: Dict[str, str] = {
     'yolov6sr1': 'https://github.com/meituan/YOLOv6/releases/download/0.1.0/yolov6s.pt',
     'yolov5m': 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5m.pt',
     'yolov5l': 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5l.pt',
+    'yolov5n6': 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n6.pt',
+    'yolov5s6': 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s6.pt',
+    'yolov5m6': 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5m6.pt',
+    'yolov5l6': 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5l6.pt',
+    'yolov5nu': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5nu.pt',
+    'yolov5su': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5su.pt',
+    'yolov5mu': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5mu.pt',
+    'yolov5lu': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5lu.pt',
+    'yolov5n6u': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5n6u.pt',
+    'yolov5s6u': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5s6u.pt',
+    'yolov5m6u': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5m6u.pt',
+    'yolov5l6u': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov5l6u.pt',
+    'yolov5x': 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5x.pt',
     'yolov8m': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt',
     'yolov8l': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l.pt',
+    'yolov8x': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x.pt',
     'yolov7': 'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt',
     'yolov7x': 'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt',
 }
@@ -64,7 +78,7 @@ class ToolCases(unittest.TestCase):
     DOWNLOAD_WEIGHTS: bool = True
     DELETE_OUTPUT: bool = True
     
-    def _test_yolo(self, model_name: str, source_folder: str, version: str, test_name: str, url: str, use_rvc2: str=DEFAULT_USE_RVC2):
+    def _test_yolo(self, model_name: str, source_folder: str, version: str, test_name: str, url: str, use_rvc2: str=DEFAULT_USE_RVC2, shape: Union[int, Tuple[int, int]]=416):
         """ Template method for conversion testing of a Yolo model. """
         print(f'Running {test_name}...')
         # If set, download the weights
@@ -72,9 +86,9 @@ class ToolCases(unittest.TestCase):
             print(f'Downloading {model_name}...')
             download_model(model_name, source_folder, f'{model_name}.pt')
         # Initializing output file
-        output_file = f'converted_{model_name}.zip'
+        output_file = f'converted_{model_name if use_rvc2 == "true" else model_name+"_rvc3"}.zip'
         # Convert the models
-        status_code, output_file = self.convert_yolo(f'{source_folder}{model_name}.pt', version=version, file_name=output_file, url=url, use_rvc2=use_rvc2)
+        status_code, output_file = self.convert_yolo(f'{source_folder}{model_name}.pt', version=version, file_name=output_file, url=url, use_rvc2=use_rvc2, shape=shape)
         # Checking if export was successful
         self.assertEqual(status_code, STATUS_OK)
         self.assertEqual(output_file, output_file)
@@ -174,9 +188,45 @@ class ToolCases(unittest.TestCase):
     
     def test_yolov5s(self):
         self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s', url=self.URL)
+
+    def test_yolov5n6(self):
+        self._test_yolo(model_name='yolov5n6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n6', url=self.URL, shape=320)
+    
+    def test_yolov5s6(self):
+        self._test_yolo(model_name='yolov5s6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s6', url=self.URL, shape=320)
+    
+    def test_yolov5m6(self):
+        self._test_yolo(model_name='yolov5m6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m6', url=self.URL, shape=320)
+    
+    def test_yolov5l6(self):
+        self._test_yolo(model_name='yolov5l6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l6', url=self.URL, shape=320)
     
     def test_yolov8n(self):
         self._test_yolo(model_name='yolov8n', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8n', url=self.URL)
+
+    def test_yolov5nu(self):
+        self._test_yolo(model_name='yolov5nu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5nu', url=self.URL, shape=320)
+    
+    def test_yolov5n6u(self):
+        self._test_yolo(model_name='yolov5n6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5n6u', url=self.URL, shape=320)
+    
+    def test_yolov5s6u(self):
+        self._test_yolo(model_name='yolov5s6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5s6u', url=self.URL, shape=320)
+    
+    def test_yolov5su(self):
+        self._test_yolo(model_name='yolov5su', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5su', url=self.URL, shape=320)
+    
+    def test_yolov5m6u(self):
+        self._test_yolo(model_name='yolov5m6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5m6u', url=self.URL, shape=320)
+    
+    def test_yolov5mu(self):
+        self._test_yolo(model_name='yolov5mu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5mu', url=self.URL, shape=320)
+    
+    def test_yolov5l6u(self):
+        self._test_yolo(model_name='yolov5l6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5l6u', url=self.URL, shape=320)
+    
+    def test_yolov5lu(self):
+        self._test_yolo(model_name='yolov5lu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5lu', url=self.URL, shape=320)
     
     def test_yolov8s(self):
         self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s', url=self.URL)
@@ -195,6 +245,18 @@ class ToolCases(unittest.TestCase):
     
     def test_yolov6mr3(self):
         self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3', url=f'{self.URL}{URL_V6R3}')
+    
+    def test_yolov6lr4(self):
+        self._test_yolo(model_name='yolov6lr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6lr4', url=self.URL)
+
+    def test_yolov6lr2(self):
+        self._test_yolo(model_name='yolov6lr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr2', url=f'{self.URL}{URL_V6R3}')
+    
+    def test_yolov6lr21(self):
+        self._test_yolo(model_name='yolov6lr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr21', url=f'{self.URL}{URL_V6R3}')
+    
+    def test_yolov6lr3(self):
+        self._test_yolo(model_name='yolov6lr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr3', url=f'{self.URL}{URL_V6R3}')
 
     def test_yolov6sr1(self):
         self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1', url=f'{self.URL}{URL_V6R1}')
@@ -208,11 +270,20 @@ class ToolCases(unittest.TestCase):
     def test_yolov5l(self):
         self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l', url=self.URL)
     
+    def test_yolov5x(self):
+        self._test_yolo(model_name='yolov5x', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5x', url=self.URL)
+    
     def test_yolov8l(self):
         self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l', url=self.URL)
+    
+    def test_yolov8x(self):
+        self._test_yolo(model_name='yolov8x', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8x', url=self.URL)
 
     def test_yolov7(self):
         self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7', url=f'{self.URL}{URL_V7}')
+    
+    def test_yolov7x(self):
+        self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x', url=f'{self.URL}{URL_V7}')
 
     def test_yolov3tinyu_rvc3(self):
         self._test_yolo(model_name='yolov3-tinyu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov3tinyu_rvc3', url=self.URL, use_rvc2='false')
@@ -256,9 +327,45 @@ class ToolCases(unittest.TestCase):
     def test_yolov5s_rvc3(self):
         self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s_rvc3', url=self.URL, use_rvc2='false')
     
+    def test_yolov5n6_rvc3(self):
+        self._test_yolo(model_name='yolov5n6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5s6_rvc3(self):
+        self._test_yolo(model_name='yolov5s6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5m6_rvc3(self):
+        self._test_yolo(model_name='yolov5m6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5l6_rvc3(self):
+        self._test_yolo(model_name='yolov5l6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
     def test_yolov8n_rvc3(self):
         self._test_yolo(model_name='yolov8n', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8n_rvc3', url=self.URL, use_rvc2='false')
     
+    def test_yolov5nu_rvc3(self):
+        self._test_yolo(model_name='yolov5nu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5nu_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5n6u_rvc3(self):
+        self._test_yolo(model_name='yolov5n6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5n6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5s6u_rvc3(self):
+        self._test_yolo(model_name='yolov5s6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5s6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5su_rvc3(self):
+        self._test_yolo(model_name='yolov5su', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5su_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5m6u_rvc3(self):
+        self._test_yolo(model_name='yolov5m6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5m6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5mu_rvc3(self):
+        self._test_yolo(model_name='yolov5mu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5mu_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5l6u_rvc3(self):
+        self._test_yolo(model_name='yolov5l6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5l6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    
+    def test_yolov5lu_rvc3(self):
+        self._test_yolo(model_name='yolov5lu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5lu_rvc3', url=self.URL, use_rvc2='false', shape=320)
+
     def test_yolov8s_rvc3(self):
         self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s_rvc3', url=self.URL, use_rvc2='false')
 
@@ -276,6 +383,18 @@ class ToolCases(unittest.TestCase):
     
     def test_yolov6mr3_rvc3(self):
         self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    
+    def test_yolov6lr4_rvc3(self):
+        self._test_yolo(model_name='yolov6lr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6lr4_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov6lr2_rvc3(self):
+        self._test_yolo(model_name='yolov6lr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    
+    def test_yolov6lr21_rvc3(self):
+        self._test_yolo(model_name='yolov6lr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    
+    def test_yolov6lr3_rvc3(self):
+        self._test_yolo(model_name='yolov6lr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
 
     def test_yolov6sr1_rvc3(self):
         self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
@@ -289,11 +408,20 @@ class ToolCases(unittest.TestCase):
     def test_yolov5l_rvc3(self):
         self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l_rvc3', url=self.URL, use_rvc2='false')
     
+    def test_yolov5x_rvc3(self):
+        self._test_yolo(model_name='yolov5x', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5x_rvc3', url=self.URL, use_rvc2='false')
+    
     def test_yolov8l_rvc3(self):
         self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l_rvc3', url=self.URL, use_rvc2='false')
+    
+    def test_yolov8x_rvc3(self):
+        self._test_yolo(model_name='yolov8x', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8x_rvc3', url=self.URL, use_rvc2='false')
 
     def test_yolov7_rvc3(self):
         self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
+
+    def test_yolov7x_rvc3(self):
+        self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
 
     def tearDown(self):
         if self.DELETE_OUTPUT:
@@ -349,7 +477,7 @@ def download_model(model_type: str, output_folder: str, name: str):
 
 def set_the_args():
     """ Function for setting the arguments. """
-    ToolCases.URL = os.environ.get("tools_url")
+    ToolCases.URL = os.environ.get("tools_url", DEFAULT_URL)
     ToolCases.DOWNLOAD_WEIGHTS = os.environ.get("DOWNLOAD_WEIGHTS", True).lower() == 'true'
     ToolCases.DELETE_OUTPUT = os.environ.get("DELETE_OUTPUT", True).lower() == 'true'
     ToolCases.V5_SOURCE_FOLDER = os.environ.get("v5_folder", "./weights/")

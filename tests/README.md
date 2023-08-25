@@ -11,8 +11,12 @@ This README describes the tests of the Tools app.
 python3 unittests.py
 # To pass arguments you have to set them as environment variables specifying the output folders
 export DOWNLOAD_WEIGHTS="True" && export DELETE_OUTPUT="True" && export tools_url="http://0.0.0.0" && export v5_folder="../../YoloV5Weights/" && export v6r1_folder="../../YOLOv6-Weights/R1/" && export v6r2_folder="../../YOLOv6-Weights/R2/" && export v6r21_folder="../../YOLOv6-Weights/R2.1/" && export v6r3_folder="../../YOLOv6-Weights/R3/" && export v6r4_folder="../../YOLOv6-Weights/R4/" && export v7_folder="../../YoloV7Weights/" && export v8_folder="../../YoloV8Weights/" && python3 unittests.py
-# Downloading weights
+# Downloading weights and testing locally
 export DOWNLOAD_WEIGHTS="True" && export DELETE_OUTPUT="True" && export tools_url="http://0.0.0.0" && python3 unittests.py
+# Downloading weights
+export DOWNLOAD_WEIGHTS="True" && export DELETE_OUTPUT="True" && python3 unittests.py
+# Not downloading weights and deleting the converted files
+export DOWNLOAD_WEIGHTS="False" && export DELETE_OUTPUT="False" && python3 unittests.py
 ```
 
 ### List of supported models of the Unit tests
