@@ -62,3 +62,27 @@ YoloV8
 * yolov8s
 * yolov8m
 * yolov8l
+
+## Automated GUI tests
+
+We are using the [Playwright library](https://playwright.dev/python/).
+
+### Installation
+```
+# Install python dependencies
+pip install pytest-playwright
+# Install the required browsers
+playwright install
+```
+
+### Arguments
+The test script expects to have specified the path to the model set in a env variable `model_path`. You can also specify the URL via the `tools_url` env variable, but it's optional. The default value is `https://tools.luxonis.com`.
+
+### Running
+```
+# Running tests in headed mode (with GUI)
+export model_path="/home/honza/Downloads/yolov6n.pt" && pytest --headed gui_tests.py
+# Running tests in headless mode (without GUI)
+export model_path="/home/honza/Downloads/yolov6n.pt" && pytest gui_tests.py
+```
+For more info about running tests (possible args, etc.), please refer to the [documentation](https://playwright.dev/python/docs/running-tests).
