@@ -155,7 +155,7 @@ function App() {
                       </div>
                       <div className="text-center mb-3 d-grid">
                         {
-                          (inProgress || (file === '' || inputshape === ''))
+                          (inProgress || (file === '' || config.inputshape === ''))
                             ? <button type="button" className="btn btn-primary disabled fa-lg gradient-custom-2">Submit</button>
                             : <button type="submit" className="btn btn-primary fa-lg gradient-custom-2">Submit</button>
                         }
