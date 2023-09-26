@@ -31,8 +31,8 @@ function resolveProgressString(item) {
 
 function App() {
   const [file, setFile] = useState('')
-  const [advanced, setAdvanced] = useState(false);
-  const [detectedVersion, setDetectedVersion] = useState('');
+  const [advanced, setAdvanced] = useState(false)
+  const [detectedVersion, setDetectedVersion] = useState('')
   const config = useSelector((state) => state.app.config)
   const error = useSelector((state) => state.app.error)
   const inProgress = useSelector((state) => state.app.inProgress)
@@ -155,7 +155,7 @@ function App() {
                       </div>
                       <div className="text-center mb-3 d-grid">
                         {
-                          inProgress
+                          (inProgress || (file === '' || config.inputshape === ''))
                             ? <button type="button" className="btn btn-primary disabled fa-lg gradient-custom-2">Submit</button>
                             : <button type="submit" className="btn btn-primary fa-lg gradient-custom-2">Submit</button>
                         }
