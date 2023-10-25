@@ -47,9 +47,10 @@ async function detectVersion(file) {
                 return YOLOV6R3_CONVERSION
             } else if (content.includes('yolov7')) {
                 return YOLOV7_CONVERSION
-            } else if (content.includes('YOLOv5u') || content.includes('YOLOv8') || content.includes('yolov8')) {
+            } else if (content.includes('YOLOv5u') || content.includes('YOLOv8') ||
+                content.includes('yolov8') || (content.includes('v8DetectionLoss') && content.includes('ultralytics'))) {
                 return YOLOV8_CONVERSION
-            } else if (content.includes('SPPF')) {
+            } else if (content.includes('SPPF') || content.includes('yolov5') || (content.includes('models.yolo.Detectr1') && content.includes('models.common.SPPr'))) {
                 return YOLOV5_CONVERSION
             }
         }
