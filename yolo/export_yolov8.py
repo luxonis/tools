@@ -7,7 +7,7 @@ import onnxsim
 import onnx
 
 from exporter import Exporter
-from ultralytics.nn.tasks import attempt_load_weights
+from ultralytics.nn.tasks import attempt_load_one_weight
 from ultralytics.nn.modules import Detect
 from yolo.detect_head import DetectV8
 
@@ -22,12 +22,14 @@ class YoloV8Exporter(Exporter):
     
     def load_model(self):
         # load the model
-        model = attempt_load_weights(str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True)
+        # model = attempt_load_weights(str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True)
+        model, _ = attempt_load_one_weight(str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True)
 
         names = model.module.names if hasattr(model, 'module') else model.names  # get class names
         
         # check num classes and labels
-        assert model.nc == len(names), f'Model class count {model.nc} != len(names) {len(names)}'
+        # assert model.nc == len(names), f'Model class count {model.nc} != len(names) {len(names)}'
+        assert model.yaml["nc"] == len(names), f'Model class count {model.yaml["nc"]} != len(names) {len(names)}'
 
         # Replace with the custom Detection Head
         if isinstance(model.model[-1], (Detect)):
