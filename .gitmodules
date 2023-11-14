@@ -20,3 +20,6 @@
 [submodule "yolo/ultralytics"]
 	path = yolo/ultralytics
 	url = https://github.com/ultralytics/ultralytics
+[submodule "GoldYolo"]
+	path = yolov6r3/yolo/Efficient-Computing
+	url = https://github.com/huawei-noah/Efficient-Computing

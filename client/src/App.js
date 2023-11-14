@@ -103,6 +103,7 @@ function App() {
                                 onChange={e => update({version: e.target.value})}>
                           <option value="v5">YoloV5</option>
                           <option value="v6r4">YoloV6 (latest)</option>
+                          <option value="goldyolo">GoldYolo</option>
                           <option value="v7">YoloV7 (detection only)</option>
                           <option value="v8">YoloV8 (detection only)</option>
                           <option value="v6">YoloV6 (R1)</option>

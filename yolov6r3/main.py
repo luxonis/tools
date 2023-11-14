@@ -9,6 +9,7 @@ from sanic.log import logger
 from sanic.exceptions import ServerError 
 
 from yolo.export_yolov6_r3 import YoloV6R3Exporter
+from yolo.export_gold_yolo import GoldYoloExporter
 
 import sentry_sdk
 
@@ -79,6 +80,16 @@ async def upload_file(request):
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model (This may be caused by trying to convert either the latest release 4.0, or by release 1.0, in which case, try to convert using the 'Yolo (latest)' or 'YoloV6 (R1)' option).", status_code=519)
+    elif version == "goldyolo":
+        try:
+            exporter = GoldYoloExporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
+        except ValueError as ve:
+            sentry_sdk.capture_exception(ve)
+            raise ServerError(message=str(ve), status_code=518)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            logger.error(e)
+            raise ServerError(message="Error while loading model", status_code=520)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
     

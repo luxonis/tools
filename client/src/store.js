@@ -46,7 +46,7 @@ export const upload = createAsyncThunk(
           timeout: 1500000,
           responseType: 'arraybuffer',
         })
-      } else if (config['version'] == 'v6r2') {
+      } else if (config['version'] == 'v6r2' || config['version'] == 'goldyolo') {
         response = await request(POST, `/yolov6r3/upload`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -115,7 +115,7 @@ export const fetchProgress = createAsyncThunk(
       response = await request(GET, `/yolov7/progress/${id}`);
     } else if (config['version'] == 'v6') {
       response = await request(GET, `/yolov6r1/progress/${id}`);
-    } else if (config['version'] == 'v6r2') {
+    } else if (config['version'] == 'v6r2' || config['version'] == 'goldyolo') {
       response = await request(GET, `/yolov6r3/progress/${id}`);
     } else {
       response = await request(GET, `/progress/${id}`);
