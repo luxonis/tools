@@ -2,9 +2,9 @@ import sys
 sys.path.append("./yolo/YOLOv6R3")
 
 import torch
-from yolo.YOLOv6R3.yolov6.layers.common import RepVGGBlock
-from yolo.YOLOv6R3.yolov6.models.efficientrep import EfficientRep, EfficientRep6, CSPBepBackbone, CSPBepBackbone_P6
-from yolo.YOLOv6R3.yolov6.utils.checkpoint import load_checkpoint
+from yolov6.layers.common import RepVGGBlock
+from yolov6.models.efficientrep import EfficientRep, EfficientRep6, CSPBepBackbone, CSPBepBackbone_P6
+from yolov6.utils.checkpoint import load_checkpoint
 import onnx
 from exporter import Exporter
 
@@ -13,7 +13,6 @@ import onnxsim
 
 from yolo.detect_head import DetectV6R3
 from yolo.backbones import YoloV6BackBone
-
 
 
 class YoloV6R3Exporter(Exporter):
