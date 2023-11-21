@@ -148,7 +148,7 @@ function App() {
                               <span>16</span>
                             </div>
                           </div>
-                          <div data-bs-toggle="tooltip" data-bs-placement="left" title="If off, defaults to OpenVINO 2022.1. Slight performance degradation noticed with 2022.3.">
+                          <div data-bs-toggle="tooltip" data-bs-placement="left" title="If off, defaults to OpenVINO 2022.1. Slight performance degradation noticed with 2022.1.">
                             <label htmlFor="useLegacyFrontend" className="form-label mr10">Use OpenVINO 2021.4: <i className="bi bi-info-circle-fill"></i></label>
                             <input type="checkbox" id="useLegacyFrontend" name="useLegacyFrontend" onChange={e => update({useLegacyFrontend: !config.useLegacyFrontend})} checked={config.useLegacyFrontend}/>
                           </div>
