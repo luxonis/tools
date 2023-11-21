@@ -10,7 +10,7 @@ export const upload = createAsyncThunk(
     const config = thunk.getState().app.config
     const formData = new FormData();
     for (const key in config) {
-      formData.append(key, config[key]);
+      formData.append(key, key !== "inputshape" ? config[key] : config[key].trim());
     }
     if (act.size > 299000000) {
       throw Error("File size exceeds 300Mb");
@@ -21,10 +21,13 @@ export const upload = createAsyncThunk(
     if (!(/^[a-z0-9_-]+$/i.test(act["name"].slice(0, -3)))) {
       throw Error("Filename must be alphanumerical or contain '_' or '-'!");
     }
-    const shape = config['inputshape'].split(" ");
+    const shape = config['inputshape'].trim().split(" "); // .map(x => x.trim()).filter(x => x.length > 0);
     shape.forEach((n, i) => {
+      if (!(/^\d+$/.test(n.replace(/\s/g, '')))) {
+        throw Error("Invalid input image shape! The input image shape must contain only one number or two numbers separated by a space (e.g. '320 320').");
+      }
       if (parseInt(n) % 32 !== 0 || i > 1) {
-        throw Error("Invalid input shape");
+        throw Error("Invalid input image shape");
       }
     });
     formData.append("file", act)
@@ -46,7 +49,7 @@ export const upload = createAsyncThunk(
           timeout: 1500000,
           responseType: 'arraybuffer',
         })
-      } else if (config['version'] == 'v6r2') {
+      } else if (config['version'] == 'v6r2' || config['version'] == 'goldyolo') {
         response = await request(POST, `/yolov6r3/upload`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -115,7 +118,7 @@ export const fetchProgress = createAsyncThunk(
       response = await request(GET, `/yolov7/progress/${id}`);
     } else if (config['version'] == 'v6') {
       response = await request(GET, `/yolov6r1/progress/${id}`);
-    } else if (config['version'] == 'v6r2') {
+    } else if (config['version'] == 'v6r2' || config['version'] == 'goldyolo') {
       response = await request(GET, `/yolov6r3/progress/${id}`);
     } else {
       response = await request(GET, `/progress/${id}`);

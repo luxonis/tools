@@ -6,6 +6,7 @@ export const YOLOV6R3_CONVERSION = 'v6r2';
 export const YOLOV6R4_CONVERSION = 'v6r4';
 export const YOLOV7_CONVERSION = 'v7';
 export const YOLOV8_CONVERSION = 'v8';
+export const GOLD_YOLO_CONVERSION = 'goldyolo';
 export const UNRECOGNIZED = 'none';
 export const version2text = {
     'v5': 'YoloV5',
@@ -13,7 +14,8 @@ export const version2text = {
     'v6r2': 'YoloV6 (R2, R3)',
     'v6r4': 'YoloV6 (latest)',
     'v7': 'YoloV7 (detection only)',
-    'v8': 'YoloV8 (detection only)'
+    'v8': 'YoloV8 (detection only)',
+    'goldyolo': 'GoldYolo'
 }
 
 async function detectVersion(file) {
@@ -43,6 +45,8 @@ async function detectVersion(file) {
                     return YOLOV6R1_CONVERSION
                 } else if (content.includes('CSPSPPFModule') || content.includes('ConvBNReLU')) {
                     return YOLOV6R4_CONVERSION
+                } else if (content.includes('gold_yolo')) {
+                    return GOLD_YOLO_CONVERSION
                 }
                 return YOLOV6R3_CONVERSION
             } else if (content.includes('yolov7')) {

@@ -1,48 +1,33 @@
 import sys
-sys.path.append("./yolo/YOLOv6R3")
+sys.path.append('./yolo/Efficient-Computing/Detection/Gold-YOLO/')
+sys.path.append('./yolo/Efficient-Computing/Detection/Gold-YOLO/gold_yolo/')
+sys.path.append('./yolo/Efficient-Computing/Detection/Gold-YOLO/yolov6/utils/')
 
-import torch
-from yolov6.layers.common import RepVGGBlock
-from yolov6.models.efficientrep import EfficientRep, EfficientRep6, CSPBepBackbone, CSPBepBackbone_P6
-from yolov6.utils.checkpoint import load_checkpoint
 import onnx
-from exporter import Exporter
-
-import numpy as np
+import torch
 import onnxsim
 
+from switch_tool import switch_to_deploy
+from checkpoint import load_checkpoint as load_checkpoint_gold_yolo
+from exporter import Exporter
 from yolo.detect_head import DetectV6R3
-from yolo.backbones import YoloV6BackBone
 
 
-class YoloV6R3Exporter(Exporter):
+class GoldYoloExporter(Exporter):
 
     def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='true'):
         super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
         self.load_model()
     
     def load_model(self):
-
-        # code based on export.py from YoloV5 repository
-        # load the model
-        model = load_checkpoint(str(self.weights_path.resolve()), map_location="cpu", inplace=True, fuse=True)  # load FP32 model
+        # Load the model
+        model = load_checkpoint_gold_yolo(str(self.weights_path.resolve()), map_location="cpu")
         
-        for layer in model.modules():
-            if isinstance(layer, RepVGGBlock):
-                layer.switch_to_deploy()
-
-        for n, module in model.named_children():
-            if isinstance(module, EfficientRep) or isinstance(module, CSPBepBackbone):
-                setattr(model, n, YoloV6BackBone(module))
-            elif isinstance(module, EfficientRep6):
-                setattr(model, n, YoloV6BackBone(module, uses_6_erblock=True))
-            elif isinstance(module, CSPBepBackbone_P6):
-                setattr(model, n, YoloV6BackBone(module, uses_fuse_P2=False, uses_6_erblock=True))
-        
-        if not hasattr(model.detect, 'obj_preds'):
-            model.detect = DetectV6R3(model.detect, self.use_rvc2)
-        
+        model.detect = DetectV6R3(model.detect, self.use_rvc2)
         self.num_branches = len(model.detect.grid)
+
+        # switch to deploy
+        model = switch_to_deploy(model)
 
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32
@@ -74,7 +59,6 @@ class YoloV6R3Exporter(Exporter):
         model_onnx = onnx.load(self.f_onnx)  # load onnx model
         onnx.checker.check_model(model_onnx)  # check onnx model
         # simplify the moodel
-
         onnx_model, check = onnxsim.simplify(model_onnx)
         assert check, 'assert check failed'
     
@@ -84,6 +68,9 @@ class YoloV6R3Exporter(Exporter):
         self.f_simplified = (self.conv_path / f"{self.model_name}-simplified.onnx").resolve()
         onnx.save(onnx_model, self.f_simplified)
         return self.f_simplified
+    
+    def export_openvino(self, version):
+        super().export_openvino('v6r2')
 
     def export_json(self):
         # generate anchors and sides
