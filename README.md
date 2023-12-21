@@ -3,8 +3,33 @@
 This application is used for exporting Yolo V5, V6 and V7 object detection models for OAKs.
 
 ## Running the app locally
-To run the application locally you need to do 2 additional things.
-### Step 1: Updating the `nginx.conf` file
+To run the application locally you need to do these folllowing steps.
+### Step 1: Cloning all repositories
+```
+# Clone tools repository
+git clone https://github.com/luxonis/tools.git
+# Clone repositories for YOLOv5, YOLOv6 R4, YOLOv8 conversions
+cd tools/yolo/
+# Clone yolov5 repository
+git clone https://github.com/ultralytics/yolov5.git
+cd yolov5 && git reset --hard c7a2d6b
+# Clone YOLOv6 repository
+cd ../ && git clone https://github.com/meituan/YOLOv6.git
+cd YOLOv6 && git reset --hard 081be9a
+# Clone ultralytics code
+cd ../ && git clone https://github.com/ultralytics/ultralytics.git
+cd ultralytics && git reset --hard a05edfb
+# Clone reporitories for YOLOv6 R1 conversion
+cd ../../yolov6r1/yolo && git clone https://github.com/meituan/YOLOv6.git YOLOv6R1
+cd YOLOv6R1 && git reset --hard 5a2fa16
+# Clone reporitories for YOLOv6 R3 conversion
+cd ../../../yolov6r3/yolo && git clone https://github.com/meituan/YOLOv6.git YOLOv6R3
+cd YOLOv6R3 && git reset --hard b495484
+cd ../ && git clone https://github.com/huawei-noah/Efficient-Computing.git
+cd Efficient-Computing && git reset --hard d76de8d
+```
+
+### Step 2: Updating the `nginx.conf` file
 It is required for the app to not consider SSL. You can rewrite the current `nginx.conf` with the following file: 
 ```
 upstream toolsapi {
@@ -67,7 +92,7 @@ server {
 
 **Note: It's better to create a copy of the `nginx.conf` file before rewriting it.**
 
-### Step 2: Updating the `docker-compose.yml` file
+### Step 3: Updating the `docker-compose.yml` file
 The app must be built from local images. You can do it by updating the current `docker-compose.yml` with the following file:
 ```
 version: '2'
@@ -107,13 +132,17 @@ services:
 
 **Note: It's better to create a copy of the `docker-compose.yml` file before rewriting it.**
 
-### Step 3: Building
+### Step 4: Building
 ```sudo docker-compose build```
+or
+```sudo docker compose build```
 
-### Step 4: Running
+### Step 5: Running
 ```sudo docker-compose up```
+or
+```sudo docker compose up```
 
-### Step 5: Open browser
+### Step 6: Open browser
 ```Open browser at http://0.0.0.0/```
 
 ## Credits
