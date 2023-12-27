@@ -3,8 +3,13 @@
 This application is used for exporting Yolo V5, V6 and V7 object detection models for OAKs.
 
 ## Running the app locally
-To run the application locally you need to do 2 additional things.
-### Step 1: Updating the `nginx.conf` file
+To run the application locally you need to do these folllowing steps.
+### Step 1: Cloning the tools repository and all submodules
+```
+git clone --recursive https://github.com/luxonis/tools.git
+```
+
+### Step 2: Updating the `nginx.conf` file
 It is required for the app to not consider SSL. You can rewrite the current `nginx.conf` with the following file: 
 ```
 upstream toolsapi {
@@ -67,7 +72,7 @@ server {
 
 **Note: It's better to create a copy of the `nginx.conf` file before rewriting it.**
 
-### Step 2: Updating the `docker-compose.yml` file
+### Step 3: Updating the `docker-compose.yml` file
 The app must be built from local images. You can do it by updating the current `docker-compose.yml` with the following file:
 ```
 version: '2'
@@ -107,14 +112,18 @@ services:
 
 **Note: It's better to create a copy of the `docker-compose.yml` file before rewriting it.**
 
-### Step 3: Building
+### Step 4: Building
 ```sudo docker-compose build```
+or
+```sudo docker compose build```
 
-### Step 4: Running
+### Step 5: Running
 ```sudo docker-compose up```
+or
+```sudo docker compose up```
 
-### Step 5: Open browser
-```Open browser at http://0.0.0.0/```
+### Step 6: Open browser
+Open browser at [http://0.0.0.0](http://0.0.0.0).
 
 ## Credits
 
