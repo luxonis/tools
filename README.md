@@ -4,9 +4,8 @@ This application is used for exporting Yolo V5, V6 and V7 object detection model
 
 ## Running the app locally
 To run the application locally you need to do these folllowing steps.
-### Step 1: Cloning all repositories
+### Step 1: Cloning the tools repository and all submodules
 ```
-# Clone tools repository and all submodules
 git clone --recursive https://github.com/luxonis/tools.git
 ```
 
