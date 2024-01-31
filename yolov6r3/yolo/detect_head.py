@@ -33,8 +33,14 @@ class DetectV6R3(nn.Module):
         self.stems = old_detect.stems
         self.cls_convs = old_detect.cls_convs
         self.reg_convs = old_detect.reg_convs
-        self.cls_preds = old_detect.cls_preds
-        self.reg_preds = old_detect.reg_preds
+        if hasattr(old_detect, 'cls_preds'):
+          self.cls_preds = old_detect.cls_preds
+        elif hasattr(old_detect, 'cls_preds_af'):
+          self.cls_preds = old_detect.cls_preds_af
+        if hasattr(old_detect, 'reg_preds'):
+          self.reg_preds = old_detect.reg_preds
+        elif hasattr(old_detect, 'reg_preds_af'):
+          self.reg_preds = old_detect.reg_preds_af
 
         self.use_rvc2 = use_rvc2
 

@@ -144,6 +144,13 @@ async def cleanup(request, response):
 
 if __name__ == '__main__':
     runtime = os.getenv("RUNTIME", "debug")
+    SENTRY_TOKEN = os.getenv("SENTRY_TOKEN")
+    logger.info(f"SENTRY_TOKEN: {SENTRY_TOKEN}")
+    if SENTRY_TOKEN is not None:
+        sentry_sdk.init(
+            dsn=SENTRY_TOKEN
+        )
+    
     if runtime == "prod":
         app.run(host="0.0.0.0", port=8003, access_log=False, workers=8)
     else:
