@@ -40,7 +40,10 @@ async function detectVersion(file) {
             const content = await entry.getData(dataWriter);
             // console.log(content);
 
-            if (content.includes('yolov6')) {
+            if (content.includes('YOLOv5u') || content.includes('YOLOv8') ||
+                content.includes('yolov8') || (content.includes('v8DetectionLoss') && content.includes('ultralytics'))) {
+                return YOLOV8_CONVERSION
+            } else if (content.includes('yolov6')) {
                 if (content.includes('yolov6.models.yolo\nDetect')) {
                     return YOLOV6R1_CONVERSION
                 } else if (content.includes('CSPSPPFModule') || content.includes('ConvBNReLU')) {
@@ -51,9 +54,6 @@ async function detectVersion(file) {
                 return YOLOV6R3_CONVERSION
             } else if (content.includes('yolov7')) {
                 return YOLOV7_CONVERSION
-            } else if (content.includes('YOLOv5u') || content.includes('YOLOv8') ||
-                content.includes('yolov8') || (content.includes('v8DetectionLoss') && content.includes('ultralytics'))) {
-                return YOLOV8_CONVERSION
             } else if (content.includes('SPPF') || content.includes('yolov5') || (content.includes('models.yolo.Detectr1') && content.includes('models.common.SPPr'))) {
                 return YOLOV5_CONVERSION
             }
