@@ -85,10 +85,17 @@ function App() {
                     }
 
                     {
-                      (!error && (detectedVersion == 'YoloV6 (R2, R3)' || detectedVersion == 'YoloV6 (latest)') && !config.useRVC2)
+                      (!error && detectedVersion == 'YoloV6 (R2, R3)' && !config.useRVC2)
                       && <div className="warning-box">
                         <h3>Warning</h3>
-                        <p>Please be aware that we are expericing difficulties with RVC3 export of medium size YoloV6. The RVC3 export of these models is likely to fail.</p>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of YoloV6 R3 models. The RVC3 export of these models is likely to fail. Please use R2 models for RVC3 export. </p>
+                      </div>
+                    }
+                    {
+                      (!error && detectedVersion == 'YoloV6 (latest)' && !config.useRVC2)
+                      && <div className="warning-box">
+                        <h3>Warning</h3>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of YoloV6 R4 models. Please use R2 models for RVC3 export. </p>
                       </div>
                     }
 
