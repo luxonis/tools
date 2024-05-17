@@ -1,25 +1,25 @@
 [submodule "yolov5"]
-    path = yolo/yolov5
+    path = tools/yolo/yolov5
     url = https://github.com/ultralytics/yolov5
 [submodule "YOLOv6"]
-    path = yolo/YOLOv6
+    path = tools/yolo/YOLOv6
     url = https://github.com/meituan/YOLOv6
     branch = main
 [submodule "YOLOv6R1"]
-    path = yolov6r1/yolo/YOLOv6R1
+    path = tools/yolov6r1/YOLOv6R1
     url = https://github.com/meituan/YOLOv6
     branch = main
 [submodule "YOLOv6R3"]
-    path = yolov6r3/yolo/YOLOv6R3
+    path = tools/yolov6r3/YOLOv6R3
     url = https://github.com/meituan/YOLOv6
     branch = main
 [submodule "yolov7"]
-    path = yolov7/yolo/yolov7
+    path = tools/yolov7/yolov7
     url = https://github.com/WongKinYiu/yolov7
     branch = main
-[submodule "yolo/ultralytics"]
-	path = yolo/ultralytics
+[submodule "tools/yolo/ultralytics"]
+	path = tools/yolo/ultralytics
 	url = https://github.com/ultralytics/ultralytics
 [submodule "GoldYolo"]
-	path = yolov6r3/yolo/Efficient-Computing
+	path = tools/yolov6r3/Efficient-Computing
 	url = https://github.com/huawei-noah/Efficient-Computing

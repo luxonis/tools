@@ -1,0 +1,57 @@
+[project]
+name = "tools"
+version = "0.0.1"
+description = "Converter for YOLO models into .ONNX format."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{ name = "Luxonis", email = "support@luxonis.com" }]
+maintainers = [{ name = "Luxonis", email = "support@luxonis.com" }]
+keywords = ["ml", "onnx", "YOLO", "computer vision", "object detection", "instance segmentation", "keypoint detection", "OBB"]
+dynamic = ["dependencies", "optional-dependencies"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3.8",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Image Processing",
+  "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+[project.scripts]
+tools = "tools.main:app"
+
+[project.urls]
+repository = "https://github.com/luxonis/tools"
+issues = "https://github.com/luxonis/tools/issues"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+tools = ["docker-compose.yaml", "docker-compose-dev.yaml"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+optional-dependencies = { dev = { file = ["requirements-dev.txt"] } }
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+ignore = ["F403", "B028", "B905", "D1", "W191"]
+select = ["E4", "E7", "E9", "F", "W", "B", "I"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+
+[tool.pyright]
+typeCheckingMode = "basic"

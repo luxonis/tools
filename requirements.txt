@@ -1,43 +1,11 @@
-sanic==21.12.1
-# torch==1.10.2
-# torchvision==0.11.3
-torch==1.9.1
-torchvision==0.10.1
-
-onnx==1.10.1
-onnx-simplifier==0.3.6
-openvino==2022.3.0
-openvino-dev==2022.3.0
-# openvino==2022.1.0
-# openvino-dev==2022.1.0
-
-# openvino==2021.4.2
-# openvino-dev==2021.4.2
-# blobconverter==1.2.9
-blobconverter>=1.4.2
-opencv-python>=4.1.2
-
-matplotlib>=3.2.2
+torch>=1.9.1
+torchvision>=0.10.1
 Pillow>=7.1.2
 PyYAML>=5.3.1
-requests>=2.23.0
-scipy>=1.4.1
-tqdm>=4.41.0
-
-IPython
-
-tensorboard>=2.4.1
-
-pandas>=1.1.4
-seaborn>=0.11.0
-
-sentry-sdk # logging
-
-thop  # FLOPs computation
-
-sparseml==1.2.0
-
-websockets==10.4
-openvino-dev[onnx]==2022.3.0
-# openvino-dev[onnx]==2022.1.0
-dill
+gcsfs
+luxonis-ml[data,nn_archive] >= 0.1.0
+onnx>=1.10.1
+onnxruntime
+s3fs
+s3transfer
+typer

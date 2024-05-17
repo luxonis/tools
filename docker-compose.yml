@@ -1,50 +1,22 @@
-version: '2'
+version: '1'
 
 services:
-  api:
+  tools-cli:
     build: .
-    ports:
-      - 8000:8000
-    environment:
-      SENTRY_TOKEN: ${SENTRY_TOKEN}
-      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
-    restart: always
-  yolov7:
-    build: ./yolov7
-    ports:
-      - 8001:8001
-    environment:
-      SENTRY_TOKEN: ${SENTRY_TOKEN}
-      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
-    restart: always
-  yolov6r1:
-    build: ./yolov6r1
-    ports:
-      - 8002:8002
-    environment:
-      SENTRY_TOKEN: ${SENTRY_TOKEN}
-      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
-    restart: always
-  yolov6r3:
-    build: ./yolov6r3
-    ports:
-      - 8003:8003
-    environment:
-      SENTRY_TOKEN: ${SENTRY_TOKEN}
-      RVC3_BLOBCONVERTER: ${RVC3_BLOBCONVERTER}
-    restart: always
-  nginx:
-    build: ./nginx
-    ports:
-      - 80:80
-      - 443:443
-    depends_on:
-      - api
-      - yolov7
-      - yolov6r1
-      - yolov6r3
-    restart: always
+    # environment:
+    #   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    #   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    #   AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
+    #   GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+    #   MONGO_URI: ${MONGO_URI}
+    #   AWS_BUCKET: ${AWS_BUCKET}
+    #   MLFLOW_S3_BUCKET: luxonis-mlflow
+    #   MLFLOW_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
     volumes:
-      - ./log:/log:z
-      - /etc/letsencrypt/live/tools.luxonis.com/privkey.pem:/ssl/key.pem
-      - /etc/letsencrypt/live/tools.luxonis.com/fullchain.pem:/ssl/cert.pem
+      - ${PWD}/shared_with_container:/app/shared_with_container
+    # secrets:
+      # - gcp-credentials
+
+# secrets:
+#   gcp-credentials:
+#     file: ${GOOGLE_APPLICATION_CREDENTIALS}
