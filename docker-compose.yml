@@ -3,20 +3,20 @@ version: '1'
 services:
   tools-cli:
     build: .
-    # environment:
-    #   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-    #   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    #   AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
-    #   GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
-    #   MONGO_URI: ${MONGO_URI}
-    #   AWS_BUCKET: ${AWS_BUCKET}
-    #   MLFLOW_S3_BUCKET: luxonis-mlflow
-    #   MLFLOW_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
+    environment:
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      MONGO_URI: ${MONGO_URI}
+      AWS_BUCKET: ${AWS_BUCKET}
+      MLFLOW_S3_BUCKET: luxonis-mlflow
+      MLFLOW_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
     volumes:
       - ${PWD}/shared_with_container:/app/shared_with_container
-    # secrets:
-      # - gcp-credentials
+    secrets:
+      - gcp-credentials
 
-# secrets:
-#   gcp-credentials:
-#     file: ${GOOGLE_APPLICATION_CREDENTIALS}
+secrets:
+  gcp-credentials:
+    file: ${GOOGLE_APPLICATION_CREDENTIALS}

@@ -1,6 +1,13 @@
 from __future__ import annotations
 
 from .config import Config
+from .filesystem_utils import (
+    resolve_path,
+    download_from_remote,
+    upload_file_to_remote,
+    upload_file_to_remote,
+    get_protocol,
+)
 from .version_detection import (
     GOLD_YOLO_CONVERSION,
     UNRECOGNIZED,
@@ -24,4 +31,8 @@ __all__ = [
     "YOLOV8_CONVERSION",
     "GOLD_YOLO_CONVERSION",
     "UNRECOGNIZED",
+    "resolve_path",
+    "download_from_remote",
+    "upload_file_to_remote",
+    "get_protocol",
 ]

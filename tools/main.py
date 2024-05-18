@@ -4,7 +4,6 @@ import logging
 from typing import Optional
 
 import typer
-from typing_extensions import Annotated, TypeAlias
 
 from tools.utils import (
     GOLD_YOLO_CONVERSION,
@@ -16,37 +15,27 @@ from tools.utils import (
     YOLOV8_CONVERSION,
     Config,
     detect_version,
+    upload_file_to_remote,
+    resolve_path,
 )
+from tools.utils.constants import MISC_DIR
+
 
 logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 
 app = typer.Typer(help="Tools CLI", add_completion=False, rich_markup_mode="markdown")
 
 
-ImgszOption: TypeAlias = Annotated[
-    str, typer.Option(help='Image size "width height" or "width".')
-]
-ModelPathOption: TypeAlias = Annotated[
-    str, typer.Option(help="Path to the model's weights.")
-]
-UseRVC2Option: TypeAlias = Annotated[bool, typer.Option(help="Whether to use RVC2.")]
-OutputRemoteUrlOption: TypeAlias = Annotated[
-    Optional[str], typer.Option(help="URL to upload the output to.")
-]
-ConfigPathOption: TypeAlias = Annotated[
-    Optional[str], typer.Option(help="Path to the config file.")
-]
-
-
 @app.command()
 def convert(
-    model: ModelPathOption,
-    imgsz: ImgszOption = "416 416",
-    use_rvc2: UseRVC2Option = True,
-    output_remote_url: OutputRemoteUrlOption = None,
-    config_path: ConfigPathOption = None,
+    model: str,
+    imgsz: str = "416 416",
+    use_rvc2: bool = True,
+    output_remote_url: Optional[str] = None,
+    config_path: Optional[str] = None,
+    put_file_plugin: Optional[str] = None,
 ):
     logger = logging.getLogger(__name__)
     logger.info("Converting model...")
@@ -64,34 +53,69 @@ def convert(
             "imgsz": imgsz,
             "use_rvc2": use_rvc2,
             "output_remote_url": output_remote_url,
+            "put_file_plugin": put_file_plugin,
         },
     )
-    logger.info(f"Config: {config}")
 
-    version = detect_version(config.model)
+    # Resolve model path
+    model_path = resolve_path(config.model, MISC_DIR)
+
+    version = detect_version(str(model_path))
     logger.info(f"Detected version: {version}")
 
-    if version == YOLOV5_CONVERSION:
-        pass
-    elif version == YOLOV6R1_CONVERSION:
-        pass
-    elif version == YOLOV6R3_CONVERSION:
-        pass
-    elif version == GOLD_YOLO_CONVERSION:
-        pass
-    elif version == YOLOV6R4_CONVERSION:
-        pass
-    elif version == YOLOV7_CONVERSION:
-        pass
-    elif version == YOLOV8_CONVERSION:
-        pass
-    else:
-        logger.error("Unrecognized model version.")
+    try:
+        # Create exporter
+        logger.info("Loading model...")
+        if version == YOLOV5_CONVERSION:
+            from tools.yolo.yolov5_exporter import YoloV5Exporter
+            exporter = YoloV5Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == YOLOV6R1_CONVERSION:
+            from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
+            exporter = YoloV6R1Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == YOLOV6R3_CONVERSION:
+            from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
+            exporter = YoloV6R3Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == GOLD_YOLO_CONVERSION:
+            from tools.yolov6r3.gold_yolo_exporter import GoldYoloExporter
+            exporter = GoldYoloExporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == YOLOV6R4_CONVERSION:
+            from tools.yolo.yolov6_exporter import YoloV6R4Exporter
+            exporter = YoloV6R4Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == YOLOV7_CONVERSION:
+            from tools.yolov7.yolov7_exporter import YoloV7Exporter
+            exporter = YoloV7Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == YOLOV8_CONVERSION:
+            from tools.yolo.yolov8_exporter import YoloV8Exporter
+            exporter = YoloV8Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        else:
+            logger.error("Unrecognized model version.")
+            raise typer.Exit(code=1)
+        logger.info("Model loaded.")
+    except Exception as e:
+        logger.error(f"Error creating exporter: {e}")
         raise typer.Exit(code=1)
+    
+    # Export model
+    try:
+        logger.info("Exporting model...")
+        exporter.export_onnx()
+        logger.info("Model exported.")
+    except Exception as e:
+        logger.error(f"Error exporting model: {e}")
+        raise typer.Exit(code=1)
+    # Create NN archive
+    try:
+        logger.info("Creating NN archive...")
+        exporter.export_nn_archive()
+        logger.info("NN archive created.")
+    except Exception as e:
+        logger.error(f"Error creating NN archive: {e}")
+        raise typer.Exit(code=1)
+    
+    # Upload to remote
+    if config.output_remote_url:
+        upload_file_to_remote(exporter.f_onnx, config.output_remote_url, config.put_file_plugin)
 
 
 if __name__ == "__main__":
     app()
-
-# python main.py --model ../yolov8n-seg.pt --imgsz "416"
-# tools --model yolov8n-seg.pt --imgsz "416"

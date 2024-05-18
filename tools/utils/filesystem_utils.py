@@ -37,15 +37,11 @@ def download_from_remote(url: str, dest: Union[Path, str], max_files: int = -1) 
         for i, remote_file in enumerate(fs.walk_dir(remote_path)):
             if i == max_files:
                 break
-            if not local_path.exists() or not os.getenv(
-                "MODELCONVERTER_UNSAFE_CACHE", False
-            ):
+            if not local_path.exists():
                 fs.get_file(remote_file, str(local_path / Path(remote_file).name))
 
     else:
-        if not local_path.exists() or not os.getenv(
-            "MODELCONVERTER_UNSAFE_CACHE", False
-        ):
+        if not local_path.exists():
             fs.get_file(remote_path, str(local_path))
 
     return local_path

@@ -19,7 +19,7 @@ cd tools
 # Building Docker image
 docker build -t tools-cli .
 # Running the image
-docker run -v "$(PWD)/shared_with_container:/app/shared_with_container" tools-cli --model shared_with_container/yolov8n-seg.pt --imgsz "416"
+docker run -v "$(PWD)/shared_with_container:/app/shared_with_container" tools-cli shared_with_container/models/yolov8n-seg.pt --imgsz "416"
 ```
 
 ### Using Docker compose
@@ -28,7 +28,7 @@ docker run -v "$(PWD)/shared_with_container:/app/shared_with_container" tools-cl
 # Building Docker image
 docker compose build
 # Running the image
-docker compose run tools-cli --model shared_with_container/yolov8n-seg.pt
+docker compose run tools-cli shared_with_container/models/yolov8n-seg.pt
 ```
 
 ### Using Python package
@@ -37,7 +37,7 @@ docker compose run tools-cli --model shared_with_container/yolov8n-seg.pt
 # Building the package
 pip install .
 # Running the package
-tools --model shared_with_container/yolov8n-seg.pt --imgsz "416"
+tools --model shared_with_container/models/yolov8n-seg.pt --imgsz "416"
 ```
 
 ## Credits

@@ -1,8 +1,20 @@
 from __future__ import annotations
 
 from .backbones import YoloV6BackBone
-from .detect_head import DetectV6R1, DetectV6R3, DetectV6R4m, DetectV6R4s, DetectV8
+from .heads import (
+    DetectV6R1, 
+    DetectV6R3, 
+    DetectV6R4m, 
+    DetectV6R4s, 
+    DetectV8,
+    PoseV8,
+    OBBV8,
+    SegmentV8,
+    ClassifyV8,
+)
 from .exporter import Exporter
+from .stage2 import Multiplier
+
 
 __all__ = [
     "YoloV6BackBone",
@@ -12,4 +24,9 @@ __all__ = [
     "DetectV6R4m",
     "DetectV8",
     "Exporter",
+    "PoseV8",
+    "OBBV8",
+    "SegmentV8",
+    "ClassifyV8",
+    "Multiplier",
 ]

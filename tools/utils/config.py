@@ -18,6 +18,9 @@ class Config(LuxonisConfig):
     output_remote_url: Optional[str] = Field(
         None, description="URL to upload the output to."
     )
+    put_file_plugin: Optional[str] = Field(
+        None, description="The name of a registered function under the PUT_FILE_REGISTRY."
+    )
 
     @validator("imgsz", each_item=True)
     def check_imgsz(cls, v):
