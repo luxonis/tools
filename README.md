@@ -23,7 +23,7 @@ cd tools
 # Building Docker image
 docker build -t tools-cli .
 # Running the image
-docker run -v "$(PWD)/shared_with_container:/app/shared_with_container" tools-cli shared_with_container/models/yolov8n-seg.pt --imgsz "416"
+docker run -v "${PWD}/shared_with_container:/app/shared_with_container" tools-cli shared_with_container/models/yolov8n-seg.pt --imgsz "416"
 ```
 
 ### Using Docker compose
