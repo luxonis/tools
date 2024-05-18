@@ -4,6 +4,10 @@ This application is used for exporting Yolo V5, V6, V7, V8 (OBB, instance segmen
 
 ## Running
 
+You can either export a model stored on cloud (e.g. S3) or locally. To export a local model, please put it inside a `shared-component` folder.
+
+The output files are going to be in `shared-component/output` folder.
+
 ### Prerequisites
 
 ```bash
