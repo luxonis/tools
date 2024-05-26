@@ -7,6 +7,7 @@ from models.common import Conv
 from models.yolo import Detect
 from typing import Tuple
 import onnx
+import onnxsim
 import torch
 
 from tools.modules.exporter import Exporter
@@ -74,6 +75,8 @@ class YoloV7Exporter(Exporter):
         # Check if the arhcitecture is correct
         onnx.checker.check_model(self.f_onnx)
         onnx_model = onnx.load(self.f_onnx)
+        onnx_model, check = onnxsim.simplify(onnx_model)
+        assert check, "Simplified ONNX model could not be validated"
 
         # add named sigmoids for prunning in OpenVINO
         conv_indices = []
@@ -107,6 +110,10 @@ class YoloV7Exporter(Exporter):
 
         # Clear the existing outputs
         onnx_model.graph.ClearField("output")
+
+        # Add the new outputs
+        for value_info in output_value_infos:
+            onnx_model.graph.output.add().CopyFrom(value_info)
 
         onnx.checker.check_model(onnx_model)  # check onnx model
         # Save onnx model

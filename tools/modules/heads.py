@@ -6,6 +6,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def make_anchors(feats, strides, grid_cell_offset=0.5):
+    """Generate anchors from features."""
+    anchor_points, stride_tensor = [], []
+    assert feats is not None
+    dtype, device = feats[0].dtype, feats[0].device
+    for i, stride in enumerate(strides):
+        _, _, h, w = feats[i].shape
+        sx = torch.arange(end=w, device=device, dtype=dtype) + grid_cell_offset  # shift x
+        sy = torch.arange(end=h, device=device, dtype=dtype) + grid_cell_offset  # shift y
+        sy, sx = torch.meshgrid(sy, sx, indexing="ij")
+        anchor_points.append(torch.stack((sx, sy), -1).view(-1, 2))
+        stride_tensor.append(torch.full((h * w, 1), stride, dtype=dtype, device=device))
+    return torch.cat(anchor_points), torch.cat(stride_tensor)
+
+
 class DetectV6R1(nn.Module):
     '''Efficient Decoupled Head
     With hardware-aware degisn, the decoupled head is optimized with
@@ -439,7 +454,13 @@ class PoseV8(nn.Module):
         for i in range(self.nl):
             x[i] = torch.cat((self.cv2[i](x[i]), self.cv3[i](x[i])), 1)
 
-        box, cls = torch.cat([xi.view(bs, self.no, -1) for xi in x], 2).split((self.reg_max * 4, self.nc), 1)
+        # box, cls = torch.cat([xi.view(bs, self.no, -1) for xi in x], 2).split((self.reg_max * 4, self.nc), 1)
+        x_cat = torch.cat([xi.view(bs, self.no, -1) for xi in x], 2)
+        if self.shape != bs:
+            self.anchors, self.strides = (x.transpose(0, 1) for x in make_anchors(x, self.stride, 0.5))
+            self.shape = bs
+        box, cls = x_cat.split((self.reg_max * 4, self.nc), 1)
+
         box = self.dfl(box)
         cls_output = cls.sigmoid()
         # Get the max
@@ -457,9 +478,20 @@ class PoseV8(nn.Module):
           outputs.append(y[:, :, start:end].view(xi.shape[0], -1, xi.shape[-2], xi.shape[-1]))
           start += xi.shape[-2]*xi.shape[-1]
 
-        outputs.append(kpt)
+        pred_kpt = self.kpts_decode(bs, kpt)
+        outputs.append(pred_kpt)
 
         return outputs
+
+    def kpts_decode(self, bs, kpts):
+        """Decodes keypoints."""
+        print(f"Kpts: {kpts.shape}, bs: {bs}, self.anchors: {self.anchors.shape}")
+        ndim = self.kpt_shape[1]
+        y = kpts.view(bs, *self.kpt_shape, -1)
+        a = (y[:, :, :2] * 2.0 + (self.anchors - 0.5)) * self.strides
+        if ndim == 3:
+            a = torch.cat((a, y[:, :, 2:3].sigmoid()), 2)
+        return a.view(bs, self.nk, -1)
 
 
 class SegmentV8(nn.Module):

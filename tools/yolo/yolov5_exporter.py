@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("./tools/yolo/yolov5")
 import onnx
+import onnxsim
 import torch.nn as nn
 from models.common import Conv
 from models.experimental import attempt_load
@@ -89,6 +90,8 @@ class YoloV5Exporter(Exporter):
         # Check if the arhcitecture is correct
         onnx.checker.check_model(self.f_onnx)
         onnx_model = onnx.load(self.f_onnx)
+        onnx_model, check = onnxsim.simplify(onnx_model)
+        assert check, "Simplified ONNX model could not be validated"
 
         # add named sigmoids for prunning in OpenVINO
         conv_indices = []

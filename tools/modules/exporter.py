@@ -5,6 +5,7 @@ import os
 from typing import List, Tuple, Optional
 
 import onnx
+import onnxsim
 import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
 from luxonis_ml.nn_archive.config_building_blocks import HeadObjectDetectionYOLO
@@ -71,8 +72,17 @@ class Exporter:
             dynamic_axes=None,
         )
 
-        # Check if the arhcitecture is correct
-        onnx.checker.check_model(self.f_onnx)
+        # check if the arhcitecture is correct
+        model_onnx = onnx.load(self.f_onnx)  # load onnx model
+        onnx.checker.check_model(model_onnx)  # check onnx model
+
+        # simplify the moodel
+        onnx_model, check = onnxsim.simplify(model_onnx)
+        assert check, "Simplified ONNX model could not be validated"
+
+        # Save onnx model
+        onnx.save(onnx_model, self.f_onnx)
+
         return self.f_onnx
 
     def make_nn_archive(
