@@ -79,7 +79,8 @@ class YoloV6R1Exporter(Exporter):
         # Check if the arhcitecture is correct
         onnx.checker.check_model(self.f_onnx)
         onnx_model = onnx.load(self.f_onnx)
-        onnx_model, _ = onnxsim.simplify(onnx_model)
+        onnx_model, check = onnxsim.simplify(onnx_model)
+        assert check, "Simplified ONNX model could not be validated"
 
         # get contacts ready for parsing
         conc_idx = []

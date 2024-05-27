@@ -10,7 +10,7 @@ import onnx
 import onnxsim
 import torch
 
-from tools.modules.exporter import Exporter
+from tools.modules import Exporter, DetectV7
 
 
 class YoloV7Exporter(Exporter):
@@ -36,6 +36,11 @@ class YoloV7Exporter(Exporter):
         # check num classes and labels
         assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
 
+        if hasattr(model, "module"):
+            model.module.model[-1] = DetectV7(model.module.model[-1])
+        else:
+            model.model[-1] = DetectV7(model.model[-1])
+        
         # check if image size is suitable
         gs = int(max(model.stride))  # grid size (max stride)
         if isinstance(self.imgsz, int):
@@ -54,71 +59,6 @@ class YoloV7Exporter(Exporter):
 
         m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]
         self.num_branches = len(m.anchor_grid)           
-
-    def export_onnx(self):
-        self.f_onnx = (self.output_folder / f"{self.model_name}.onnx").resolve()
-        im = torch.zeros(1, 3, *self.imgsz[::-1])
-        # export onnx model
-        torch.onnx.export(
-            self.model,
-            im,
-            self.f_onnx,
-            verbose=False,
-            opset_version=12,
-            training=torch.onnx.TrainingMode.EVAL,
-            do_constant_folding=True,
-            input_names=["images"],
-            output_names=['output'],
-            dynamic_axes=None,
-        )
-
-        # Check if the arhcitecture is correct
-        onnx.checker.check_model(self.f_onnx)
-        onnx_model = onnx.load(self.f_onnx)
-        onnx_model, check = onnxsim.simplify(onnx_model)
-        assert check, "Simplified ONNX model could not be validated"
-
-        # add named sigmoids for prunning in OpenVINO
-        conv_indices = []
-        for i, n in enumerate(onnx_model.graph.node):
-            if "Conv" in n.name:
-                conv_indices.append(i)
-
-        inputs = conv_indices[-self.num_branches:]
-
-        # Names of the node outputs you want to set as model outputs
-        node_output_names = []
-        for i, inp in enumerate(inputs):
-            node_output_names.append(f"output{i+1}_yolov7")
-            sigmoid = onnx.helper.make_node(
-                'Sigmoid',
-                inputs=[onnx_model.graph.node[inp].output[0]],
-                outputs=[f'output{i+1}_yolov7'],
-            )
-            onnx_model.graph.node.append(sigmoid)
-        
-        # Create ValueInfoProto messages for the desired outputs
-        output_value_infos = []
-        for output_name in node_output_names:
-            for node in onnx_model.graph.node:
-                if output_name in node.output:
-                    # Copy information from the output's ValueInfoProto
-                    # (this includes the data type and shape, if they are known)
-                    for value_info in onnx_model.graph.value_info:
-                        if value_info.name == output_name:
-                            output_value_infos.append(value_info)
-
-        # Clear the existing outputs
-        onnx_model.graph.ClearField("output")
-
-        # Add the new outputs
-        for value_info in output_value_infos:
-            onnx_model.graph.output.add().CopyFrom(value_info)
-
-        onnx.checker.check_model(onnx_model)  # check onnx model
-        # Save onnx model
-        onnx.save(onnx_model, self.f_onnx)
-        return self.f_onnx
 
     def export_nn_archive(self):
         """Export the model to NN archive format."""

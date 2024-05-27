@@ -11,6 +11,8 @@ from .heads import (
     OBBV8,
     SegmentV8,
     ClassifyV8,
+    DetectV5,
+    DetectV7,
 )
 from .exporter import Exporter
 from .stage2 import Multiplier
@@ -29,4 +31,6 @@ __all__ = [
     "SegmentV8",
     "ClassifyV8",
     "Multiplier",
+    "DetectV5",
+    "DetectV7",
 ]

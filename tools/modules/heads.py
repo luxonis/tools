@@ -21,6 +21,63 @@ def make_anchors(feats, strides, grid_cell_offset=0.5):
     return torch.cat(anchor_points), torch.cat(stride_tensor)
 
 
+class DetectV5(nn.Module):
+    '''
+    YOLOv5 Detect head for detection models.
+    '''
+    def __init__(self, old_detect):
+        super().__init__()
+        self.nc = old_detect.nc  # number of classes
+        self.no = old_detect.no  # number of outputs per anchor
+        self.nl = old_detect.nl  # number of detection layers
+        self.na = old_detect.na
+        self.grid = old_detect.grid # [torch.zeros(1)] * self.nl
+        self.anchor_grid = old_detect.anchor_grid
+        self.m = old_detect.m
+        self.inplace = old_detect.inplace
+        self.stride = old_detect.stride
+        self.anchors = old_detect.anchors
+        self.f = old_detect.f
+        self.i = old_detect.i
+
+    def forward(self, x):
+        outputs = []
+
+        for i in range(self.nl):
+            x[i] = self.m[i](x[i])  # conv
+            channel_output = torch.sigmoid(x[i])
+            outputs.append(channel_output)
+        
+        return outputs
+
+
+class DetectV7(nn.Module):
+    '''
+    YOLOv7 Detect head for detection models.
+    '''
+    def __init__(self, old_detect):
+        super().__init__()
+        self.nc = old_detect.nc  # number of classes
+        self.no = old_detect.no  # number of outputs per anchor
+        self.nl = old_detect.nl  # number of detection layers
+        self.na = old_detect.na
+        self.grid = old_detect.grid
+        self.anchor_grid = old_detect.anchor_grid
+        self.m = old_detect.m
+        self.stride = old_detect.stride
+        self.anchors = old_detect.anchors
+
+    def forward(self, x):
+        outputs = []
+
+        for i in range(self.nl):
+            x[i] = self.m[i](x[i])  # conv
+            channel_output = torch.sigmoid(x[i])
+            outputs.append(channel_output)
+        
+        return outputs
+
+
 class DetectV6R1(nn.Module):
     '''Efficient Decoupled Head
     With hardware-aware degisn, the decoupled head is optimized with
@@ -167,7 +224,7 @@ class DetectV6R4s(nn.Module):
         self.stride = old_detect.stride
         if hasattr(old_detect, "use_dfl"):
             self.use_dfl = old_detect.use_dfl
-            print(old_detect.use_dfl)
+            # print(old_detect.use_dfl)
         if hasattr(old_detect, "reg_max"):
             self.reg_max = old_detect.reg_max
         if hasattr(old_detect, "proj_conv"):
@@ -485,7 +542,6 @@ class PoseV8(nn.Module):
 
     def kpts_decode(self, bs, kpts):
         """Decodes keypoints."""
-        print(f"Kpts: {kpts.shape}, bs: {bs}, self.anchors: {self.anchors.shape}")
         ndim = self.kpt_shape[1]
         y = kpts.view(bs, *self.kpt_shape, -1)
         a = (y[:, :, :2] * 2.0 + (self.anchors - 0.5)) * self.strides
