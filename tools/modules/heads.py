@@ -66,6 +66,8 @@ class DetectV7(nn.Module):
         self.m = old_detect.m
         self.stride = old_detect.stride
         self.anchors = old_detect.anchors
+        self.f = old_detect.f
+        self.i = old_detect.i
 
     def forward(self, x):
         outputs = []
