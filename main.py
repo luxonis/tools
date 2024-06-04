@@ -12,11 +12,11 @@ import sentry_sdk
 
 from yolo.export_yolov5 import YoloV5Exporter
 from yolo.export_yolov6 import YoloV6R4Exporter
+from yolo.export_yolov8 import YoloV8Exporter
+from yolo.export_yolov10 import YoloV10Exporter
 
 import os
 import aiofiles
-
-from yolo.export_yolov8 import YoloV8Exporter
 
 Config.KEEP_ALIVE = False
 Config.RESPONSE_TIMEOUT = 1000
@@ -103,6 +103,15 @@ async def upload_file(request):
     elif version == "v8":
         try:
             exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
+        except ValueError as ve:
+            sentry_sdk.capture_exception(ve)
+            raise ServerError(message=str(ve), status_code=518)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            raise ServerError(message="Error while loading model", status_code=520)
+    elif version == "v10":
+        try:
+            exporter = YoloV10Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise ServerError(message=str(ve), status_code=518)

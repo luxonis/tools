@@ -115,6 +115,7 @@ function App() {
                           <option value="v8">YoloV8 (detection only)</option>
                           <option value="v6">YoloV6 (R1)</option>
                           <option value="v6r2">YoloV6 (R2, R3)</option>
+                          <option value="v10">YoloV10</option>
                         </select>
                         {
                           (detectedVersion !== '') &&
