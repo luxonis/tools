@@ -28,10 +28,22 @@ logging.getLogger().setLevel(logging.INFO)
 app = typer.Typer(help="Tools CLI", add_completion=False, rich_markup_mode="markdown")
 
 
+YOLO_VERSIONS = [
+    GOLD_YOLO_CONVERSION,
+    YOLOV5_CONVERSION,
+    YOLOV6R1_CONVERSION,
+    YOLOV6R3_CONVERSION,
+    YOLOV6R4_CONVERSION,
+    YOLOV7_CONVERSION,
+    YOLOV8_CONVERSION
+]
+
+
 @app.command()
 def convert(
     model: str,
     imgsz: str = "416 416",
+    version: Optional[str] = None,
     use_rvc2: bool = True,
     output_remote_url: Optional[str] = None,
     config_path: Optional[str] = None,
@@ -39,6 +51,10 @@ def convert(
 ):
     logger = logging.getLogger(__name__)
     logger.info("Converting model...")
+
+    if version is not None and version not in YOLO_VERSIONS:
+        logger.error("Wrong YOLO version selected!")
+        raise typer.Exit(code=1)
 
     try:
         imgsz = list(map(int, imgsz.split(" "))) if " " in imgsz else [int(imgsz)] * 2
@@ -60,8 +76,9 @@ def convert(
     # Resolve model path
     model_path = resolve_path(config.model, MISC_DIR)
 
-    version = detect_version(str(model_path))
-    logger.info(f"Detected version: {version}")
+    if version is None:
+        version = detect_version(str(model_path))
+        logger.info(f"Detected version: {version}")
 
     try:
         # Create exporter
