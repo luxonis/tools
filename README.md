@@ -44,6 +44,17 @@ pip install .
 tools --model shared_with_container/models/yolov6nr4.pt --imgsz "416"
 ```
 
+### Arguments
+
+* `model: str` = Path to the model.
+* `imgsz: str` = Image input shape in the format `width height` or `width`. Default value `"416 416"`.
+* `version: Optional[str]` = 
+* `use_rvc2: bool` = Whether to export for RVC2 or RVC3 devices. Default value `True`.
+* `class_names: Optional[str]` = Optional list of classes separated by a comma, e.g. `"person, dog, cat"`
+* `output_remote_url: Optional[str]` = Remote output url for the output .onnx model.
+* `config_path: Optional[str]` = Optional path to an optional config.
+* `put_file_plugin: Optional[str]` = Which plugin to use. Optional.
+
 ## Credits
 
 This application uses source code of the following repositories: [YOLOv5](https://github.com/ultralytics/yolov5), [YOLOv6](https://github.com/meituan/YOLOv6), [GoldYOLO](https://github.com/huawei-noah/Efficient-Computing) [YOLOv7](https://github.com/WongKinYiu/yolov7), and [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) (see each of them for more information).

@@ -9,6 +9,7 @@ from switch_tool import switch_to_deploy
 from typing import Tuple
 
 from tools.modules import Exporter, DetectV6R3
+from tools.utils import get_first_conv2d_in_channels
 
 
 class GoldYoloExporter(Exporter):
@@ -36,6 +37,12 @@ class GoldYoloExporter(Exporter):
 
         # switch to deploy
         model = switch_to_deploy(model)
+
+        try:
+            self.number_of_channels = get_first_conv2d_in_channels(model)
+            # print(f"Number of channels: {self.number_of_channels}")
+        except Exception as e:
+            print(f"Error while getting number of channels: {e}")
 
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32

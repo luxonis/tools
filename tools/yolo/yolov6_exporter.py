@@ -8,6 +8,7 @@ from yolov6.utils.checkpoint import load_checkpoint
 from typing import Tuple
 
 from tools.modules import Exporter, DetectV6R4m, DetectV6R4s
+from tools.utils import get_first_conv2d_in_channels
 
 
 class YoloV6R4Exporter(Exporter):
@@ -45,6 +46,12 @@ class YoloV6R4Exporter(Exporter):
         else:
             model.detect = DetectV6R4m(model.detect, self.use_rvc2)
 
+        try:
+            self.number_of_channels = get_first_conv2d_in_channels(model)
+            # print(f"Number of channels: {self.number_of_channels}")
+        except Exception as e:
+            print(f"Error while getting number of channels: {e}")
+        
         self.num_branches = len(model.detect.grid)
 
         # check if image size is suitable

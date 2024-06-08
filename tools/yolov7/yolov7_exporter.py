@@ -3,14 +3,10 @@ import sys
 sys.path.append("./tools/yolov7/yolov7")
 
 from models.experimental import attempt_load
-from models.common import Conv
-from models.yolo import Detect
-from typing import Tuple
-import onnx
-import onnxsim
-import torch
+from typing import Tuple, List, Optional
 
 from tools.modules import Exporter, DetectV7
+from tools.utils import get_first_conv2d_in_channels
 
 
 class YoloV7Exporter(Exporter):
@@ -38,8 +34,16 @@ class YoloV7Exporter(Exporter):
 
         if hasattr(model, "module"):
             model.module.model[-1] = DetectV7(model.module.model[-1])
+            # self.number_of_channels = model.module.model[0].conv.in_channels
         else:
             model.model[-1] = DetectV7(model.model[-1])
+            # self.number_of_channels = model.model[0].conv.in_channels
+
+        try:
+            self.number_of_channels = get_first_conv2d_in_channels(model)
+            # print(f"Number of channels: {self.number_of_channels}")
+        except Exception as e:
+            print(f"Error while getting number of channels: {e}")
         
         # check if image size is suitable
         gs = int(max(model.stride))  # grid size (max stride)
@@ -60,6 +64,17 @@ class YoloV7Exporter(Exporter):
         m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]
         self.num_branches = len(m.anchor_grid)           
 
-    def export_nn_archive(self):
-        """Export the model to NN archive format."""
-        self.make_nn_archive(self.model.names, self.model.nc)
+    def export_nn_archive(self, class_names: Optional[List[str]] = None):
+        """
+        Export the model to NN archive format.
+        
+        Args:
+            class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+        """
+        names = self.model.names
+
+        if class_names is not None:
+            assert len(class_names) == self.model.nc, f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            names = class_names
+
+        self.make_nn_archive(names, self.model.nc)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Optional, List
 
 import typer
 
@@ -45,6 +45,7 @@ def convert(
     imgsz: str = "416 416",
     version: Optional[str] = None,
     use_rvc2: bool = True,
+    class_names: Optional[str] = None,
     output_remote_url: Optional[str] = None,
     config_path: Optional[str] = None,
     put_file_plugin: Optional[str] = None,
@@ -62,12 +63,17 @@ def convert(
         logger.error('Invalid image size format. Must be "width height" or "width".')
         raise typer.Exit(code=1)
 
+    if class_names:
+        class_names = [class_name.strip() for class_name in class_names.split(",")]
+        logger.info(f"Class names: {class_names}")
+
     config = Config.get_config(
         config_path,
         {
             "model": model,
             "imgsz": imgsz,
             "use_rvc2": use_rvc2,
+            "class_names": class_names,
             "output_remote_url": output_remote_url,
             "put_file_plugin": put_file_plugin,
         },
@@ -123,7 +129,7 @@ def convert(
     # Create NN archive
     try:
         logger.info("Creating NN archive...")
-        exporter.export_nn_archive()
+        exporter.export_nn_archive(config.class_names)
         logger.info("NN archive created.")
     except Exception as e:
         logger.error(f"Error creating NN archive: {e}")

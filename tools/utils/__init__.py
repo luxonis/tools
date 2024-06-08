@@ -19,6 +19,8 @@ from .version_detection import (
     YOLOV8_CONVERSION,
     detect_version,
 )
+from .in_channels import get_first_conv2d_in_channels
+
 
 __all__ = [
     "Config",
@@ -35,4 +37,5 @@ __all__ = [
     "download_from_remote",
     "upload_file_to_remote",
     "get_protocol",
+    "get_first_conv2d_in_channels",
 ]

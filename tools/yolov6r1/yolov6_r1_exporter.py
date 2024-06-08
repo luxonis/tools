@@ -10,6 +10,7 @@ import torch
 from typing import Tuple
 
 from tools.modules import Exporter, DetectV6R1
+from tools.utils import get_first_conv2d_in_channels
 
 
 class YoloV6R1Exporter(Exporter):
@@ -44,6 +45,12 @@ class YoloV6R1Exporter(Exporter):
         
         self.num_branches = len(model.detect.grid)
 
+        try:
+            self.number_of_channels = get_first_conv2d_in_channels(model)
+            # print(f"Number of channels: {self.number_of_channels}")
+        except Exception as e:
+            print(f"Error while getting number of channels: {e}")
+
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32
         if isinstance(self.imgsz, int):
@@ -61,7 +68,7 @@ class YoloV6R1Exporter(Exporter):
 
     def export_onnx(self):
         self.f_onnx = (self.output_folder / f"{self.model_name}.onnx").resolve()
-        im = torch.zeros(1, 3, *self.imgsz[::-1])
+        im = torch.zeros(1, self.number_of_channels, *self.imgsz[::-1])
         # export onnx model
         torch.onnx.export(
             self.model,

@@ -14,6 +14,9 @@ class Config(LuxonisConfig):
         max_length=2,
         min_ledescription="Image size [width, height].",
     )
+    class_names: Optional[List[str]] = Field(
+        None, description="List of class names."
+    )
     use_rvc2: Literal[False, True] = Field(True, description="Whether to use RVC2.")
     output_remote_url: Optional[str] = Field(
         None, description="URL to upload the output to."

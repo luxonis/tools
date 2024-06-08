@@ -18,9 +18,10 @@ from luxonis_ml.nn_archive.config_building_blocks.base_models.head_outputs impor
 from ultralytics.nn.modules import Detect, Segment, Classify, OBB, Pose
 from ultralytics.nn.tasks import attempt_load_one_weight
 import torch
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 from tools.modules import Exporter, DetectV8, SegmentV8, OBBV8, PoseV8, ClassifyV8, Multiplier
+from tools.utils import get_first_conv2d_in_channels
 
 
 DETECT_MODE = 0
@@ -96,6 +97,12 @@ class YoloV8Exporter(Exporter):
             # check num classes and labels
             assert model.nc == len(self.names), f'Model class count {model.nc} != len(names) {len(self.names)}'
 
+        try:
+            self.number_of_channels = get_first_conv2d_in_channels(model)
+            # print(f"Number of channels: {self.number_of_channels}")
+        except Exception as e:
+            print(f"Error while getting number of channels: {e}")
+
         # Get output names
         self.output_names = get_output_names(self.mode)
 
@@ -128,17 +135,29 @@ class YoloV8Exporter(Exporter):
             output_names=["mask"]
         )
 
-    def export_nn_archive(self):
+    def export_nn_archive(self, class_names: Optional[List[str]] = None):
+        """
+        Export the model to NN archive format.
+        
+        Args:
+            class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+        """
+        names = list(self.model.names.values())
+
+        if class_names is not None:
+            assert len(class_names) == len(names), f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
+            names = class_names
+        
         if self.mode == DETECT_MODE:
-            self.make_nn_archive(list(self.model.names.values()), self.model.model[-1].nc)
+            self.make_nn_archive(names, self.model.model[-1].nc)
         elif self.mode == SEGMENT_MODE:
-            self.make_seg_nn_archive(list(self.model.names.values()), self.model.model[-1].nc)
+            self.make_seg_nn_archive(names, self.model.model[-1].nc)
         elif self.mode == OBB_MODE:
-            self.make_obb_nn_archive(list(self.model.names.values()), self.model.model[-1].nc)
+            self.make_obb_nn_archive(names, self.model.model[-1].nc)
         elif self.mode == POSE_MODE:
-            self.make_pose_nn_archive(list(self.model.names.values()), self.model.model[-1].nc)
+            self.make_pose_nn_archive(names, self.model.model[-1].nc)
         elif self.mode == CLASSIFY_MODE:
-            self.make_cls_nn_archive(list(self.model.names.values()), len(self.model.names))
+            self.make_cls_nn_archive(names, len(self.model.names))
 
     def make_seg_nn_archive(
         self,
@@ -172,7 +191,7 @@ class YoloV8Exporter(Exporter):
                             "name": "images",
                             "dtype": "float32",
                             "input_type": "image",
-                            "shape": [1, 3, *self.imgsz[::-1]],
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
@@ -252,7 +271,7 @@ class YoloV8Exporter(Exporter):
                             "name": "images",
                             "dtype": "float32",
                             "input_type": "image",
-                            "shape": [1, 3, *self.imgsz[::-1]],
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
@@ -325,7 +344,7 @@ class YoloV8Exporter(Exporter):
                             "name": "images",
                             "dtype": "float32",
                             "input_type": "image",
-                            "shape": [1, 3, *self.imgsz[::-1]],
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
@@ -387,7 +406,7 @@ class YoloV8Exporter(Exporter):
                             "name": "images",
                             "dtype": "float32",
                             "input_type": "image",
-                            "shape": [1, 3, *self.imgsz[::-1]],
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],

@@ -1,17 +1,15 @@
 import sys
 
 sys.path.append("./tools/yolo/yolov5")
-import onnx
-import onnxsim
 import torch.nn as nn
 from models.common import Conv
 from models.experimental import attempt_load
 from models.yolo import Detect
 from utils.activations import SiLU
-import torch
-from typing import Tuple
+from typing import Tuple, List, Optional
 
 from tools.modules import Exporter, DetectV5
+from tools.utils import get_first_conv2d_in_channels
 
 
 class YoloV5Exporter(Exporter):
@@ -72,9 +70,26 @@ class YoloV5Exporter(Exporter):
         model.eval()
         self.model = model
 
+        try:
+            self.number_of_channels = get_first_conv2d_in_channels(model)
+            # print(f"Number of channels: {self.number_of_channels}")
+        except Exception as e:
+            print(f"Error while getting number of channels: {e}")
+
         m = model.module.model[-1] if hasattr(model, "module") else model.model[-1]
         self.num_branches = len(m.anchor_grid)
 
-    def export_nn_archive(self):
-        """Export the model to NN archive format."""
-        self.make_nn_archive(list(self.model.names.values()), self.model.nc)
+    def export_nn_archive(self, class_names: Optional[List[str]] = None):
+        """
+        Export the model to NN archive format.
+        
+        Args:
+            class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+        """
+        names = list(self.model.names.values())
+
+        if class_names is not None:
+            assert len(class_names) == self.model.nc, f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            names = class_names
+
+        self.make_nn_archive(names, self.model.nc)

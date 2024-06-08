@@ -43,6 +43,7 @@ class Exporter:
         # Set up file paths
         self.f_onnx = None
         self.use_rvc2 = use_rvc2
+        self.number_of_channels = None
         self.subtype = subtype
         self.output_names = output_names
         self.output_folder = (OUTPUTS_DIR / f"{self.model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}").resolve()
@@ -57,7 +58,7 @@ class Exporter:
             Path: Path to the exported ONNX model
         """
         self.f_onnx = (self.output_folder / f"{self.model_name}.onnx").resolve()
-        im = torch.zeros(1, 3, *self.imgsz[::-1])
+        im = torch.zeros(1, self.number_of_channels, *self.imgsz[::-1])
         # export onnx model
         torch.onnx.export(
             self.model,
@@ -117,7 +118,7 @@ class Exporter:
                             "name": "images",
                             "dtype": "float32",
                             "input_type": "image",
-                            "shape": [1, 3, *self.imgsz[::-1]],
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
@@ -150,13 +151,23 @@ class Exporter:
         )
         archive.make_archive()
 
-    def export_nn_archive(self):
-        """Export the model to NN archive format."""
+    def export_nn_archive(self, class_names: Optional[List[str]] = None):
+        """
+        Export the model to NN archive format.
+        
+        Args:
+            class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+        """
         nc = self.model.detect.nc
-        # Check if the model has a names attribute
-        if hasattr(self.model, "names"):
-            names = self.model.names
+        # If class names are provided, use them
+        if class_names is not None:
+            assert len(class_names) == nc, f"Number of the given class names {len(class_names)} does not match number of classes {nc} provided in the model!"
+            names = class_names
         else:
-            names = [f"Class_{i}" for i in range(nc)]
+            # Check if the model has a names attribute
+            if hasattr(self.model, "names"):
+                names = self.model.names
+            else:
+                names = [f"Class_{i}" for i in range(nc)]
 
         self.make_nn_archive(names, nc)
