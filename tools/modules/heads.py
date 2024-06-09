@@ -109,7 +109,7 @@ class DetectV6R1(nn.Module):
         self.obj_preds = old_detect.obj_preds
 
     def forward(self, x):
-        z = []
+        outputs = []
         for i in range(self.nl):
             x[i] = self.stems[i](x[i])
             cls_x = x[i]
@@ -120,21 +120,8 @@ class DetectV6R1(nn.Module):
             reg_output = self.reg_preds[i](reg_feat)
             obj_output = self.obj_preds[i](reg_feat)
             y = torch.cat([reg_output, obj_output.sigmoid(), cls_output.sigmoid()], 1)
-            bs, _, ny, nx = y.shape
-            y = y.view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
-            if self.grid[i].shape[2:4] != y.shape[2:4]:
-                d = self.stride.device
-                yv, xv = torch.meshgrid([torch.arange(ny).to(d), torch.arange(nx).to(d)])
-                self.grid[i] = torch.stack((xv, yv), 2).view(1, self.na, ny, nx, 2).float()
-            if self.inplace:
-                y[..., 0:2] = (y[..., 0:2] + self.grid[i]) * self.stride[i]  # xy
-                y[..., 2:4] = torch.exp(y[..., 2:4]) * self.stride[i] # wh
-            else:
-                xy = (y[..., 0:2] + self.grid[i]) * self.stride[i]  # xy
-                wh = torch.exp(y[..., 2:4]) * self.stride[i]  # wh
-                y = torch.cat((xy, wh, y[..., 4:]), -1)
-            z.append(y.view(bs, -1, self.no))
-        return torch.cat(z, 1)
+            outputs.append(y)
+        return outputs
 
 
 class DetectV6R3(nn.Module):
