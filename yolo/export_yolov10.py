@@ -1,5 +1,5 @@
 import sys
-#sys.path.append("./yolo/ultralytics")
+sys.path.append("./yolo/ultralytics")
 
 import re
 import torch
