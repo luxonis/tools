@@ -62,6 +62,12 @@ model_type2url: Dict[str, str] = {
     'yolov8x': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x.pt',
     'yolov7': 'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt',
     'yolov7x': 'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt',
+    'yolov10n': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10n.pt',
+    'yolov10s': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10s.pt',
+    'yolov10m': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10m.pt',
+    'yolov10b': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10b.pt',
+    'yolov10l': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10l.pt',
+    'yolov10x': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10x.pt',
 }
 
 
