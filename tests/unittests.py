@@ -80,6 +80,7 @@ class ToolCases(unittest.TestCase):
     V6R4_SOURCE_FOLDER: str = './weights/'
     V7_SOURCE_FOLDER: str = './weights/'
     V8_SOURCE_FOLDER: str = './weights/'
+    V10_SOURCE_FOLDER: str = './weights/'
     URL: str = DEFAULT_URL
     DOWNLOAD_WEIGHTS: bool = True
     DELETE_OUTPUT: bool = True
@@ -290,6 +291,24 @@ class ToolCases(unittest.TestCase):
     
     def test_yolov7x(self):
         self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x', url=f'{self.URL}{URL_V7}')
+    
+    def test_yolov10n(self):
+        self._test_yolo(model_name='yolov10n', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10n', url=self.URL)
+
+    def test_yolov10s(self):
+        self._test_yolo(model_name='yolov10s', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10s', url=self.URL)
+    
+    def test_yolov10m(self):
+        self._test_yolo(model_name='yolov10m', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10m', url=self.URL)
+
+    def test_yolov10b(self):
+        self._test_yolo(model_name='yolov10b', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10b', url=self.URL)
+
+    def test_yolov10l(self):
+        self._test_yolo(model_name='yolov10l', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10l', url=self.URL)
+
+    def test_yolov10x(self):
+        self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x', url=self.URL)
 
     def test_yolov3tinyu_rvc3(self):
         self._test_yolo(model_name='yolov3-tinyu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov3tinyu_rvc3', url=self.URL, use_rvc2='false')
@@ -429,6 +448,24 @@ class ToolCases(unittest.TestCase):
     def test_yolov7x_rvc3(self):
         self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
 
+    def test_yolov10n_rvc3(self):
+        self._test_yolo(model_name='yolov10n', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10n_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov10s_rvc3(self):
+        self._test_yolo(model_name='yolov10s', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10s_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov10m_rvc3(self):
+        self._test_yolo(model_name='yolov10m', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10m_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov10b_rvc3(self):
+        self._test_yolo(model_name='yolov10b', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10b_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov10l_rvc3(self):
+        self._test_yolo(model_name='yolov10l', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10l_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov10x_rvc3(self):
+        self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x_rvc3', url=self.URL, use_rvc2='false')
+
     def tearDown(self):
         if self.DELETE_OUTPUT:
             # Get a list of all files and folders in the specified folder
@@ -494,6 +531,7 @@ def set_the_args():
     ToolCases.V6R4_SOURCE_FOLDER = os.environ.get("v6r4_folder", "./weights/")
     ToolCases.V7_SOURCE_FOLDER = os.environ.get("v7_folder", "./weights/")
     ToolCases.V8_SOURCE_FOLDER = os.environ.get("v8_folder", "./weights/")
+    ToolCases.V10_SOURCE_FOLDER = os.environ.get("v10_folder", "./weights/")
 
     print('*'*60)
     print('ARGS:')
@@ -507,6 +545,7 @@ def set_the_args():
     print("v6r4_folder:", ToolCases.V6R4_SOURCE_FOLDER)
     print("v7_folder:", ToolCases.V7_SOURCE_FOLDER)
     print("v8_folder:", ToolCases.V8_SOURCE_FOLDER)
+    print("v10_folder:", ToolCases.V10_SOURCE_FOLDER)
     print("URL:", ToolCases.URL)
     print('*'*60)
 
