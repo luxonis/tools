@@ -12,12 +12,15 @@ from exporter import Exporter
 from ultralytics.nn.tasks import attempt_load_one_weight
 from ultralytics.nn.modules import Detect
 from yolo.detect_head import DetectV10
-from yolo.export_yolov8 import YoloV8Exporter
 
 
 DIR_TMP = "./tmp"
 
-class YoloV10Exporter(YoloV8Exporter):
+class YoloV10Exporter(Exporter):
+
+    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='true'):
+        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
+        self.load_model()
     
     def load_model(self):
         # load the model
@@ -50,6 +53,58 @@ class YoloV10Exporter(YoloV8Exporter):
 
         model.eval()
         self.model = model
+
+    def export_onnx(self):
+        # export onnx model
+        self.f_onnx = (self.conv_path / f"{self.model_name}.onnx").resolve()
+        im = torch.zeros(1, 3, *self.imgsz[::-1])#.to(device)  # image size(1,3,320,192) BCHW iDetection
+        torch.onnx.export(self.model, im, self.f_onnx, verbose=False, opset_version=12,
+                        training=torch.onnx.TrainingMode.EVAL,
+                        do_constant_folding=True,
+                        input_names=['images'],
+                        output_names=[f"output{i+1}_yolov10" for i in range(self.num_branches)],
+                        dynamic_axes=None)
+
+        # check if the arhcitecture is correct
+        model_onnx = onnx.load(self.f_onnx)  # load onnx model
+        onnx.checker.check_model(model_onnx)  # check onnx model
+        # simplify the moodel
+        onnx_model, check = onnxsim.simplify(model_onnx)
+        assert check, 'assert check failed'
+    
+        onnx.checker.check_model(onnx_model)  # check onnx model
+
+        # save the simplified model
+        self.f_simplified = (self.conv_path / f"{self.model_name}-simplified.onnx").resolve()
+        onnx.save(onnx_model, self.f_simplified)
+        return self.f_simplified
+    
+    def export_openvino(self, version):
+        super().export_openvino('v10')
+
+        if not self.use_rvc2:
+            # Replace opset8 with opset1 for Softmax layers
+            # Read the content of the file
+            with open(self.f_xml, 'r') as file:
+                content = file.read()
+
+            # Use the re.sub() function to replace the pattern with the new version
+            new_content = re.sub(r'type="SoftMax" version="opset8"', 'type="SoftMax" version="opset1"', content)
+
+            # Write the updated content back to the file
+            with open(self.f_xml, 'w') as file:
+                file.write(new_content)
+
+        return self.f_xml, self.f_mapping, self.f_bin
+    
+    def export_json(self):
+        # generate anchors and sides
+        anchors, masks = [], {}
+
+        nc = self.model.model[-1].nc
+        names = [f"Class_{i}" for i in range(nc)]
+
+        return self.write_json(anchors, masks, nc, names)
     
 
 if __name__ == "__main__":
