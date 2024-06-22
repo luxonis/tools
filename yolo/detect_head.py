@@ -206,3 +206,9 @@ class DetectV8(nn.Module):
         for a, b, s in zip(m.cv2, m.cv3, m.stride):  # from
             a[-1].bias.data[:] = 1.0  # box
             b[-1].bias.data[:m.nc] = math.log(5 / m.nc / (640 / s) ** 2)  # cls (.01 objects, 80 classes, 640 img)
+
+class DetectV10(DetectV8):
+    def __init__(self, old_detect, use_rvc2):
+        super().__init__(old_detect, use_rvc2)
+        self.cv2 = old_detect.one2one_cv2
+        self.cv3 = old_detect.one2one_cv3

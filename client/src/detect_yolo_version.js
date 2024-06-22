@@ -6,6 +6,7 @@ export const YOLOV6R3_CONVERSION = 'v6r2';
 export const YOLOV6R4_CONVERSION = 'v6r4';
 export const YOLOV7_CONVERSION = 'v7';
 export const YOLOV8_CONVERSION = 'v8';
+export const YOLOV10_CONVERSION = 'v10';
 export const GOLD_YOLO_CONVERSION = 'goldyolo';
 export const UNRECOGNIZED = 'none';
 export const version2text = {
@@ -15,6 +16,7 @@ export const version2text = {
     'v6r4': 'YoloV6 (latest)',
     'v7': 'YoloV7 (detection only)',
     'v8': 'YoloV8 (detection only)',
+    'v10': 'YoloV10',
     'goldyolo': 'GoldYolo'
 }
 
@@ -31,6 +33,10 @@ async function detectVersion(file) {
         if (entry.filename.toLowerCase().includes('yolov8')) {
             // Code block to execute if 'yolov8' is found in the folder string
             return YOLOV8_CONVERSION
+        }
+        if (entry.filename.toLowerCase().includes('yolov10')) {
+            // Code block to execute if 'yolov10' is found in the folder string
+            return YOLOV10_CONVERSION
         }
         // It's the data.pkl file
         if (entry.filename.toLowerCase().includes('data.pkl')) {
@@ -54,6 +60,8 @@ async function detectVersion(file) {
                 return YOLOV6R3_CONVERSION
             } else if (content.includes('yolov7')) {
                 return YOLOV7_CONVERSION
+            } else if (content.includes('yolov10')) {
+                return YOLOV10_CONVERSION
             } else if (content.includes('SPPF') || content.includes('yolov5') || (content.includes('models.yolo.Detectr1') && content.includes('models.common.SPPr'))) {
                 return YOLOV5_CONVERSION
             }
