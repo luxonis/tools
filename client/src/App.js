@@ -99,6 +99,14 @@ function App() {
                       </div>
                     }
 
+                    {
+                      (!error && detectedVersion == 'YoloV10' && !config.useRVC2)
+                      && <div className="warning-box">
+                        <h3>Warning</h3>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of YoloV10 models. The RVC3 export of these models is likely to fail. </p>
+                      </div>
+                    }
+
                     <form onSubmit={e => {
                       e.preventDefault();
                       dispatch(upload(file));
