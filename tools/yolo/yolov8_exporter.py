@@ -148,6 +148,8 @@ class YoloV8Exporter(Exporter):
             assert len(class_names) == len(names), f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
             names = class_names
         
+        self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
+
         if self.mode == DETECT_MODE:
             self.make_nn_archive(names, self.model.model[-1].nc)
         elif self.mode == SEGMENT_MODE:

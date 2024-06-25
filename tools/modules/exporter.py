@@ -42,6 +42,7 @@ class Exporter:
         self.model_name = os.path.basename(self.model_path).split(".")[0]
         # Set up file paths
         self.f_onnx = None
+        self.f_nn_archive = None
         self.use_rvc2 = use_rvc2
         self.number_of_channels = None
         self.subtype = subtype
@@ -103,6 +104,7 @@ class Exporter:
             conf_threshold (float): Confidence threshold
             max_det (int): Maximum number of detections
         """
+        self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
         archive = ArchiveGenerator(
             archive_name=self.model_name,
             save_path=str(self.output_folder),
