@@ -138,6 +138,7 @@ def convert(
     # Upload to remote
     if config.output_remote_url:
         upload_file_to_remote(exporter.f_nn_archive, config.output_remote_url, config.put_file_plugin)
+        logger.info(f"Uploaded NN archive to {config.output_remote_url}")
 
 
 if __name__ == "__main__":
