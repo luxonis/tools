@@ -17,6 +17,7 @@ from .version_detection import (
     YOLOV6R4_CONVERSION,
     YOLOV7_CONVERSION,
     YOLOV8_CONVERSION,
+    YOLOV10_CONVERSION,
     detect_version,
 )
 from .in_channels import get_first_conv2d_in_channels
@@ -31,6 +32,7 @@ __all__ = [
     "YOLOV6R4_CONVERSION",
     "YOLOV7_CONVERSION",
     "YOLOV8_CONVERSION",
+    "YOLOV10_CONVERSION",
     "GOLD_YOLO_CONVERSION",
     "UNRECOGNIZED",
     "resolve_path",

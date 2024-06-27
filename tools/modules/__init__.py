@@ -13,6 +13,7 @@ from .heads import (
     ClassifyV8,
     DetectV5,
     DetectV7,
+    DetectV10,
 )
 from .exporter import Exporter
 from .stage2 import Multiplier
@@ -33,4 +34,5 @@ __all__ = [
     "Multiplier",
     "DetectV5",
     "DetectV7",
+    "DetectV10",
 ]

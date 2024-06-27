@@ -624,3 +624,10 @@ class ClassifyV8(nn.Module):
             x = torch.cat(x, 1)
         x = self.linear(self.drop(self.pool(self.conv(x)).flatten(1)))
         return x
+    
+class DetectV10(DetectV8):
+    """YOLOv10 Detect head for detection models."""
+    def __init__(self, old_detect, use_rvc2):
+        super().__init__(old_detect, use_rvc2)
+        self.cv2 = old_detect.one2one_cv2
+        self.cv3 = old_detect.one2one_cv3

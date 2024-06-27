@@ -13,6 +13,7 @@ from tools.utils import (
     YOLOV6R4_CONVERSION,
     YOLOV7_CONVERSION,
     YOLOV8_CONVERSION,
+    YOLOV10_CONVERSION,
     Config,
     detect_version,
     upload_file_to_remote,
@@ -35,7 +36,8 @@ YOLO_VERSIONS = [
     YOLOV6R3_CONVERSION,
     YOLOV6R4_CONVERSION,
     YOLOV7_CONVERSION,
-    YOLOV8_CONVERSION
+    YOLOV8_CONVERSION,
+    YOLOV10_CONVERSION,
 ]
 
 
@@ -110,6 +112,9 @@ def convert(
         elif version == YOLOV8_CONVERSION:
             from tools.yolo.yolov8_exporter import YoloV8Exporter
             exporter = YoloV8Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == YOLOV10_CONVERSION:
+            from tools.yolo.yolov10_exporter import YoloV10Exporter
+            exporter = YoloV10Exporter(str(model_path), config.imgsz, config.use_rvc2)
         else:
             logger.error("Unrecognized model version.")
             raise typer.Exit(code=1)
