@@ -1,6 +1,6 @@
 [project]
 name = "tools"
-version = "0.0.1"
+version = "0.0.2"
 description = "Converter for YOLO models into .ONNX format."
 readme = "README.md"
 requires-python = ">=3.8"
