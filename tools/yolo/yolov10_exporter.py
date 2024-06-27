@@ -21,7 +21,7 @@ class YoloV10Exporter(Exporter):
             model_path,
             imgsz,
             use_rvc2,
-            subtype="yolov8",
+            subtype="yolov10",
             output_names=["output1_yolov10", "output2_yolov10", "output3_yolov10"],
         )
         self.load_model()
