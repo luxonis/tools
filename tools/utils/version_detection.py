@@ -10,6 +10,7 @@ YOLOV6R3_CONVERSION = "yolov6r3"
 YOLOV6R4_CONVERSION = "yolov6r4"
 YOLOV7_CONVERSION = "yolov7"
 YOLOV8_CONVERSION = "yolov8"
+YOLOV10_CONVERSION = "yolov10"
 GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
 
@@ -61,6 +62,8 @@ def detect_version(path: str, debug: bool = False) -> str:
                 return YOLOV6R3_CONVERSION
             elif "yolov7" in content:
                 return YOLOV7_CONVERSION
+            elif "yolov10" in content:
+                return YOLOV10_CONVERSION
             elif (
                 "SPPF" in content
                 or "yolov5" in content

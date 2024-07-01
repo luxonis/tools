@@ -41,7 +41,7 @@ docker compose run tools-cli shared_with_container/models/yolov6nr4.pt
 # Building the package
 pip install .
 # Running the package
-tools --model shared_with_container/models/yolov6nr4.pt --imgsz "416"
+tools shared_with_container/models/yolov6nr4.pt --imgsz "416"
 ```
 
 ### Arguments
