@@ -6,6 +6,7 @@ import torch
 import onnxsim
 import onnx
 from pathlib import Path
+import json
 
 
 from exporter import Exporter
@@ -62,7 +63,7 @@ class YoloV10Exporter(Exporter):
                         training=torch.onnx.TrainingMode.EVAL,
                         do_constant_folding=True,
                         input_names=['images'],
-                        output_names=[f"output{i+1}_yolov10" for i in range(self.num_branches)],
+                        output_names=[f"output{i+1}_yolov6r2" for i in range(self.num_branches)],
                         dynamic_axes=None)
 
         # check if the arhcitecture is correct
@@ -80,7 +81,7 @@ class YoloV10Exporter(Exporter):
         return self.f_simplified
     
     def export_openvino(self, version):
-        super().export_openvino('v10')
+        super().export_openvino('v6r2')
 
         if not self.use_rvc2:
             # Replace opset8 with opset1 for Softmax layers
@@ -96,6 +97,37 @@ class YoloV10Exporter(Exporter):
                 file.write(new_content)
 
         return self.f_xml, self.f_mapping, self.f_bin
+    
+    def write_json(self, anchors, masks, nc = None, names = None):
+        # set parameters
+        f = open((Path(__file__).parent / "json" / "yolo.json").resolve())
+        content = json.load(f)
+
+        content["model"]["xml"] = f"{self.model_name}.xml"
+        content["model"]["bin"] = f"{self.model_name}.bin"
+        content["nn_config"]["input_size"] = "x".join([str(x) for x in self.imgsz])
+        if nc:
+            content["nn_config"]["NN_specific_metadata"]["classes"] = nc
+        else:
+            content["nn_config"]["NN_specific_metadata"]["classes"] = self.model.nc
+        content["nn_config"]["NN_specific_metadata"]["anchors"] = anchors
+        content["nn_config"]["NN_specific_metadata"]["anchor_masks"] = masks
+        content["nn_config"]["NN_specific_metadata"]["iou_threshold"] = 1.0
+        if names:
+            # use COCO labels if 80 classes, else use a placeholder
+            content["mappings"]["labels"] = content["mappings"]["labels"] if nc == 80 else names
+        else:
+            content["mappings"]["labels"] = self.model.names if isinstance(self.model.names, list) else list(self.model.names.values())
+        content["version"] = 1
+
+        # save json
+        f_json = (self.conv_path / f"{self.model_name}.json").resolve()
+        with open(f_json, 'w') as outfile:
+            json.dump(content, outfile, ensure_ascii=False, indent=4)
+
+        self.f_json = f_json
+
+        return self.f_json
     
     def export_json(self):
         # generate anchors and sides
@@ -118,5 +150,5 @@ if __name__ == "__main__":
     useRVC2 = 'false'
     exporter = YoloV10Exporter(conv_path, weights_filename, imgsz, conv_id, nShaves, useLegacyFrontend, useRVC2)
     exporter.export_onnx()
-    exporter.export_openvino("v10")
+    exporter.export_openvino("v6r2")
     exporter.export_json()
