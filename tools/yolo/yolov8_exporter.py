@@ -3,18 +3,8 @@ import sys
 sys.path.append("./tools/yolo/ultralytics")
 
 from luxonis_ml.nn_archive import ArchiveGenerator
-from luxonis_ml.nn_archive.config_building_blocks import (
-    HeadInstanceSegmentationYOLO, 
-    HeadKeypointDetectionYOLO,
-    HeadClassification,
-    HeadOBBDetectionYOLO
-)
-from luxonis_ml.nn_archive.config_building_blocks.base_models.head_outputs import (
-    OutputsInstanceSegmentationYOLO,
-    OutputsKeypointDetectionYOLO,
-    OutputsClassification,
-    OutputsOBBDetectionYOLO,
-)
+from luxonis_ml.nn_archive.config_building_blocks import HeadClassification
+from luxonis_ml.nn_archive.config_building_blocks.base_models.head_outputs import OutputsClassification
 from ultralytics.nn.modules import Detect, Segment, Classify, OBB, Pose
 from ultralytics.nn.tasks import attempt_load_one_weight
 import torch
@@ -104,7 +94,7 @@ class YoloV8Exporter(Exporter):
             print(f"Error while getting number of channels: {e}")
 
         # Get output names
-        self.output_names = get_output_names(self.mode)
+        self.all_output_names = get_output_names(self.mode)
 
         # check if image size is suitable
         gs = max(int(model.stride.max()), 32)  # model stride
@@ -153,238 +143,41 @@ class YoloV8Exporter(Exporter):
         if self.mode == DETECT_MODE:
             self.make_nn_archive(names, self.model.model[-1].nc)
         elif self.mode == SEGMENT_MODE:
-            self.make_seg_nn_archive(names, self.model.model[-1].nc)
+            self.make_nn_archive(
+                names, 
+                self.model.model[-1].nc,
+                stage2_executable_path=str(self.f_stage2_onnx),
+                postprocessor_path=self.stage2_filename,
+                n_prototypes=32,
+                is_softmax=True,
+                output_kwargs={
+                    "mask_outputs": [
+                        "output1_masks",
+                        "output2_masks",
+                        "output3_masks"
+                    ],
+                    "protos": "protos_output"
+                },
+            )
         elif self.mode == OBB_MODE:
-            self.make_obb_nn_archive(names, self.model.model[-1].nc)
+            self.make_nn_archive(
+                names, 
+                self.model.model[-1].nc,
+                output_kwargs={
+                    "angles": "angle_output"
+                },
+            )
         elif self.mode == POSE_MODE:
-            self.make_pose_nn_archive(names, self.model.model[-1].nc)
+            self.make_nn_archive(
+                names, 
+                self.model.model[-1].nc,
+                n_keypoints=17,
+                output_kwargs={
+                    "keypoints": "kpt_output"
+                },
+            )
         elif self.mode == CLASSIFY_MODE:
             self.make_cls_nn_archive(names, len(self.model.names))
-
-    def make_seg_nn_archive(
-        self,
-        class_list: List[str],
-        n_classes: int,
-        iou_threshold: float = 0.5,
-        conf_threshold: float = 0.5,
-        max_det: int = 300,
-    ):
-        """Export the segmentation model to NN archive format.
-
-        Args:
-            class_list (List[str], optional): List of class names
-            n_classes (int): Number of classes
-            iou_threshold (float): Intersection over Union threshold
-            conf_threshold (float): Confidence threshold
-            max_det (int): Maximum number of detections
-        """
-        archive = ArchiveGenerator(
-            archive_name=self.model_name,
-            save_path=str(self.output_folder),
-            cfg_dict={
-                "config_version": "1.0",
-                "model": {
-                    "metadata": {
-                        "name": self.model_name,
-                        "path": f"{self.model_name}.onnx",
-                    },
-                    "inputs": [
-                        {
-                            "name": "images",
-                            "dtype": "float32",
-                            "input_type": "image",
-                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
-                                "reverse_channels": True,
-                            },
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "name": output,
-                            "dtype": "float32",
-                        }
-                        for output in self.output_names
-                    ],
-                    "heads": [
-                        HeadInstanceSegmentationYOLO(
-                            family="InstanceSegmentationYOLO",
-                            outputs=OutputsInstanceSegmentationYOLO(
-                            yolo_outputs=[
-                                    "output1_yolov8",
-                                    "output2_yolov8",
-                                    "output3_yolov8"
-                                ],
-                                mask_outputs=[
-                                    "output1_masks",
-                                    "output2_masks",
-                                    "output3_masks"
-                                ],
-                                protos="protos_output"
-                            ),
-                            postprocessor_path=self.stage2_filename,
-                            n_prototypes=32,
-                            n_classes=n_classes,
-                            is_softmax=True,
-                            classes=class_list,
-                            subtype=self.subtype,
-                            iou_threshold=iou_threshold,
-                            conf_threshold=conf_threshold,
-                            max_det=max_det,
-                        )
-                    ],
-                },
-            },
-            executables_paths=[str(self.f_onnx), str(self.f_stage2_onnx)],
-        )
-        archive.make_archive()
-
-    def make_pose_nn_archive(
-        self,
-        class_list: List[str],
-        n_classes: int,
-        iou_threshold: float = 0.5,
-        conf_threshold: float = 0.5,
-        max_det: int = 300,
-    ):
-        """Export the pose estimation model to NN archive format.
-
-        Args:
-            class_list (List[str], optional): List of class names
-            n_classes (int): Number of classes
-            iou_threshold (float): Intersection over Union threshold
-            conf_threshold (float): Confidence threshold
-            max_det (int): Maximum number of detections
-        """
-        archive = ArchiveGenerator(
-            archive_name=self.model_name,
-            save_path=str(self.output_folder),
-            cfg_dict={
-                "config_version": "1.0",
-                "model": {
-                    "metadata": {
-                        "name": self.model_name,
-                        "path": f"{self.model_name}.onnx",
-                    },
-                    "inputs": [
-                        {
-                            "name": "images",
-                            "dtype": "float32",
-                            "input_type": "image",
-                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
-                                "reverse_channels": True,
-                            },
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "name": output,
-                            "dtype": "float32",
-                        }
-                        for output in self.output_names
-                    ],
-                    "heads": [
-                        HeadKeypointDetectionYOLO(
-                            family="KeypointDetectionYOLO",
-                            outputs=OutputsKeypointDetectionYOLO(
-                            yolo_outputs=[
-                                    "output1_yolov8",
-                                    "output2_yolov8",
-                                    "output3_yolov8"
-                                ],
-                                keypoints="kpt_output"
-                            ),
-                            n_keypoints=17,
-                            n_classes=n_classes,
-                            classes=class_list,
-                            subtype=self.subtype,
-                            iou_threshold=iou_threshold,
-                            conf_threshold=conf_threshold,
-                            max_det=max_det,
-                        )
-                    ],
-                },
-            },
-            executables_paths=[str(self.f_onnx)],
-        )
-        archive.make_archive()
-
-    def make_obb_nn_archive(
-        self,
-        class_list: List[str],
-        n_classes: int,
-        iou_threshold: float = 0.5,
-        conf_threshold: float = 0.5,
-        max_det: int = 300,
-    ):
-        """Export the model to NN archive format.
-
-        Args:
-            class_list (List[str], optional): List of class names
-            n_classes (int): Number of classes
-            iou_threshold (float): Intersection over Union threshold
-            conf_threshold (float): Confidence threshold
-            max_det (int): Maximum number of detections
-        """
-        archive = ArchiveGenerator(
-            archive_name=self.model_name,
-            save_path=str(self.output_folder),
-            cfg_dict={
-                "config_version": "1.0",
-                "model": {
-                    "metadata": {
-                        "name": self.model_name,
-                        "path": f"{self.model_name}.onnx",
-                    },
-                    "inputs": [
-                        {
-                            "name": "images",
-                            "dtype": "float32",
-                            "input_type": "image",
-                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
-                                "reverse_channels": True,
-                            },
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "name": output,
-                            "dtype": "float32",
-                        }
-                        for output in self.output_names
-                    ],
-                    "heads": [
-                        HeadOBBDetectionYOLO(
-                            family="OBBDetectionYOLO",
-                            outputs=OutputsOBBDetectionYOLO(
-                                yolo_outputs=[
-                                    "output1_yolov8",
-                                    "output2_yolov8",
-                                    "output3_yolov8"
-                                ],
-                                angles="angle_output"
-                            ),
-                            n_classes=n_classes,
-                            classes=class_list,
-                            subtype=self.subtype,
-                            iou_threshold=iou_threshold,
-                            conf_threshold=conf_threshold,
-                            max_det=max_det,
-                        )
-                    ],
-                },
-            },
-            executables_paths=[str(self.f_onnx)],
-        )
-        archive.make_archive()
 
     def make_cls_nn_archive(self, class_list: List[str], n_classes: int):
         """Export the model to NN archive format.
@@ -421,12 +214,12 @@ class YoloV8Exporter(Exporter):
                             "name": output,
                             "dtype": "float32",
                         }
-                        for output in self.output_names
+                        for output in self.all_output_names
                     ],
                     "heads": [
                         HeadClassification(
                             family="Classification",
-                            outputs=OutputsClassification(predictions=self.output_names[0]),
+                            outputs=OutputsClassification(predictions=self.all_output_names[0]),
                             is_softmax=False,
                             n_classes=n_classes,
                             classes=class_list,

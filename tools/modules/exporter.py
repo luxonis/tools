@@ -8,7 +8,7 @@ import onnx
 import onnxsim
 import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
-from luxonis_ml.nn_archive.config_building_blocks import HeadObjectDetectionYOLO
+from luxonis_ml.nn_archive.config_building_blocks import HeadYOLO
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_outputs import (
     OutputsYOLO,
 )
@@ -25,6 +25,7 @@ class Exporter:
         use_rvc2: bool, 
         subtype: str,
         output_names: List[str] = ["output"],
+        all_output_names: Optional[List[str]] = None,
     ):
         """
         Initialize the Exporter class.
@@ -34,7 +35,8 @@ class Exporter:
             imgsz (Tuple[int, int]): Image size [width, height]
             use_rvc2 (bool): Whether to use RVC2
             subtype (str): Subtype of the model
-            output_names (List[str], optional): List of output names. Defaults to ["output"].
+            output_names (List[str]): List of output names. Defaults to ["output"].
+            all_output_names (Optional[List[str]]): List of all output names. Defaults to None.
         """
         # Set up variables
         self.model_path = model_path
@@ -47,6 +49,7 @@ class Exporter:
         self.number_of_channels = None
         self.subtype = subtype
         self.output_names = output_names
+        self.all_output_names = all_output_names if all_output_names is not None else output_names
         self.output_folder = (OUTPUTS_DIR / f"{self.model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}").resolve()
         # If output directory does not exist, create it
         if not self.output_folder.exists():
@@ -70,7 +73,7 @@ class Exporter:
             training=torch.onnx.TrainingMode.EVAL,
             do_constant_folding=True,
             input_names=["images"],
-            output_names=self.output_names,
+            output_names=self.all_output_names,
             dynamic_axes=None,
         )
 
@@ -94,6 +97,12 @@ class Exporter:
         iou_threshold: float = 0.5,
         conf_threshold: float = 0.5,
         max_det: int = 300,
+        stage2_executable_path: Optional[str] = None,
+        postprocessor_path: Optional[str] = None,
+        n_prototypes: Optional[int] = None,
+        n_keypoints: Optional[int] = None,
+        is_softmax: Optional[bool] = None,
+        output_kwargs: Optional[dict] = {},
     ):
         """Export the model to NN archive format.
 
@@ -103,8 +112,19 @@ class Exporter:
             iou_threshold (float): Intersection over Union threshold
             conf_threshold (float): Confidence threshold
             max_det (int): Maximum number of detections
+            2stage_executable_path (Optional[str], optional): Path to the executables. Defaults to None.
+            postprocessor_path (Optional[str], optional): Path to the postprocessor. Defaults to None.
+            n_prototypes (Optional[int], optional): Number of prototypes. Defaults to None.
+            n_keypoints (Optional[int], optional): Number of keypoints. Defaults to None.
+            is_softmax (Optional[bool], optional): Whether to use softmax. Defaults to None.
+            output_kwargs (Optional[dict], optional): Output keyword arguments. Defaults to None.
         """
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
+        if stage2_executable_path is not None:
+            executables_paths = [str(self.f_onnx), stage2_executable_path]
+        else:
+            executables_paths = [str(self.f_onnx)]
+        
         archive = ArchiveGenerator(
             archive_name=self.model_name,
             save_path=str(self.output_folder),
@@ -133,23 +153,27 @@ class Exporter:
                             "name": output,
                             "dtype": "float32",
                         }
-                        for output in self.output_names
+                        for output in self.all_output_names
                     ],
                     "heads": [
-                        HeadObjectDetectionYOLO(
-                            family="ObjectDetectionYOLO",
-                            outputs=OutputsYOLO(yolo_outputs=self.output_names),
+                        HeadYOLO(
+                            family="YOLO",
+                            outputs=OutputsYOLO(yolo_outputs=self.output_names, **output_kwargs),
+                            subtype=self.subtype,
                             n_classes=n_classes,
                             classes=class_list,
-                            subtype=self.subtype,
                             iou_threshold=iou_threshold,
                             conf_threshold=conf_threshold,
                             max_det=max_det,
+                            postprocessor_path=postprocessor_path,
+                            n_prototypes=n_prototypes,
+                            n_keypoints=n_keypoints,
+                            is_softmax=is_softmax,
                         )
                     ],
                 },
             },
-            executables_paths=[str(self.f_onnx)],
+            executables_paths=executables_paths,
         )
         archive.make_archive()
 
