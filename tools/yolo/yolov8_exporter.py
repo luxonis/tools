@@ -3,8 +3,14 @@ import sys
 sys.path.append("./tools/yolo/ultralytics")
 
 from luxonis_ml.nn_archive import ArchiveGenerator
-from luxonis_ml.nn_archive.config_building_blocks import HeadClassification
-from luxonis_ml.nn_archive.config_building_blocks.base_models.head_outputs import OutputsClassification
+from luxonis_ml.nn_archive.config_building_blocks import (
+    Head,
+    InputType,
+    DataType,
+)
+from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
+    HeadClassificationMetadata,
+)
 from ultralytics.nn.modules import Detect, Segment, Classify, OBB, Pose
 from ultralytics.nn.tasks import attempt_load_one_weight
 import torch
@@ -156,7 +162,7 @@ class YoloV8Exporter(Exporter):
                         "output2_masks",
                         "output3_masks"
                     ],
-                    "protos": "protos_output"
+                    "protos_outputs": "protos_output"
                 },
             )
         elif self.mode == OBB_MODE:
@@ -164,7 +170,7 @@ class YoloV8Exporter(Exporter):
                 names, 
                 self.model.model[-1].nc,
                 output_kwargs={
-                    "angles": "angle_output"
+                    "angles_outputs": ["angle_output"]
                 },
             )
         elif self.mode == POSE_MODE:
@@ -173,7 +179,7 @@ class YoloV8Exporter(Exporter):
                 self.model.model[-1].nc,
                 n_keypoints=17,
                 output_kwargs={
-                    "keypoints": "kpt_output"
+                    "keypoints_outputs": ["kpt_output"]
                 },
             )
         elif self.mode == CLASSIFY_MODE:
@@ -199,8 +205,8 @@ class YoloV8Exporter(Exporter):
                     "inputs": [
                         {
                             "name": "images",
-                            "dtype": "float32",
-                            "input_type": "image",
+                            "dtype": DataType.FLOAT32,
+                            "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
                                 "mean": [0, 0, 0],
@@ -212,17 +218,18 @@ class YoloV8Exporter(Exporter):
                     "outputs": [
                         {
                             "name": output,
-                            "dtype": "float32",
+                            "dtype": DataType.FLOAT32,
                         }
                         for output in self.all_output_names
                     ],
                     "heads": [
-                        HeadClassification(
-                            family="Classification",
-                            outputs=OutputsClassification(predictions=self.all_output_names[0]),
-                            is_softmax=False,
-                            n_classes=n_classes,
-                            classes=class_list,
+                        Head(
+                            parser="Classification",
+                            metadata=HeadClassificationMetadata(
+                                is_softmax=False,
+                                n_classes=n_classes,
+                                classes=class_list,
+                            ),
                         )
                     ],
                 },

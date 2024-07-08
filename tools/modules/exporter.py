@@ -8,9 +8,13 @@ import onnx
 import onnxsim
 import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
-from luxonis_ml.nn_archive.config_building_blocks import HeadYOLO
-from luxonis_ml.nn_archive.config_building_blocks.base_models.head_outputs import (
-    OutputsYOLO,
+from luxonis_ml.nn_archive.config_building_blocks import (
+    Head,
+    InputType,
+    DataType,
+)
+from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
+    HeadYOLOMetadata,
 )
 
 from tools.utils.constants import OUTPUTS_DIR
@@ -138,8 +142,8 @@ class Exporter:
                     "inputs": [
                         {
                             "name": "images",
-                            "dtype": "float32",
-                            "input_type": "image",
+                            "dtype": DataType.FLOAT32,
+                            "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
                                 "mean": [0, 0, 0],
@@ -151,24 +155,27 @@ class Exporter:
                     "outputs": [
                         {
                             "name": output,
-                            "dtype": "float32",
+                            "dtype": DataType.FLOAT32,
                         }
                         for output in self.all_output_names
                     ],
                     "heads": [
-                        HeadYOLO(
-                            family="YOLO",
-                            outputs=OutputsYOLO(yolo_outputs=self.output_names, **output_kwargs),
-                            subtype=self.subtype,
-                            n_classes=n_classes,
-                            classes=class_list,
-                            iou_threshold=iou_threshold,
-                            conf_threshold=conf_threshold,
-                            max_det=max_det,
-                            postprocessor_path=postprocessor_path,
-                            n_prototypes=n_prototypes,
-                            n_keypoints=n_keypoints,
-                            is_softmax=is_softmax,
+                        Head(
+                            parser="YoloDetectionNetwork",
+                            metadata=HeadYOLOMetadata(
+                                yolo_outputs=self.output_names, 
+                                subtype=self.subtype,
+                                n_classes=n_classes,
+                                classes=class_list,
+                                iou_threshold=iou_threshold,
+                                conf_threshold=conf_threshold,
+                                max_det=max_det,
+                                postprocessor_path=postprocessor_path,
+                                n_prototypes=n_prototypes,
+                                n_keypoints=n_keypoints,
+                                is_softmax=is_softmax,
+                                **output_kwargs,
+                            ),
                         )
                     ],
                 },
