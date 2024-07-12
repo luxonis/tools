@@ -161,7 +161,7 @@ class Exporter:
                     ],
                     "heads": [
                         Head(
-                            parser="YoloDetectionNetwork",
+                            parser="YOLO",
                             metadata=HeadYOLOMetadata(
                                 yolo_outputs=self.output_names, 
                                 subtype=self.subtype,
@@ -176,6 +176,7 @@ class Exporter:
                                 is_softmax=is_softmax,
                                 **output_kwargs,
                             ),
+                            outputs=self.all_output_names,
                         )
                     ],
                 },

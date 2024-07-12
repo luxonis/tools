@@ -3,7 +3,7 @@ torchvision>=0.10.1
 Pillow>=7.1.2
 PyYAML>=5.3.1
 gcsfs
-luxonis-ml[data,nn_archive]>=0.2.2
+luxonis-ml[data,nn_archive]>=0.2.3
 # luxonis-ml[data,nn_archive] @ git+https://github.com/luxonis/luxonis-ml@dev
 onnx>=1.10.1
 onnxruntime
@@ -13,4 +13,4 @@ s3transfer
 typer>=0.12.3
 psutil
 mmcv==1.5.0
-seaborn 
+seaborn

@@ -230,6 +230,7 @@ class YoloV8Exporter(Exporter):
                                 n_classes=n_classes,
                                 classes=class_list,
                             ),
+                            outputs=self.all_output_names,
                         )
                     ],
                 },
