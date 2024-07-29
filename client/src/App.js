@@ -72,7 +72,7 @@ function App() {
                   <div className="card-body p-md-5 mx-md-4 config-col">
 
                     <div className="text-center">
-                      <img src="https://docs.luxonis.com/en/latest/_static/logo.png" style={{width: 185}} alt="logo"/>
+                      <img src="https://discuss.luxonis.com/assets/logo-l82qocwd.png" style={{width: 185}} alt="logo"/>
                       <h4 className="mt-1 pb-1">Upload your model</h4>
                     </div>
 

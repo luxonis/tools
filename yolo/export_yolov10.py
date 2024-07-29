@@ -10,13 +10,13 @@ from pathlib import Path
 import json
 
 from exporter import Exporter
-from ultralytics.utils.checks import check_suffix, check_requirements
 from ultralytics.nn.tasks import temporary_modules, guess_model_task, Ensemble
+from ultralytics.utils.checks import check_suffix, check_requirements
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, emojis
 from ultralytics.nn.modules import Detect
 from yolo.detect_head import DetectV10
 
-DIR_TMP = "./tmp"
+DIR_TMP = "./tmhttps://docs.luxonis.com/en/latest/_static/logo.pngp"
 
 
 def torch_safe_load(weight):
@@ -45,7 +45,7 @@ def torch_safe_load(weight):
             attributes={
                 "ultralytics.nn.modules.block.Silence": "torch.nn.Identity",  # YOLOv9e
                 "ultralytics.nn.tasks.YOLOv10DetectionModel": "ultralytics.nn.tasks.DetectionModel",  # YOLOv10
-                "ultralytics.nn.tasks.v10DetectLoss": "loss.v10DetectLoss",  # YOLOv10
+                "ultralytics.utils.loss.v10DetectLoss": "loss.v10DetectLoss",  # YOLOv10
             },
         ):
             ckpt = torch.load(file, map_location="cpu")
@@ -128,13 +128,11 @@ class YoloV10Exporter(Exporter):
     
     def load_model(self):
         # load the model
-        # model = attempt_load_weights(str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True)
-        model, _ = attempt_load_yolov10_weights(str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True)
+        model = attempt_load_yolov10_weights(str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True)
 
         names = model.module.names if hasattr(model, 'module') else model.names  # get class names
         
         # check num classes and labels
-        # assert model.nc == len(names), f'Model class count {model.nc} != len(names) {len(names)}'
         assert model.yaml["nc"] == len(names), f'Model class count {model.yaml["nc"]} != len(names) {len(names)}'
 
         # Replace with the custom Detection Head

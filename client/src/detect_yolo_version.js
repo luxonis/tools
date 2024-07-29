@@ -46,7 +46,9 @@ async function detectVersion(file) {
             const content = await entry.getData(dataWriter);
             // console.log(content);
 
-            if (content.includes('YOLOv5u') || content.includes('YOLOv8') ||
+            if (content.includes('yolov10') || content.includes('v10DetectLoss')) {
+                return YOLOV10_CONVERSION
+            } else if (content.includes('YOLOv5u') || content.includes('YOLOv8') ||
                 content.includes('yolov8') || (content.includes('v8DetectionLoss') && content.includes('ultralytics'))) {
                 return YOLOV8_CONVERSION
             } else if (content.includes('yolov6')) {
@@ -60,8 +62,6 @@ async function detectVersion(file) {
                 return YOLOV6R3_CONVERSION
             } else if (content.includes('yolov7')) {
                 return YOLOV7_CONVERSION
-            } else if (content.includes('yolov10')) {
-                return YOLOV10_CONVERSION
             } else if (content.includes('SPPF') || content.includes('yolov5') || (content.includes('models.yolo.Detectr1') && content.includes('models.common.SPPr'))) {
                 return YOLOV5_CONVERSION
             }
