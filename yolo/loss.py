@@ -4,6 +4,7 @@ sys.path.append("./yolo/ultralytics")
 from ultralytics.nn.tasks import v8DetectionLoss
 import torch
 
+
 class v10DetectLoss:
     def __init__(self, model):
         self.one2many = v8DetectionLoss(model, tal_topk=10)
