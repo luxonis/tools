@@ -11,8 +11,9 @@ import json
 
 from exporter import Exporter
 from ultralytics.nn.tasks import temporary_modules, guess_model_task, Ensemble
+from ultralytics.utils import DEFAULT_CFG_DICT, LOGGER, emojis
 from ultralytics.utils.checks import check_suffix, check_requirements
-from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, emojis
+from ultralytics.utils.downloads import attempt_download_asset
 from ultralytics.nn.modules import Detect
 from yolo.detect_head import DetectV10
 
@@ -31,8 +32,6 @@ def torch_safe_load(weight):
     Returns:
         (dict): The loaded PyTorch model.
     """
-    from ultralytics.utils.downloads import attempt_download_asset
-
     check_suffix(file=weight, suffix=".pt")
     file = attempt_download_asset(weight)  # search online if missing locally
     try:
