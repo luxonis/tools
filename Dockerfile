@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y nodejs build-essential cmake git pkg-co
     gfortran openexr libatlas-base-dev python3-dev python3-numpy \
     libtbb2 libtbb-dev libdc1394-22-dev libopenexr-dev \
     libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev
+
 WORKDIR /app
 ADD requirements.txt /app/requirements.txt
 RUN python3 -m pip install -r requirements.txt
