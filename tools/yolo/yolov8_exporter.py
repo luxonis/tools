@@ -40,7 +40,7 @@ def get_output_names(mode: int) -> List[str]:
     if mode == DETECT_MODE:
         return ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
     elif mode == SEGMENT_MODE:
-        return ["output1_masks", "output1_yolov8", "output2_masks", "output2_yolov8", "output3_masks", "output3_yolov8", "protos_output"]
+        return ["output1_yolov8", "output2_yolov8", "output3_yolov8", "output1_masks", "output2_masks", "output3_masks", "protos_output"]
     elif mode == OBB_MODE:
         return ["output1_yolov8", "output2_yolov8", "output3_yolov8", "angle_output"]
     elif mode == POSE_MODE:
