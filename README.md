@@ -21,9 +21,9 @@ cd tools
 
 ```bash
 # Building Docker image
-docker build -t tools-cli .
+docker build -t tools_cli .
 # Running the image
-docker run -v "${PWD}/shared_with_container:/app/shared_with_container" tools-cli shared_with_container/models/yolov8n-seg.pt --imgsz "416"
+docker run -v "${PWD}/shared_with_container:/app/shared_with_container" tools_cli shared_with_container/models/yolov8n-seg.pt --imgsz "416"
 ```
 
 ### Using Docker compose
@@ -32,7 +32,7 @@ docker run -v "${PWD}/shared_with_container:/app/shared_with_container" tools-cl
 # Building Docker image
 docker compose build
 # Running the image
-docker compose run tools-cli shared_with_container/models/yolov6nr4.pt
+docker compose run tools_cli shared_with_container/models/yolov6nr4.pt
 ```
 
 ### Using Python package

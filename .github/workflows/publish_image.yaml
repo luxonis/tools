@@ -1,0 +1,43 @@
+name: Publishing a docker image
+
+on:
+  push:
+    branches: ['cli']
+
+env:
+  NAME: luxonis/tools_cli
+
+jobs:
+  ghcr-publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get tools-cli version
+      id: commit
+      run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Docker login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Publish latest
+      run: |
+        docker build -t $NAME:latest .
+        docker tag $NAME:latest ghcr.io/$NAME:latest
+        docker push ghcr.io/$NAME:latest
+
+    - name: Publish tagged
+      run: |
+        VERSION=${{ steps.commit.outputs.sha }}
+        docker tag $NAME:latest ghcr.io/$NAME:$VERSION
+        docker push ghcr.io/$NAME:$VERSION
