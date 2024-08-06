@@ -166,53 +166,53 @@ class ToolCases(unittest.TestCase):
     def test_yolov6nr4(self):
         self._test_yolo(model_name='yolov6nr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6nr4', url=self.URL)
     
-    # def test_yolov6sr4(self):
-    #     self._test_yolo(model_name='yolov6sr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6sr4', url=self.URL)
+    def test_yolov6sr4(self):
+        self._test_yolo(model_name='yolov6sr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6sr4', url=self.URL)
 
-    # def test_yolov6nr2(self):
-    #     self._test_yolo(model_name='yolov6nr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr2', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6nr2(self):
+        self._test_yolo(model_name='yolov6nr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr2', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6tr2(self):
-    #     self._test_yolo(model_name='yolov6tr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6tr2', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6tr2(self):
+        self._test_yolo(model_name='yolov6tr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6tr2', url=f'{self.URL}{URL_V6R3}')
 
-    # def test_yolov6sr2(self):
-    #     self._test_yolo(model_name='yolov6sr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr2', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6sr2(self):
+        self._test_yolo(model_name='yolov6sr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr2', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6nr21(self):
-    #     self._test_yolo(model_name='yolov6nr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr21', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6nr21(self):
+        self._test_yolo(model_name='yolov6nr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr21', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6sr21(self):
-    #     self._test_yolo(model_name='yolov6sr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr21', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6sr21(self):
+        self._test_yolo(model_name='yolov6sr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr21', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6nr3(self):
-    #     self._test_yolo(model_name='yolov6nr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr3', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6nr3(self):
+        self._test_yolo(model_name='yolov6nr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr3', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6sr3(self):
-    #     self._test_yolo(model_name='yolov6sr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr3', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6sr3(self):
+        self._test_yolo(model_name='yolov6sr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr3', url=f'{self.URL}{URL_V6R3}')
 
-    # def test_yolov6nr1(self):
-    #     self._test_yolo(model_name='yolov6nr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6nr1', url=f'{self.URL}{URL_V6R1}')
+    def test_yolov6nr1(self):
+        self._test_yolo(model_name='yolov6nr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6nr1', url=f'{self.URL}{URL_V6R1}')
     
-    # def test_yolov6tr1(self):
-    #     self._test_yolo(model_name='yolov6tr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6tr1', url=f'{self.URL}{URL_V6R1}')
+    def test_yolov6tr1(self):
+        self._test_yolo(model_name='yolov6tr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6tr1', url=f'{self.URL}{URL_V6R1}')
     
     def test_yolov5n(self):
         self._test_yolo(model_name='yolov5n', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n', url=self.URL)
     
-    # def test_yolov5s(self):
-    #     self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s', url=self.URL)
+    def test_yolov5s(self):
+        self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s', url=self.URL)
 
-    # def test_yolov5n6(self):
-    #     self._test_yolo(model_name='yolov5n6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n6', url=self.URL, shape=320)
+    def test_yolov5n6(self):
+        self._test_yolo(model_name='yolov5n6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n6', url=self.URL, shape=320)
     
-    # def test_yolov5s6(self):
-    #     self._test_yolo(model_name='yolov5s6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s6', url=self.URL, shape=320)
+    def test_yolov5s6(self):
+        self._test_yolo(model_name='yolov5s6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s6', url=self.URL, shape=320)
     
-    # def test_yolov5m6(self):
-    #     self._test_yolo(model_name='yolov5m6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m6', url=self.URL, shape=320)
+    def test_yolov5m6(self):
+        self._test_yolo(model_name='yolov5m6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m6', url=self.URL, shape=320)
     
-    # def test_yolov5l6(self):
-    #     self._test_yolo(model_name='yolov5l6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l6', url=self.URL, shape=320)
+    def test_yolov5l6(self):
+        self._test_yolo(model_name='yolov5l6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l6', url=self.URL, shape=320)
     
     def test_yolov8n(self):
         self._test_yolo(model_name='yolov8n', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8n', url=self.URL)
@@ -223,23 +223,23 @@ class ToolCases(unittest.TestCase):
     def test_yolov5n6u(self):
         self._test_yolo(model_name='yolov5n6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5n6u', url=self.URL, shape=320)
     
-    # def test_yolov5s6u(self):
-    #     self._test_yolo(model_name='yolov5s6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5s6u', url=self.URL, shape=320)
+    def test_yolov5s6u(self):
+        self._test_yolo(model_name='yolov5s6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5s6u', url=self.URL, shape=320)
     
-    # def test_yolov5su(self):
-    #     self._test_yolo(model_name='yolov5su', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5su', url=self.URL, shape=320)
+    def test_yolov5su(self):
+        self._test_yolo(model_name='yolov5su', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5su', url=self.URL, shape=320)
     
-    # def test_yolov5m6u(self):
-    #     self._test_yolo(model_name='yolov5m6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5m6u', url=self.URL, shape=320)
+    def test_yolov5m6u(self):
+        self._test_yolo(model_name='yolov5m6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5m6u', url=self.URL, shape=320)
     
-    # def test_yolov5mu(self):
-    #     self._test_yolo(model_name='yolov5mu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5mu', url=self.URL, shape=320)
+    def test_yolov5mu(self):
+        self._test_yolo(model_name='yolov5mu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5mu', url=self.URL, shape=320)
     
-    # def test_yolov5l6u(self):
-    #     self._test_yolo(model_name='yolov5l6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5l6u', url=self.URL, shape=320)
+    def test_yolov5l6u(self):
+        self._test_yolo(model_name='yolov5l6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5l6u', url=self.URL, shape=320)
     
-    # def test_yolov5lu(self):
-    #     self._test_yolo(model_name='yolov5lu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5lu', url=self.URL, shape=320)
+    def test_yolov5lu(self):
+        self._test_yolo(model_name='yolov5lu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5lu', url=self.URL, shape=320)
     
     def test_yolov8s(self):
         self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s', url=self.URL)
@@ -259,59 +259,59 @@ class ToolCases(unittest.TestCase):
     def test_yolov9e(self):
         self._test_yolo(model_name='yolov9e', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9e', url=self.URL)
 
-    # def test_yolov7t(self):
-    #     self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t', url=f'{self.URL}{URL_V7}')
+    def test_yolov7t(self):
+        self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t', url=f'{self.URL}{URL_V7}')
     
-    # def test_yolov6mr4(self):
-    #     self._test_yolo(model_name='yolov6mr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6mr4', url=self.URL)
+    def test_yolov6mr4(self):
+        self._test_yolo(model_name='yolov6mr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6mr4', url=self.URL)
 
-    # def test_yolov6mr2(self):
-    #     self._test_yolo(model_name='yolov6mr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr2', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6mr2(self):
+        self._test_yolo(model_name='yolov6mr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr2', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6mr21(self):
-    #     self._test_yolo(model_name='yolov6mr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr21', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6mr21(self):
+        self._test_yolo(model_name='yolov6mr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr21', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6mr3(self):
-    #     self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6mr3(self):
+        self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6lr4(self):
-    #     self._test_yolo(model_name='yolov6lr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6lr4', url=self.URL)
+    def test_yolov6lr4(self):
+        self._test_yolo(model_name='yolov6lr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6lr4', url=self.URL)
 
-    # def test_yolov6lr2(self):
-    #     self._test_yolo(model_name='yolov6lr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr2', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6lr2(self):
+        self._test_yolo(model_name='yolov6lr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr2', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6lr21(self):
-    #     self._test_yolo(model_name='yolov6lr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr21', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6lr21(self):
+        self._test_yolo(model_name='yolov6lr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr21', url=f'{self.URL}{URL_V6R3}')
     
-    # def test_yolov6lr3(self):
-    #     self._test_yolo(model_name='yolov6lr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr3', url=f'{self.URL}{URL_V6R3}')
+    def test_yolov6lr3(self):
+        self._test_yolo(model_name='yolov6lr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr3', url=f'{self.URL}{URL_V6R3}')
 
-    # def test_yolov6sr1(self):
-    #     self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1', url=f'{self.URL}{URL_V6R1}')
+    def test_yolov6sr1(self):
+        self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1', url=f'{self.URL}{URL_V6R1}')
     
-    # def test_yolov5m(self):
-    #     self._test_yolo(model_name='yolov5m', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m', url=self.URL)
+    def test_yolov5m(self):
+        self._test_yolo(model_name='yolov5m', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m', url=self.URL)
     
-    # def test_yolov8m(self):
-    #     self._test_yolo(model_name='yolov8m', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8m', url=self.URL)
+    def test_yolov8m(self):
+        self._test_yolo(model_name='yolov8m', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8m', url=self.URL)
     
-    # def test_yolov5l(self):
-    #     self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l', url=self.URL)
+    def test_yolov5l(self):
+        self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l', url=self.URL)
     
-    # def test_yolov5x(self):
-    #     self._test_yolo(model_name='yolov5x', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5x', url=self.URL)
+    def test_yolov5x(self):
+        self._test_yolo(model_name='yolov5x', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5x', url=self.URL)
     
-    # def test_yolov8l(self):
-    #     self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l', url=self.URL)
+    def test_yolov8l(self):
+        self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l', url=self.URL)
     
-    # def test_yolov8x(self):
-    #     self._test_yolo(model_name='yolov8x', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8x', url=self.URL)
+    def test_yolov8x(self):
+        self._test_yolo(model_name='yolov8x', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8x', url=self.URL)
 
-    # def test_yolov7(self):
-    #     self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7', url=f'{self.URL}{URL_V7}')
+    def test_yolov7(self):
+        self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7', url=f'{self.URL}{URL_V7}')
     
-    # def test_yolov7x(self):
-    #     self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x', url=f'{self.URL}{URL_V7}')
+    def test_yolov7x(self):
+        self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x', url=f'{self.URL}{URL_V7}')
     
     def test_yolov10n(self):
         self._test_yolo(model_name='yolov10n', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10n', url=self.URL)
@@ -319,17 +319,17 @@ class ToolCases(unittest.TestCase):
     def test_yolov10s(self):
         self._test_yolo(model_name='yolov10s', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10s', url=self.URL)
     
-    # def test_yolov10m(self):
-    #     self._test_yolo(model_name='yolov10m', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10m', url=self.URL)
+    def test_yolov10m(self):
+        self._test_yolo(model_name='yolov10m', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10m', url=self.URL)
 
-    # def test_yolov10b(self):
-    #     self._test_yolo(model_name='yolov10b', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10b', url=self.URL)
+    def test_yolov10b(self):
+        self._test_yolo(model_name='yolov10b', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10b', url=self.URL)
 
-    # def test_yolov10l(self):
-    #     self._test_yolo(model_name='yolov10l', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10l', url=self.URL)
+    def test_yolov10l(self):
+        self._test_yolo(model_name='yolov10l', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10l', url=self.URL)
 
-    # def test_yolov10x(self):
-    #     self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x', url=self.URL)
+    def test_yolov10x(self):
+        self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x', url=self.URL)
 
     def test_yolov3tinyu_rvc3(self):
         self._test_yolo(model_name='yolov3-tinyu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov3tinyu_rvc3', url=self.URL, use_rvc2='false')
@@ -337,53 +337,53 @@ class ToolCases(unittest.TestCase):
     def test_yolov6nr4_rvc3(self):
         self._test_yolo(model_name='yolov6nr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6nr4_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov6sr4_rvc3(self):
-    #     self._test_yolo(model_name='yolov6sr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6sr4_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov6sr4_rvc3(self):
+        self._test_yolo(model_name='yolov6sr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6sr4_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov6nr2_rvc3(self):
-    #     self._test_yolo(model_name='yolov6nr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6nr2_rvc3(self):
+        self._test_yolo(model_name='yolov6nr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6tr2_rvc3(self):
-    #     self._test_yolo(model_name='yolov6tr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6tr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6tr2_rvc3(self):
+        self._test_yolo(model_name='yolov6tr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6tr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
 
-    # def test_yolov6sr2_rvc3(self):
-    #     self._test_yolo(model_name='yolov6sr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6sr2_rvc3(self):
+        self._test_yolo(model_name='yolov6sr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6nr21_rvc3(self):
-    #     self._test_yolo(model_name='yolov6nr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6nr21_rvc3(self):
+        self._test_yolo(model_name='yolov6nr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6sr21_rvc3(self):
-    #     self._test_yolo(model_name='yolov6sr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6sr21_rvc3(self):
+        self._test_yolo(model_name='yolov6sr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6nr3_rvc3(self):
-    #     self._test_yolo(model_name='yolov6nr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6nr3_rvc3(self):
+        self._test_yolo(model_name='yolov6nr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6nr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6sr3_rvc3(self):
-    #     self._test_yolo(model_name='yolov6sr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6sr3_rvc3(self):
+        self._test_yolo(model_name='yolov6sr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6sr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
 
-    # def test_yolov6nr1_rvc3(self):
-    #     self._test_yolo(model_name='yolov6nr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6nr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
+    def test_yolov6nr1_rvc3(self):
+        self._test_yolo(model_name='yolov6nr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6nr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
     
-    # def test_yolov6tr1_rvc3(self):
-    #     self._test_yolo(model_name='yolov6tr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6tr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
+    def test_yolov6tr1_rvc3(self):
+        self._test_yolo(model_name='yolov6tr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6tr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
     
     def test_yolov5n_rvc3(self):
         self._test_yolo(model_name='yolov5n', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov5s_rvc3(self):
-    #     self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov5s_rvc3(self):
+        self._test_yolo(model_name='yolov5s', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov5n6_rvc3(self):
-    #     self._test_yolo(model_name='yolov5n6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5n6_rvc3(self):
+        self._test_yolo(model_name='yolov5n6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5n6_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5s6_rvc3(self):
-    #     self._test_yolo(model_name='yolov5s6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5s6_rvc3(self):
+        self._test_yolo(model_name='yolov5s6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5s6_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5m6_rvc3(self):
-    #     self._test_yolo(model_name='yolov5m6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5m6_rvc3(self):
+        self._test_yolo(model_name='yolov5m6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m6_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5l6_rvc3(self):
-    #     self._test_yolo(model_name='yolov5l6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l6_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5l6_rvc3(self):
+        self._test_yolo(model_name='yolov5l6', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l6_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
     def test_yolov8n_rvc3(self):
         self._test_yolo(model_name='yolov8n', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8n_rvc3', url=self.URL, use_rvc2='false')
@@ -394,23 +394,23 @@ class ToolCases(unittest.TestCase):
     def test_yolov5n6u_rvc3(self):
         self._test_yolo(model_name='yolov5n6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5n6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5s6u_rvc3(self):
-    #     self._test_yolo(model_name='yolov5s6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5s6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5s6u_rvc3(self):
+        self._test_yolo(model_name='yolov5s6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5s6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5su_rvc3(self):
-    #     self._test_yolo(model_name='yolov5su', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5su_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5su_rvc3(self):
+        self._test_yolo(model_name='yolov5su', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5su_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5m6u_rvc3(self):
-    #     self._test_yolo(model_name='yolov5m6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5m6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5m6u_rvc3(self):
+        self._test_yolo(model_name='yolov5m6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5m6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5mu_rvc3(self):
-    #     self._test_yolo(model_name='yolov5mu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5mu_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5mu_rvc3(self):
+        self._test_yolo(model_name='yolov5mu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5mu_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5l6u_rvc3(self):
-    #     self._test_yolo(model_name='yolov5l6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5l6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5l6u_rvc3(self):
+        self._test_yolo(model_name='yolov5l6u', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5l6u_rvc3', url=self.URL, use_rvc2='false', shape=320)
     
-    # def test_yolov5lu_rvc3(self):
-    #     self._test_yolo(model_name='yolov5lu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5lu_rvc3', url=self.URL, use_rvc2='false', shape=320)
+    def test_yolov5lu_rvc3(self):
+        self._test_yolo(model_name='yolov5lu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov5lu_rvc3', url=self.URL, use_rvc2='false', shape=320)
 
     def test_yolov8s_rvc3(self):
         self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s_rvc3', url=self.URL, use_rvc2='false')
@@ -430,77 +430,77 @@ class ToolCases(unittest.TestCase):
     def test_yolov9e_rvc3(self):
         self._test_yolo(model_name='yolov9e', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9e_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov7t_rvc3(self):
-    #     self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
+    def test_yolov7t_rvc3(self):
+        self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
     
-    # def test_yolov6mr4_rvc3(self):
-    #     self._test_yolo(model_name='yolov6mr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6mr4_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov6mr4_rvc3(self):
+        self._test_yolo(model_name='yolov6mr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6mr4_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov6mr2_rvc3(self):
-    #     self._test_yolo(model_name='yolov6mr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6mr2_rvc3(self):
+        self._test_yolo(model_name='yolov6mr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6mr21_rvc3(self):
-    #     self._test_yolo(model_name='yolov6mr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6mr21_rvc3(self):
+        self._test_yolo(model_name='yolov6mr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6mr3_rvc3(self):
-    #     self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6mr3_rvc3(self):
+        self._test_yolo(model_name='yolov6mr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6mr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6lr4_rvc3(self):
-    #     self._test_yolo(model_name='yolov6lr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6lr4_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov6lr4_rvc3(self):
+        self._test_yolo(model_name='yolov6lr4', source_folder=self.V6R4_SOURCE_FOLDER, version='v6r4', test_name='test_yolov6lr4_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov6lr2_rvc3(self):
-    #     self._test_yolo(model_name='yolov6lr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6lr2_rvc3(self):
+        self._test_yolo(model_name='yolov6lr2', source_folder=self.V6R2_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr2_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6lr21_rvc3(self):
-    #     self._test_yolo(model_name='yolov6lr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6lr21_rvc3(self):
+        self._test_yolo(model_name='yolov6lr21', source_folder=self.V6R21_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr21_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
     
-    # def test_yolov6lr3_rvc3(self):
-    #     self._test_yolo(model_name='yolov6lr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
+    def test_yolov6lr3_rvc3(self):
+        self._test_yolo(model_name='yolov6lr3', source_folder=self.V6R3_SOURCE_FOLDER, version='v6r2', test_name='test_yolov6lr3_rvc3', url=f'{self.URL}{URL_V6R3}', use_rvc2='false')
 
-    # def test_yolov6sr1_rvc3(self):
-    #     self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
+    def test_yolov6sr1_rvc3(self):
+        self._test_yolo(model_name='yolov6sr1', source_folder=self.V6R1_SOURCE_FOLDER, version='v6', test_name='test_yolov6sr1_rvc3', url=f'{self.URL}{URL_V6R1}', use_rvc2='false')
     
-    # def test_yolov5m_rvc3(self):
-    #     self._test_yolo(model_name='yolov5m', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov5m_rvc3(self):
+        self._test_yolo(model_name='yolov5m', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5m_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov8m_rvc3(self):
-    #     self._test_yolo(model_name='yolov8m', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8m_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov8m_rvc3(self):
+        self._test_yolo(model_name='yolov8m', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8m_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov5l_rvc3(self):
-    #     self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov5l_rvc3(self):
+        self._test_yolo(model_name='yolov5l', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5l_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov5x_rvc3(self):
-    #     self._test_yolo(model_name='yolov5x', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5x_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov5x_rvc3(self):
+        self._test_yolo(model_name='yolov5x', source_folder=self.V5_SOURCE_FOLDER, version='v5', test_name='test_yolov5x_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov8l_rvc3(self):
-    #     self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov8l_rvc3(self):
+        self._test_yolo(model_name='yolov8l', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8l_rvc3', url=self.URL, use_rvc2='false')
     
-    # def test_yolov8x_rvc3(self):
-    #     self._test_yolo(model_name='yolov8x', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8x_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov8x_rvc3(self):
+        self._test_yolo(model_name='yolov8x', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8x_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov7_rvc3(self):
-    #     self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
+    def test_yolov7_rvc3(self):
+        self._test_yolo(model_name='yolov7', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
 
-    # def test_yolov7x_rvc3(self):
-    #     self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
+    def test_yolov7x_rvc3(self):
+        self._test_yolo(model_name='yolov7x', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7x_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
 
-    # def test_yolov10n_rvc3(self):
-    #     self._test_yolo(model_name='yolov10n', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10n_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov10n_rvc3(self):
+        self._test_yolo(model_name='yolov10n', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10n_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov10s_rvc3(self):
-    #     self._test_yolo(model_name='yolov10s', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10s_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov10s_rvc3(self):
+        self._test_yolo(model_name='yolov10s', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10s_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov10m_rvc3(self):
-    #     self._test_yolo(model_name='yolov10m', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10m_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov10m_rvc3(self):
+        self._test_yolo(model_name='yolov10m', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10m_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov10b_rvc3(self):
-    #     self._test_yolo(model_name='yolov10b', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10b_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov10b_rvc3(self):
+        self._test_yolo(model_name='yolov10b', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10b_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov10l_rvc3(self):
-    #     self._test_yolo(model_name='yolov10l', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10l_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov10l_rvc3(self):
+        self._test_yolo(model_name='yolov10l', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10l_rvc3', url=self.URL, use_rvc2='false')
 
-    # def test_yolov10x_rvc3(self):
-    #     self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x_rvc3', url=self.URL, use_rvc2='false')
+    def test_yolov10x_rvc3(self):
+        self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x_rvc3', url=self.URL, use_rvc2='false')
 
     def tearDown(self):
         if self.DELETE_OUTPUT:
