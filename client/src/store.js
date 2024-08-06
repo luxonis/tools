@@ -76,6 +76,8 @@ export const upload = createAsyncThunk(
         console.log(JSON.stringify(error, null, 4));
       }
       switch (status) {
+        case 515:
+          throw Error("Error while loading model (Make sure that you are trying to export a YOLOv9 weights that are from Ultralytics).");
         case 516:
           throw Error("Error while loading model (This may be caused by trying to convert older releases 1.0, 2.0 or 3.0, in which case, try to convert using the 'YoloV6 (R1)' or 'YoloV6 (R2, R3)' option).");
         case 517:

@@ -100,7 +100,7 @@ async def upload_file(request):
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model (This may be caused by trying to convert older releases 1.0, 2.0 or 3.0, in which case, try to convert using the 'YoloV6 (R1)' or 'YoloV6 (R2, R3)' option).", status_code=516)
-    elif version == "v8":
+    elif version == "v8" or version == "v9":
         try:
             exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
         except ValueError as ve:
@@ -108,7 +108,10 @@ async def upload_file(request):
             raise ServerError(message=str(ve), status_code=518)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            raise ServerError(message="Error while loading model", status_code=520)
+            if version == "v8":
+                raise ServerError(message="Error while loading model", status_code=520)
+            else:
+                raise ServerError(message="Error while loading model", status_code=515)
     elif version == "v10":
         try:
             exporter = YoloV10Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)

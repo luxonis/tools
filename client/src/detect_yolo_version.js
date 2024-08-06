@@ -6,6 +6,7 @@ export const YOLOV6R3_CONVERSION = 'v6r2';
 export const YOLOV6R4_CONVERSION = 'v6r4';
 export const YOLOV7_CONVERSION = 'v7';
 export const YOLOV8_CONVERSION = 'v8';
+export const YOLOV9_CONVERSION = 'v9';
 export const YOLOV10_CONVERSION = 'v10';
 export const GOLD_YOLO_CONVERSION = 'goldyolo';
 export const UNRECOGNIZED = 'none';
@@ -16,6 +17,7 @@ export const version2text = {
     'v6r4': 'YoloV6 (latest)',
     'v7': 'YoloV7 (detection only)',
     'v8': 'YoloV8 (detection only)',
+    'v9': 'YoloV9 (detection only)',
     'v10': 'YoloV10',
     'goldyolo': 'GoldYolo'
 }
@@ -51,6 +53,8 @@ async function detectVersion(file) {
             } else if (content.includes('YOLOv5u') || content.includes('YOLOv8') ||
                 content.includes('yolov8') || (content.includes('v8DetectionLoss') && content.includes('ultralytics'))) {
                 return YOLOV8_CONVERSION
+            } else if (content.includes('yolov9') || (content.includes('v9-model') && content.includes('ultralytics'))) {
+                return YOLOV9_CONVERSION
             } else if (content.includes('yolov6')) {
                 if (content.includes('yolov6.models.yolo\nDetect')) {
                     return YOLOV6R1_CONVERSION

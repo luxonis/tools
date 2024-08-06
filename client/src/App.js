@@ -98,7 +98,13 @@ function App() {
                         <p>Please be aware that we are expericing difficulties with RVC3 export of YoloV6 R4 models. Please use R2 models for RVC3 export. </p>
                       </div>
                     }
-
+                    {
+                      (!error && detectedVersion == 'YoloV9 (detection only)')
+                      && <div className="warning-box">
+                        <h3>Warning</h3>
+                        <p>Please be aware that we are only supporting conversion of YoloV9 weights from Ultralytics. </p>
+                      </div>
+                    }
                     {
                       (!error && detectedVersion == 'YoloV10' && !config.useRVC2)
                       && <div className="warning-box">
@@ -121,9 +127,10 @@ function App() {
                           <option value="goldyolo">GoldYolo</option>
                           <option value="v7">YoloV7 (detection only)</option>
                           <option value="v8">YoloV8 (detection only)</option>
+                          <option value="v9">YoloV9 (detection only)</option>
+                          <option value="v10">YoloV10</option>
                           <option value="v6">YoloV6 (R1)</option>
                           <option value="v6r2">YoloV6 (R2, R3)</option>
-                          <option value="v10">YoloV10</option>
                         </select>
                         {
                           (detectedVersion !== '') &&
