@@ -62,6 +62,11 @@ model_type2url: Dict[str, str] = {
     'yolov8x': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x.pt',
     'yolov7': 'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt',
     'yolov7x': 'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt',
+    'yolov9t': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov9t.pt',
+    'yolov9s': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov9s.pt',
+    'yolov9m': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov9m.pt',
+    'yolov9c': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov9c.pt',
+    'yolov9e': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov9e.pt',
     'yolov10n': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10n.pt',
     'yolov10s': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10s.pt',
     'yolov10m': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10m.pt',
@@ -80,6 +85,7 @@ class ToolCases(unittest.TestCase):
     V6R4_SOURCE_FOLDER: str = './weights/'
     V7_SOURCE_FOLDER: str = './weights/'
     V8_SOURCE_FOLDER: str = './weights/'
+    V9_SOURCE_FOLDER: str = './weights/'
     V10_SOURCE_FOLDER: str = './weights/'
     URL: str = DEFAULT_URL
     DOWNLOAD_WEIGHTS: bool = True
@@ -237,6 +243,21 @@ class ToolCases(unittest.TestCase):
     
     def test_yolov8s(self):
         self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s', url=self.URL)
+    
+    def test_yolov9t(self):
+        self._test_yolo(model_name='yolov9t', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9t', url=self.URL)
+    
+    def test_yolov9s(self):
+        self._test_yolo(model_name='yolov9s', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9s', url=self.URL)
+    
+    def test_yolov9m(self):
+        self._test_yolo(model_name='yolov9m', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9m', url=self.URL)
+    
+    def test_yolov9c(self):
+        self._test_yolo(model_name='yolov9c', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9c', url=self.URL)
+    
+    def test_yolov9e(self):
+        self._test_yolo(model_name='yolov9e', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9e', url=self.URL)
 
     def test_yolov7t(self):
         self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t', url=f'{self.URL}{URL_V7}')
@@ -394,6 +415,21 @@ class ToolCases(unittest.TestCase):
     def test_yolov8s_rvc3(self):
         self._test_yolo(model_name='yolov8s', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov8s_rvc3', url=self.URL, use_rvc2='false')
 
+    def test_yolov9t_rvc3(self):
+        self._test_yolo(model_name='yolov9t', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9t_rvc3', url=self.URL, use_rvc2='false')
+    
+    def test_yolov9s_rvc3(self):
+        self._test_yolo(model_name='yolov9s', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9s_rvc3', url=self.URL, use_rvc2='false')
+    
+    def test_yolov9m_rvc3(self):
+        self._test_yolo(model_name='yolov9m', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9m_rvc3', url=self.URL, use_rvc2='false')
+    
+    def test_yolov9c_rvc3(self):
+        self._test_yolo(model_name='yolov9c', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9c_rvc3', url=self.URL, use_rvc2='false')
+    
+    def test_yolov9e_rvc3(self):
+        self._test_yolo(model_name='yolov9e', source_folder=self.V9_SOURCE_FOLDER, version='v9', test_name='test_yolov9e_rvc3', url=self.URL, use_rvc2='false')
+
     def test_yolov7t_rvc3(self):
         self._test_yolo(model_name='yolov7t', source_folder=self.V7_SOURCE_FOLDER, version='v7', test_name='test_yolov7t_rvc3', url=f'{self.URL}{URL_V7}', use_rvc2='false')
     
@@ -531,6 +567,7 @@ def set_the_args():
     ToolCases.V6R4_SOURCE_FOLDER = os.environ.get("v6r4_folder", "./weights/")
     ToolCases.V7_SOURCE_FOLDER = os.environ.get("v7_folder", "./weights/")
     ToolCases.V8_SOURCE_FOLDER = os.environ.get("v8_folder", "./weights/")
+    ToolCases.V9_SOURCE_FOLDER = os.environ.get("v9_folder", "./weights/")
     ToolCases.V10_SOURCE_FOLDER = os.environ.get("v10_folder", "./weights/")
 
     print('*'*60)
@@ -545,6 +582,7 @@ def set_the_args():
     print("v6r4_folder:", ToolCases.V6R4_SOURCE_FOLDER)
     print("v7_folder:", ToolCases.V7_SOURCE_FOLDER)
     print("v8_folder:", ToolCases.V8_SOURCE_FOLDER)
+    print("v9_folder:", ToolCases.V9_SOURCE_FOLDER)
     print("v10_folder:", ToolCases.V10_SOURCE_FOLDER)
     print("URL:", ToolCases.URL)
     print('*'*60)
