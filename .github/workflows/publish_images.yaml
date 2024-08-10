@@ -1,0 +1,58 @@
+name: Publishing docker images
+
+on:
+  push:
+    branches: ['feat/add-gh-workflow-deploy']
+
+env:
+  API_NAME: luxonis/tools_api
+  V7_NAME: luxonis/tools_yolov7
+  V6R1_NAME: luxonis/tools_yolov6r1
+  V6R3_NAME: luxonis/tools_yolov6r3
+
+jobs:
+  ghcr-publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get tools version
+      id: commit
+      run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Docker login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Publish latest images
+      run: |
+        docker compose build
+        docker tag tools-api:latest ghcr.io/$API_NAME:test
+        docker tag tools-yolov7:latest ghcr.io/$V7_NAME:test
+        docker tag tools-yolov6r1:latest ghcr.io/$V6R1_NAME:test
+        docker tag tools-yolov6r3:latest ghcr.io/$V6R3_NAME:test
+        docker push ghcr.io/$API_NAME:latest
+        docker push ghcr.io/$V7_NAME:latest
+        docker push ghcr.io/$V6R1_NAME:latest
+        docker push ghcr.io/$V6R3_NAME:latest
+
+    - name: Publish tagged images
+      run: |
+        VERSION=${{ steps.commit.outputs.sha }}
+        docker tag tools-api:latest ghcr.io/$API_NAME:$VERSION
+        docker tag tools-yolov7:latest ghcr.io/$V7_NAME:$VERSION
+        docker tag tools-yolov6r1:latest ghcr.io/$V6R1_NAME:$VERSION
+        docker tag tools-yolov6r3:latest ghcr.io/$V6R3_NAME:$VERSION
+        docker push ghcr.io/$API_NAME:$VERSION
+        docker push ghcr.io/$V7_NAME:$VERSION
+        docker push ghcr.io/$V6R1_NAME:$VERSION
+        docker push ghcr.io/$V6R3_NAME:$VERSION
