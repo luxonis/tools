@@ -45,11 +45,15 @@ def detect_version(path: str, debug: bool = False) -> str:
                 print(data.decode(errors="replace"))
             content = data.decode("latin1")
 
-            if (
+            if "yolov10" in content or "v10DetectLoss" in content:
+                return YOLOV10_CONVERSION
+            elif (
                 "YOLOv5u" in content
                 or "YOLOv8" in content
                 or "yolov8" in content
                 or ("v8DetectionLoss" in content and "ultralytics" in content)
+                or "yolov9" in content 
+                or ("v9-model" and "ultralytics" in content)
             ):
                 return YOLOV8_CONVERSION
             elif "yolov6" in content:
@@ -62,8 +66,6 @@ def detect_version(path: str, debug: bool = False) -> str:
                 return YOLOV6R3_CONVERSION
             elif "yolov7" in content:
                 return YOLOV7_CONVERSION
-            elif "yolov10" in content:
-                return YOLOV10_CONVERSION
             elif (
                 "SPPF" in content
                 or "yolov5" in content
