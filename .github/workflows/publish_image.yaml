@@ -32,6 +32,7 @@ jobs:
 
     - name: Publish latest
       run: |
+        git submodule update --init --recursive
         docker build -t $NAME:latest .
         docker tag $NAME:latest ghcr.io/$NAME:latest
         docker push ghcr.io/$NAME:latest
