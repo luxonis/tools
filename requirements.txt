@@ -1,4 +1,4 @@
-sanic>=21.12.2
+sanic==21.12.1
 # torch==1.10.2
 # torchvision==0.11.3
 torch>=2.2.0
@@ -20,6 +20,8 @@ scipy>=1.4.1
 tqdm>=4.41.0
 
 IPython
+
+psutil>=6.0.0
 
 tensorboard>=2.12.0
 protobuf>=3.20.2
