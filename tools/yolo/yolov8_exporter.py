@@ -44,7 +44,7 @@ def get_output_names(mode: int) -> List[str]:
     elif mode == OBB_MODE:
         return ["output1_yolov8", "output2_yolov8", "output3_yolov8", "angle_output"]
     elif mode == POSE_MODE:
-        return ["output1_yolov8", "output2_yolov8", "output3_yolov8", "kpt_output"]
+        return ["output1_yolov8", "output2_yolov8", "output3_yolov8", "kpt_output1", "kpt_output2", "kpt_output3"]
     return ["output"]
 
 
