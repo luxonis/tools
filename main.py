@@ -44,7 +44,7 @@ async def index(request):
 
 
 @app.get("/progress/<key>")
-async def key(request, key):
+async def progress(request, key):
     return response.json({"progress": conversions.get(key, "none")})
 
 
