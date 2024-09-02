@@ -152,6 +152,7 @@ class YoloV8Exporter(Exporter):
             self.make_nn_archive(
                 names, 
                 self.model.model[-1].nc,
+                parser="YOLOExtendedParser",
                 stage2_executable_path=str(self.f_stage2_onnx),
                 postprocessor_path=self.stage2_filename,
                 n_prototypes=32,
@@ -177,6 +178,7 @@ class YoloV8Exporter(Exporter):
             self.make_nn_archive(
                 names, 
                 self.model.model[-1].nc,
+                parser="YOLOExtendedParser",
                 n_keypoints=17,
                 output_kwargs={
                     "keypoints_outputs": ["kpt_output"]

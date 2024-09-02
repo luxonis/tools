@@ -101,6 +101,7 @@ class Exporter:
         iou_threshold: float = 0.5,
         conf_threshold: float = 0.5,
         max_det: int = 300,
+        parser: str = "YOLO",
         stage2_executable_path: Optional[str] = None,
         postprocessor_path: Optional[str] = None,
         n_prototypes: Optional[int] = None,
@@ -116,6 +117,7 @@ class Exporter:
             iou_threshold (float): Intersection over Union threshold
             conf_threshold (float): Confidence threshold
             max_det (int): Maximum number of detections
+            parser (str): Parser type, defaults to "YOLO"
             2stage_executable_path (Optional[str], optional): Path to the executables. Defaults to None.
             postprocessor_path (Optional[str], optional): Path to the postprocessor. Defaults to None.
             n_prototypes (Optional[int], optional): Number of prototypes. Defaults to None.
@@ -161,7 +163,7 @@ class Exporter:
                     ],
                     "heads": [
                         Head(
-                            parser="YOLO",
+                            parser=parser,
                             metadata=HeadYOLOMetadata(
                                 yolo_outputs=self.output_names, 
                                 subtype=self.subtype,
