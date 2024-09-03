@@ -31,7 +31,7 @@ DEFAULT_USE_RVC2 = 'true'
 
 
 @app.get("/yolov7/progress/<key>")
-async def index(request, key):
+async def progress(request, key):
     return response.json({"progress": conversions.get(key, "none")})
 
 
