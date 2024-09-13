@@ -100,6 +100,6 @@ class YoloV8Exporter(Exporter):
         anchors, masks = [], {}
 
         nc = self.model.model[-1].nc
-        names = [f"Class_{i}" for i in range(nc)]
+        names = list(self.model.names.values())
 
         return self.write_json(anchors, masks, nc, names)
