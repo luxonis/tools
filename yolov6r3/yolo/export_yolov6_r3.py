@@ -67,7 +67,7 @@ class YoloV6R3Exporter(Exporter):
                         training=torch.onnx.TrainingMode.EVAL,
                         do_constant_folding=True,
                         input_names=['images'],
-                        output_names=['output1_yolov6r2', 'output2_yolov6r2', 'output3_yolov6r2'],
+                        output_names=[f"output{i+1}_yolov6r2" for i in range(self.num_branches)],
                         dynamic_axes=None)
 
         # check if the arhcitecture is correct
