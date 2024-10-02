@@ -1,6 +1,6 @@
 # Tools
 
-This application is used for exporting Yolo V5, V6 and V7 object detection models for OAKs.
+This application is used for exporting Yolo V5, V6 V7, V8, YoloP object detection models for OAKs.
 
 ## Running the app locally
 To run the application locally you need to do these folllowing steps.
@@ -10,7 +10,7 @@ git clone --recursive https://github.com/luxonis/tools.git
 ```
 
 ### Step 2: Updating the `nginx.conf` file
-It is required for the app to not consider SSL. You can rewrite the current `nginx.conf` with the following file: 
+It is required for the app to not consider SSL. You can rewrite the current `nginx.conf` with the following file:
 ```
 upstream toolsapi {
     server api:8000;
@@ -41,7 +41,7 @@ server {
     proxy_redirect off;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $http_host;
-    proxy_set_header X-Forwarded-Ssl $scheme; 
+    proxy_set_header X-Forwarded-Ssl $scheme;
   }
 
   location /yolov6r1 {
@@ -49,7 +49,7 @@ server {
     proxy_redirect off;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $http_host;
-    proxy_set_header X-Forwarded-Ssl $scheme; 
+    proxy_set_header X-Forwarded-Ssl $scheme;
   }
 
   location /yolov6r3 {
@@ -57,7 +57,7 @@ server {
     proxy_redirect off;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $http_host;
-    proxy_set_header X-Forwarded-Ssl $scheme; 
+    proxy_set_header X-Forwarded-Ssl $scheme;
   }
 
   location / {
@@ -127,7 +127,7 @@ Open browser at [http://0.0.0.0](http://0.0.0.0).
 
 ## Credits
 
-This application uses source code of the following repositories: [YOLOv5](https://github.com/ultralytics/yolov5), [YOLOv6](https://github.com/meituan/YOLOv6), [YOLOv7](https://github.com/WongKinYiu/yolov7), and [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) (see each of them for more information).
+This application uses source code of the following repositories: [YOLOv5](https://github.com/ultralytics/yolov5), [YOLOv6](https://github.com/meituan/YOLOv6), [YOLOv7](https://github.com/WongKinYiu/yolov7), [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics), and [YOLOP](https://github.com/hustvl/YOLOP) (see each of them for more information).
 
 ## License
 
