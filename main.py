@@ -7,13 +7,14 @@ from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
 from sanic.exceptions import ServerError
-  
+
 import sentry_sdk
 
 from yolo.export_yolov5 import YoloV5Exporter
 from yolo.export_yolov6 import YoloV6R4Exporter
 from yolo.export_yolov8 import YoloV8Exporter
 from yolo.export_yolov10 import YoloV10Exporter
+from yolo.export_yolop import YoloPExporter
 
 import os
 import aiofiles
@@ -56,7 +57,7 @@ async def upload_file(request):
 
     useLegacyFrontend = request.form["useLegacyFrontend"][0] if "useLegacyFrontend" in request.form else DEFAULT_USE_LEGACY_FRONTEND
     logger.info(f"useLegacyFrontend: {useLegacyFrontend}")
-    
+
     useRVC2 = request.form["useRVC2"][0] if "useRVC2" in request.form else DEFAULT_USE_RVC2
     logger.info(f"useRVC2: {useRVC2}")
 
@@ -75,7 +76,7 @@ async def upload_file(request):
         await f.write(request.files["file"][0].body)
 
     version = request.form["version"][0]
-    
+
     # load exporter and do conversion process
     conversions[conv_id] = "read"
     try:
@@ -121,9 +122,18 @@ async def upload_file(request):
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise ServerError(message="Error while loading model", status_code=520)
+    elif version == "p":
+        try:
+            exporter = YoloPExporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
+        except ValueError as ve:
+            sentry_sdk.capture_exception(ve)
+            raise ServerError(message=str(ve), status_code=518)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            raise ServerError(message="Error while loading model", status_code=520)
     else:
         raise ValueError(f"Yolo version {version} is not supported.")
-    
+
     conversions[conv_id] = "initialized"
     try:
         exporter.export_onnx()
@@ -183,7 +193,7 @@ if __name__ == '__main__':
         sentry_sdk.init(
             dsn=SENTRY_TOKEN
         )
-    
+
     if runtime == "prod":
         app.run(host="0.0.0.0", access_log=False, workers=8)
     else:
