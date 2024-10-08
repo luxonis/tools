@@ -95,9 +95,7 @@ class Exporter:
             shaves=self.n_shaves,
             version="2022.1" if self.use_rvc2 else "2022.3_RVC3",
             use_cache=False,
-            output_dir=self.conv_path.resolve(),
-            url="https://blobconverter.luxonis.com" if self.use_rvc2 else \
-                os.getenv("RVC3_BLOBCONVERTER", "https://blobconverter.luxonis.com")
+            output_dir=self.conv_path.resolve()
         )
         
         self.f_blob = blob_path

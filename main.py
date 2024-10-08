@@ -18,9 +18,12 @@ from yolo.export_yolov10 import YoloV10Exporter
 import os
 import aiofiles
 
+Sanic.START_METHOD_SET = True
+Sanic.start_method = "fork"
 Config.KEEP_ALIVE = False
 Config.RESPONSE_TIMEOUT = 1000
 app = Sanic(__name__)
+print(app.start_method, app.START_METHOD_SET)
 app.config.static_path = (Path(__file__).parent / './client/build/static').resolve().absolute()
 if not app.config.static_path.exists():
     raise RuntimeError("Client was not built. Please run `npm install && npm run build` to build the client")
@@ -41,7 +44,7 @@ async def index(request):
 
 
 @app.get("/progress/<key>")
-async def index(request, key):
+async def progress(request, key):
     return response.json({"progress": conversions.get(key, "none")})
 
 
