@@ -1,7 +1,7 @@
 # [Deprecated] Tools - Web App
 
 > [!WARNING]  
-> This branch contains the deprecated tools web application. To see the latest CLI version, please refer to the [master](https://github.com/luxonis/tools/tree/main) branch.
+> This branch contains the deprecated tools web application. To see the latest CLI version, please refer to the [main](https://github.com/luxonis/tools/tree/main) branch.
 
 This application is used for exporting Yolo V5, V6 and V7 object detection models for OAKs.
 
