@@ -1,5 +1,9 @@
 # Tools-CLI
 
+> [!NOTE]  
+> This is the latest version of tools CLI. If you are looking for the tools web application, please refer to the [web-app](https://github.com/luxonis/tools/tree/web-app) branch.
+
+
 This application is used for exporting Yolo V5, V6, V7, V8 (OBB, instance segmentation, pose estimation, cls) and Gold YOLO object detection models to .ONNX.
 
 ## Running
