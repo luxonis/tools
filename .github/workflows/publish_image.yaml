@@ -2,7 +2,7 @@ name: Publishing a docker image
 
 on:
   push:
-    branches: ['cli']
+    branches: ['main']
 
 env:
   NAME: luxonis/tools_cli
