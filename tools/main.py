@@ -13,7 +13,9 @@ from tools.utils import (
     YOLOV6R4_CONVERSION,
     YOLOV7_CONVERSION,
     YOLOV8_CONVERSION,
+    YOLOV9_CONVERSION,
     YOLOV10_CONVERSION,
+    YOLOV11_CONVERSION,
     Config,
     detect_version,
     upload_file_to_remote,
@@ -37,7 +39,9 @@ YOLO_VERSIONS = [
     YOLOV6R4_CONVERSION,
     YOLOV7_CONVERSION,
     YOLOV8_CONVERSION,
+    YOLOV9_CONVERSION,
     YOLOV10_CONVERSION,
+    YOLOV11_CONVERSION,
 ]
 
 
@@ -109,7 +113,7 @@ def convert(
         elif version == YOLOV7_CONVERSION:
             from tools.yolov7.yolov7_exporter import YoloV7Exporter
             exporter = YoloV7Exporter(str(model_path), config.imgsz, config.use_rvc2)
-        elif version == YOLOV8_CONVERSION:
+        elif version in [YOLOV8_CONVERSION, YOLOV9_CONVERSION, YOLOV11_CONVERSION]:
             from tools.yolo.yolov8_exporter import YoloV8Exporter
             exporter = YoloV8Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == YOLOV10_CONVERSION:

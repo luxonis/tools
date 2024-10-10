@@ -74,7 +74,7 @@ class YoloV8Exporter(Exporter):
         if isinstance(model.model[-1], (Segment)):
             model.model[-1] = SegmentV8(model.model[-1], self.use_rvc2)
             self.mode = SEGMENT_MODE
-            self.export_stage2_multiplier()
+            # self.export_stage2_multiplier()
         elif isinstance(model.model[-1], (OBB)):
             model.model[-1] = OBBV8(model.model[-1],self.use_rvc2)
             self.mode = OBB_MODE
@@ -153,8 +153,8 @@ class YoloV8Exporter(Exporter):
                 names, 
                 self.model.model[-1].nc,
                 parser="YOLOExtendedParser",
-                stage2_executable_path=str(self.f_stage2_onnx),
-                postprocessor_path=self.stage2_filename,
+                # stage2_executable_path=str(self.f_stage2_onnx),
+                # postprocessor_path=self.stage2_filename,
                 n_prototypes=32,
                 is_softmax=True,
                 output_kwargs={
