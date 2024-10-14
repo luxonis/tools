@@ -8,17 +8,19 @@ export const YOLOV7_CONVERSION = 'v7';
 export const YOLOV8_CONVERSION = 'v8';
 export const YOLOV9_CONVERSION = 'v9';
 export const YOLOV10_CONVERSION = 'v10';
+export const YOLOV11_CONVERSION = 'v11';
 export const GOLD_YOLO_CONVERSION = 'goldyolo';
 export const UNRECOGNIZED = 'none';
 export const version2text = {
-    'v5': 'YoloV5',
-    'v6': 'YoloV6 (R1)',
-    'v6r2': 'YoloV6 (R2, R3)',
-    'v6r4': 'YoloV6 (latest)',
-    'v7': 'YoloV7 (detection only)',
-    'v8': 'YoloV8 (detection only)',
-    'v9': 'YoloV9 (detection only)',
-    'v10': 'YoloV10',
+    'v5': 'YOLOv5',
+    'v6': 'YOLOv6 (R1)',
+    'v6r2': 'YOLOv6 (R2, R3)',
+    'v6r4': 'YOLOv6 (latest)',
+    'v7': 'YOLOv7 (detection only)',
+    'v8': 'YOLOv8 (detection only)',
+    'v9': 'YOLOv9 (detection only)',
+    'v10': 'YOLOv10',
+    'v11': 'YOLOv11 (detection only)',
     'goldyolo': 'GoldYolo'
 }
 
@@ -50,6 +52,8 @@ async function detectVersion(file) {
 
             if (content.includes('yolov10') || content.includes('v10DetectLoss')) {
                 return YOLOV10_CONVERSION
+            } else if (content.includes('yolo11')) {
+                return YOLOV11_CONVERSION
             } else if (content.includes('YOLOv5u') || content.includes('YOLOv8') ||
                 content.includes('yolov8') || (content.includes('v8DetectionLoss') && content.includes('ultralytics'))) {
                 return YOLOV8_CONVERSION

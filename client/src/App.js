@@ -59,7 +59,7 @@ function App() {
               <div className="row g-0">
                 <div className="col-lg-6 d-flex align-items-center gradient-custom-2">
                   <div className="text-white px-3 py-4 p-md-5 mcustomizablex-md-4">
-                    <h4 className="mb-4">Automatic Yolo export for OAKs</h4>
+                    <h4 className="mb-4">Automatic YOLO export for OAKs</h4>
                     <p className="small mb-2">With the goal of simplifying the export process of the most popular object
                       detectors, we developed this tool. Simply upload the weights of the pre-trained model (.pt file), and we'll
                       compile a blob and JSON configuration for you.</p>
@@ -85,31 +85,38 @@ function App() {
                     }
 
                     {
-                      (!error && detectedVersion == 'YoloV6 (R2, R3)' && !config.useRVC2)
+                      (!error && detectedVersion == 'YOLOv6 (R2, R3)' && !config.useRVC2)
                       && <div className="warning-box">
                         <h3>Warning</h3>
-                        <p>Please be aware that we are expericing difficulties with RVC3 export of YoloV6 R3 models. The RVC3 export of these models is likely to fail. Please use R2 models for RVC3 export. </p>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of YOLOv6 R3 models. The RVC3 export of these models is likely to fail. Please use R2 models for RVC3 export. </p>
                       </div>
                     }
                     {
-                      (!error && detectedVersion == 'YoloV6 (latest)' && !config.useRVC2)
+                      (!error && detectedVersion == 'YOLOv6 (latest)' && !config.useRVC2)
                       && <div className="warning-box">
                         <h3>Warning</h3>
-                        <p>Please be aware that we are expericing difficulties with RVC3 export of YoloV6 R4 models. Please use R2 models for RVC3 export. </p>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of YOLOv6 R4 models. Please use R2 models for RVC3 export. </p>
                       </div>
                     }
                     {
-                      (!error && detectedVersion == 'YoloV9 (detection only)')
+                      (!error && detectedVersion == 'YOLOv9 (detection only)')
                       && <div className="warning-box">
                         <h3>Warning</h3>
-                        <p>Please be aware that we are only supporting conversion of YoloV9 weights from Ultralytics. </p>
+                        <p>Please be aware that we are only supporting conversion of YOLOv9 weights from Ultralytics. </p>
                       </div>
                     }
                     {
-                      (!error && detectedVersion == 'YoloV10' && !config.useRVC2)
+                      (!error && detectedVersion == 'YOLOv10' && !config.useRVC2)
                       && <div className="warning-box">
                         <h3>Warning</h3>
-                        <p>Please be aware that we are expericing difficulties with RVC3 export of YoloV10 models. The RVC3 export of these models is likely to fail. </p>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of YOLOv10 models. The RVC3 export of these models is likely to fail. </p>
+                      </div>
+                    }
+                    {
+                      (!error && detectedVersion == 'YOLOv11 (detection only)' && !config.useRVC2)
+                      && <div className="warning-box">
+                        <h3>Warning</h3>
+                        <p>Please be aware that we are expericing difficulties with RVC3 export of YOLOv11 models. The RVC3 export of these models is likely to fail. </p>
                       </div>
                     }
 
@@ -122,15 +129,16 @@ function App() {
                         <label htmlFor="version">Yolo Version</label>
                         <select id="version" value={config.version} name="version" className="form-select" aria-label="Default select example"
                                 onChange={e => update({version: e.target.value})}>
-                          <option value="v5">YoloV5</option>
-                          <option value="v6r4">YoloV6 (latest)</option>
+                          <option value="v5">YOLOv5</option>
+                          <option value="v6r4">YOLOv6 (latest)</option>
                           <option value="goldyolo">GoldYolo</option>
-                          <option value="v7">YoloV7 (detection only)</option>
-                          <option value="v8">YoloV8 (detection only)</option>
-                          <option value="v9">YoloV9 (detection only)</option>
-                          <option value="v10">YoloV10</option>
-                          <option value="v6">YoloV6 (R1)</option>
-                          <option value="v6r2">YoloV6 (R2, R3)</option>
+                          <option value="v7">YOLOv7 (detection only)</option>
+                          <option value="v8">YOLOv8 (detection only)</option>
+                          <option value="v9">YOLOv9 (detection only)</option>
+                          <option value="v10">YOLOv10</option>
+                          <option value="v11">YOLOv11 (detection only)</option>
+                          <option value="v6">YOLOv6 (R1)</option>
+                          <option value="v6r2">YOLOv6 (R2, R3)</option>
                         </select>
                         {
                           (detectedVersion !== '') &&
