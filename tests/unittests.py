@@ -73,6 +73,11 @@ model_type2url: Dict[str, str] = {
     'yolov10b': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10b.pt',
     'yolov10l': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10l.pt',
     'yolov10x': 'https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov10x.pt',
+    'yolov11n': 'https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt',
+    'yolov11s': 'https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s.pt',
+    'yolov11m': 'https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11m.pt',
+    'yolov11l': 'https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11l.pt',
+    'yolov11x': 'https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11x.pt',
 }
 
 
@@ -87,6 +92,7 @@ class ToolCases(unittest.TestCase):
     V8_SOURCE_FOLDER: str = './weights/'
     V9_SOURCE_FOLDER: str = './weights/'
     V10_SOURCE_FOLDER: str = './weights/'
+    V11_SOURCE_FOLDER: str = './weights/'
     URL: str = DEFAULT_URL
     DOWNLOAD_WEIGHTS: bool = True
     DELETE_OUTPUT: bool = True
@@ -331,6 +337,21 @@ class ToolCases(unittest.TestCase):
     def test_yolov10x(self):
         self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x', url=self.URL)
 
+    def test_yolov11n(self):
+        self._test_yolo(model_name='yolov11n', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11n', url=self.URL)
+
+    def test_yolov11s(self):
+        self._test_yolo(model_name='yolov11s', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11s', url=self.URL)
+
+    def test_yolov11m(self):
+        self._test_yolo(model_name='yolov11m', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11m', url=self.URL)
+
+    def test_yolov11l(self):
+        self._test_yolo(model_name='yolov11l', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11l', url=self.URL)
+
+    def test_yolov11x(self):
+        self._test_yolo(model_name='yolov11x', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11x', url=self.URL)
+
     def test_yolov3tinyu_rvc3(self):
         self._test_yolo(model_name='yolov3-tinyu', source_folder=self.V8_SOURCE_FOLDER, version='v8', test_name='test_yolov3tinyu_rvc3', url=self.URL, use_rvc2='false')
     
@@ -502,6 +523,21 @@ class ToolCases(unittest.TestCase):
     def test_yolov10x_rvc3(self):
         self._test_yolo(model_name='yolov10x', source_folder=self.V10_SOURCE_FOLDER, version='v10', test_name='test_yolov10x_rvc3', url=self.URL, use_rvc2='false')
 
+    def test_yolov11n_rvc3(self):
+        self._test_yolo(model_name='yolov11n', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11n_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov11s_rvc3(self):
+        self._test_yolo(model_name='yolov11s', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11s_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov11m_rvc3(self):
+        self._test_yolo(model_name='yolov11m', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11m_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov11l_rvc3(self):
+        self._test_yolo(model_name='yolov11l', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11l_rvc3', url=self.URL, use_rvc2='false')
+
+    def test_yolov11x_rvc3(self):
+        self._test_yolo(model_name='yolov11x', source_folder=self.V11_SOURCE_FOLDER, version='v11', test_name='test_yolov11x_rvc3', url=self.URL, use_rvc2='false')
+
     def tearDown(self):
         if self.DELETE_OUTPUT:
             # Get a list of all files and folders in the specified folder
@@ -569,6 +605,7 @@ def set_the_args():
     ToolCases.V8_SOURCE_FOLDER = os.environ.get("v8_folder", "./weights/")
     ToolCases.V9_SOURCE_FOLDER = os.environ.get("v9_folder", "./weights/")
     ToolCases.V10_SOURCE_FOLDER = os.environ.get("v10_folder", "./weights/")
+    ToolCases.V11_SOURCE_FOLDER = os.environ.get("v11_folder", "./weights/")
 
     print('*'*60)
     print('ARGS:')
@@ -584,6 +621,7 @@ def set_the_args():
     print("v8_folder:", ToolCases.V8_SOURCE_FOLDER)
     print("v9_folder:", ToolCases.V9_SOURCE_FOLDER)
     print("v10_folder:", ToolCases.V10_SOURCE_FOLDER)
+    print("v11_folder:", ToolCases.V11_SOURCE_FOLDER)
     print("URL:", ToolCases.URL)
     print('*'*60)
 
