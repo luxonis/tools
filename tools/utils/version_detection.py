@@ -82,7 +82,7 @@ def detect_version(path: str, debug: bool = False) -> str:
 
         # Remove the output folder
         subprocess.check_output("rm -r extracted_model", shell=True)
-    except subprocess.CalledProcessError:
-        raise RuntimeError()
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError() from e
 
     return UNRECOGNIZED
