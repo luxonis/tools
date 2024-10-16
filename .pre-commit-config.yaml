@@ -11,12 +11,13 @@ repos:
     hooks:
     - id: black
       language_version: python3.8
+      exclude: 'tools/yolov7/yolov7/'
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
     - id: no-commit-to-branch
-      args: ['--branch', 'main', '--branch', 'dev']
+      args: ['--branch', 'main']
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.10

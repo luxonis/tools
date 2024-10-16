@@ -39,6 +39,7 @@ optional-dependencies = { dev = { file = ["requirements-dev.txt"] } }
 
 [tool.ruff]
 target-version = "py38"
+exclude = ["tools/yolov7/yolov7/"]
 
 [tool.ruff.lint]
 ignore = ["F403", "B028", "B905", "D1"]

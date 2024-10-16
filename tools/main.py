@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, List
+from typing import Optional
 
 import typer
 
@@ -18,11 +18,10 @@ from tools.utils import (
     YOLOV11_CONVERSION,
     Config,
     detect_version,
-    upload_file_to_remote,
     resolve_path,
+    upload_file_to_remote,
 )
 from tools.utils.constants import MISC_DIR
-
 
 logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
@@ -61,13 +60,13 @@ def convert(
 
     if version is not None and version not in YOLO_VERSIONS:
         logger.error("Wrong YOLO version selected!")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
     try:
         imgsz = list(map(int, imgsz.split(" "))) if " " in imgsz else [int(imgsz)] * 2
-    except ValueError:
+    except ValueError as e:
         logger.error('Invalid image size format. Must be "width height" or "width".')
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
     if class_names:
         class_names = [class_name.strip() for class_name in class_names.split(",")]
@@ -97,36 +96,44 @@ def convert(
         logger.info("Loading model...")
         if version == YOLOV5_CONVERSION:
             from tools.yolo.yolov5_exporter import YoloV5Exporter
+
             exporter = YoloV5Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == YOLOV6R1_CONVERSION:
             from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
+
             exporter = YoloV6R1Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == YOLOV6R3_CONVERSION:
             from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
+
             exporter = YoloV6R3Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == GOLD_YOLO_CONVERSION:
             from tools.yolov6r3.gold_yolo_exporter import GoldYoloExporter
+
             exporter = GoldYoloExporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == YOLOV6R4_CONVERSION:
             from tools.yolo.yolov6_exporter import YoloV6R4Exporter
+
             exporter = YoloV6R4Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == YOLOV7_CONVERSION:
             from tools.yolov7.yolov7_exporter import YoloV7Exporter
+
             exporter = YoloV7Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version in [YOLOV8_CONVERSION, YOLOV9_CONVERSION, YOLOV11_CONVERSION]:
             from tools.yolo.yolov8_exporter import YoloV8Exporter
+
             exporter = YoloV8Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == YOLOV10_CONVERSION:
             from tools.yolo.yolov10_exporter import YoloV10Exporter
+
             exporter = YoloV10Exporter(str(model_path), config.imgsz, config.use_rvc2)
         else:
             logger.error("Unrecognized model version.")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
         logger.info("Model loaded.")
     except Exception as e:
         logger.error(f"Error creating exporter: {e}")
-        raise typer.Exit(code=1)
-    
+        raise typer.Exit(code=1) from e
+
     # Export model
     try:
         logger.info("Exporting model...")
@@ -134,7 +141,7 @@ def convert(
         logger.info("Model exported.")
     except Exception as e:
         logger.error(f"Error exporting model: {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
     # Create NN archive
     try:
         logger.info("Creating NN archive...")
@@ -142,11 +149,13 @@ def convert(
         logger.info("NN archive created.")
     except Exception as e:
         logger.error(f"Error creating NN archive: {e}")
-        raise typer.Exit(code=1)
-    
+        raise typer.Exit(code=1) from e
+
     # Upload to remote
     if config.output_remote_url:
-        upload_file_to_remote(exporter.f_nn_archive, config.output_remote_url, config.put_file_plugin)
+        upload_file_to_remote(
+            exporter.f_nn_archive, config.output_remote_url, config.put_file_plugin
+        )
         logger.info(f"Uploaded NN archive to {config.output_remote_url}")
 
 

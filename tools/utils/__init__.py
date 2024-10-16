@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from .config import Config
 from .filesystem_utils import (
-    resolve_path,
     download_from_remote,
-    upload_file_to_remote,
-    upload_file_to_remote,
     get_protocol,
+    resolve_path,
+    upload_file_to_remote,
 )
+from .in_channels import get_first_conv2d_in_channels
 from .version_detection import (
     GOLD_YOLO_CONVERSION,
     UNRECOGNIZED,
@@ -22,8 +22,6 @@ from .version_detection import (
     YOLOV11_CONVERSION,
     detect_version,
 )
-from .in_channels import get_first_conv2d_in_channels
-
 
 __all__ = [
     "Config",
