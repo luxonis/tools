@@ -41,6 +41,7 @@ Example output of test with RTX 3090.
 [I] Total GPU Compute Time: 3.03404 s
 [I] Explanations of the performance metrics are printed in the verbose logs.
 ```
+
 Note: 73.5 qps x batch 8 = 588 fps @ ~15ms latency.
 
 ## Model Repository
