@@ -1,15 +1,19 @@
+from __future__ import annotations
+
 import sys
+from typing import List, Optional, Tuple
+
+import torch.nn as nn
+
+from tools.modules import DetectV5, Exporter
+from tools.utils import get_first_conv2d_in_channels
 
 sys.path.append("./tools/yolo/yolov5")
-import torch.nn as nn
-from models.common import Conv
-from models.experimental import attempt_load
-from models.yolo import Detect
-from utils.activations import SiLU
-from typing import Tuple, List, Optional
 
-from tools.modules import Exporter, DetectV5
-from tools.utils import get_first_conv2d_in_channels
+from models.common import Conv  # noqa: E402
+from models.experimental import attempt_load  # noqa: E402
+from models.yolo import Detect  # noqa: E402
+from utils.activations import SiLU  # noqa: E402
 
 
 class YoloV5Exporter(Exporter):
@@ -52,7 +56,7 @@ class YoloV5Exporter(Exporter):
 
         inplace = True
 
-        for k, m in model.named_modules():
+        for _, m in model.named_modules():
             if isinstance(m, Conv):  # assign export-friendly activations
                 if isinstance(m.act, nn.SiLU):
                     m.act = SiLU()
@@ -82,14 +86,16 @@ class YoloV5Exporter(Exporter):
     def export_nn_archive(self, class_names: Optional[List[str]] = None):
         """
         Export the model to NN archive format.
-        
+
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
         """
         names = list(self.model.names.values())
 
         if class_names is not None:
-            assert len(class_names) == self.model.nc, f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            assert (
+                len(class_names) == self.model.nc
+            ), f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
             names = class_names
 
         self.make_nn_archive(names, self.model.nc)

@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 import sys
+from typing import List, Optional, Tuple
+
+from tools.modules import DetectV7, Exporter
+from tools.utils import get_first_conv2d_in_channels
 
 sys.path.append("./tools/yolov7/yolov7")
-
-from models.experimental import attempt_load
-from typing import Tuple, List, Optional
-
-from tools.modules import Exporter, DetectV7
-from tools.utils import get_first_conv2d_in_channels
+from models.experimental import attempt_load  # noqa: E402
 
 
 class YoloV7Exporter(Exporter):
@@ -24,13 +25,15 @@ class YoloV7Exporter(Exporter):
             output_names=["output1_yolov7", "output2_yolov7", "output3_yolov7"],
         )
         self.load_model()
-    
+
     def load_model(self):
         # code based on export.py from YoloV5 repository
         # load the model
         model = attempt_load(self.model_path, map_location="cpu")
         # check num classes and labels
-        assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
+        assert model.nc == len(
+            model.names
+        ), f"Model class count {model.nc} != len(names) {len(model.names)}"
 
         if hasattr(model, "module"):
             model.module.model[-1] = DetectV7(model.module.model[-1])
@@ -44,7 +47,7 @@ class YoloV7Exporter(Exporter):
             # print(f"Number of channels: {self.number_of_channels}")
         except Exception as e:
             print(f"Error while getting number of channels: {e}")
-        
+
         # check if image size is suitable
         gs = int(max(model.stride))  # grid size (max stride)
         if isinstance(self.imgsz, int):
@@ -55,26 +58,28 @@ class YoloV7Exporter(Exporter):
 
         # ensure correct length
         if len(self.imgsz) != 2:
-            raise ValueError(f"Image size must be of length 1 or 2.")
-        
+            raise ValueError("Image size must be of length 1 or 2.")
+
         model.eval()
 
         self.model = model
 
-        m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]
-        self.num_branches = len(m.anchor_grid)           
+        m = model.module.model[-1] if hasattr(model, "module") else model.model[-1]
+        self.num_branches = len(m.anchor_grid)
 
     def export_nn_archive(self, class_names: Optional[List[str]] = None):
         """
         Export the model to NN archive format.
-        
+
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
         """
         names = self.model.names
 
         if class_names is not None:
-            assert len(class_names) == self.model.nc, f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            assert (
+                len(class_names) == self.model.nc
+            ), f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
             names = class_names
 
         self.make_nn_archive(names, self.model.nc)

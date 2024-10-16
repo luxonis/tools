@@ -1,14 +1,15 @@
+from __future__ import annotations
+
 import sys
-
-sys.path.append("./tools/yolo/YOLOv6")
-
-from yolov6.layers.common import RepVGGBlock
-from yolov6.models.heads.effidehead_distill_ns import Detect
-from yolov6.utils.checkpoint import load_checkpoint
 from typing import Tuple
 
-from tools.modules import Exporter, DetectV6R4m, DetectV6R4s
+from tools.modules import DetectV6R4m, DetectV6R4s, Exporter
 from tools.utils import get_first_conv2d_in_channels
+
+sys.path.append("./tools/yolo/YOLOv6")
+from yolov6.layers.common import RepVGGBlock  # noqa: E402
+from yolov6.models.heads.effidehead_distill_ns import Detect  # noqa: E402
+from yolov6.utils.checkpoint import load_checkpoint  # noqa: E402
 
 
 class YoloV6R4Exporter(Exporter):
@@ -51,7 +52,7 @@ class YoloV6R4Exporter(Exporter):
             # print(f"Number of channels: {self.number_of_channels}")
         except Exception as e:
             print(f"Error while getting number of channels: {e}")
-        
+
         self.num_branches = len(model.detect.grid)
 
         # check if image size is suitable

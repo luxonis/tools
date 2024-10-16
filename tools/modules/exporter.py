@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from datetime import datetime
 import os
-from typing import List, Tuple, Optional
+from datetime import datetime
+from typing import List, Optional, Tuple
 
 import onnx
 import onnxsim
 import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
 from luxonis_ml.nn_archive.config_building_blocks import (
+    DataType,
     Head,
     InputType,
-    DataType,
 )
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
     HeadYOLOMetadata,
@@ -22,13 +22,14 @@ from tools.utils.constants import OUTPUTS_DIR
 
 class Exporter:
     """Exporter class to export models to ONNX and NN archive formats."""
+
     def __init__(
-        self, 
-        model_path: str, 
-        imgsz: Tuple[int, int], 
-        use_rvc2: bool, 
+        self,
+        model_path: str,
+        imgsz: Tuple[int, int],
+        use_rvc2: bool,
         subtype: str,
-        output_names: List[str] = ["output"],
+        output_names: List[str] = None,
         all_output_names: Optional[List[str]] = None,
     ):
         """
@@ -53,8 +54,13 @@ class Exporter:
         self.number_of_channels = None
         self.subtype = subtype
         self.output_names = output_names
-        self.all_output_names = all_output_names if all_output_names is not None else output_names
-        self.output_folder = (OUTPUTS_DIR / f"{self.model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}").resolve()
+        self.all_output_names = (
+            all_output_names if all_output_names is not None else output_names
+        )
+        self.output_folder = (
+            OUTPUTS_DIR
+            / f"{self.model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        ).resolve()
         # If output directory does not exist, create it
         if not self.output_folder.exists():
             self.output_folder.mkdir(parents=True)
@@ -107,7 +113,7 @@ class Exporter:
         n_prototypes: Optional[int] = None,
         n_keypoints: Optional[int] = None,
         is_softmax: Optional[bool] = None,
-        output_kwargs: Optional[dict] = {},
+        output_kwargs: Optional[dict] = None,
     ):
         """Export the model to NN archive format.
 
@@ -130,7 +136,10 @@ class Exporter:
             executables_paths = [str(self.f_onnx), stage2_executable_path]
         else:
             executables_paths = [str(self.f_onnx)]
-        
+
+        if output_kwargs is None:
+            output_kwargs = {}
+
         archive = ArchiveGenerator(
             archive_name=self.model_name,
             save_path=str(self.output_folder),
@@ -165,7 +174,7 @@ class Exporter:
                         Head(
                             parser=parser,
                             metadata=HeadYOLOMetadata(
-                                yolo_outputs=self.output_names, 
+                                yolo_outputs=self.output_names,
                                 subtype=self.subtype,
                                 n_classes=n_classes,
                                 classes=class_list,
@@ -190,14 +199,16 @@ class Exporter:
     def export_nn_archive(self, class_names: Optional[List[str]] = None):
         """
         Export the model to NN archive format.
-        
+
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
         """
         nc = self.model.detect.nc
         # If class names are provided, use them
         if class_names is not None:
-            assert len(class_names) == nc, f"Number of the given class names {len(class_names)} does not match number of classes {nc} provided in the model!"
+            assert (
+                len(class_names) == nc
+            ), f"Number of the given class names {len(class_names)} does not match number of classes {nc} provided in the model!"
             names = class_names
         else:
             # Check if the model has a names attribute

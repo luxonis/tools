@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import sys
+from typing import Tuple
+
+from tools.modules import DetectV6R3, Exporter
+from tools.utils import get_first_conv2d_in_channels
 
 sys.path.append("./tools/yolov6r3/Efficient-Computing/Detection/Gold-YOLO/")
 sys.path.append("./tools/yolov6r3/Efficient-Computing/Detection/Gold-YOLO/gold_yolo/")
-sys.path.append("./tools/yolov6r3/Efficient-Computing/Detection/Gold-YOLO/yolov6/utils/")
-
-from checkpoint import load_checkpoint as load_checkpoint_gold_yolo
-from switch_tool import switch_to_deploy
-from typing import Tuple
-
-from tools.modules import Exporter, DetectV6R3
-from tools.utils import get_first_conv2d_in_channels
+sys.path.append(
+    "./tools/yolov6r3/Efficient-Computing/Detection/Gold-YOLO/yolov6/utils/"
+)
+from checkpoint import load_checkpoint as load_checkpoint_gold_yolo  # noqa: E402
+from switch_tool import switch_to_deploy  # noqa: E402
 
 
 class GoldYoloExporter(Exporter):

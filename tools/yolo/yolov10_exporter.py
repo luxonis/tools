@@ -1,14 +1,15 @@
+from __future__ import annotations
+
 import sys
+from typing import List, Optional, Tuple
+
+from tools.modules import DetectV10, Exporter
+from tools.utils import get_first_conv2d_in_channels
 
 sys.path.append("./tools/yolo/ultralytics")
+from ultralytics.nn.modules import Detect  # noqa: E402
+from ultralytics.nn.tasks import attempt_load_one_weight  # noqa: E402
 
-from ultralytics.nn.modules import Detect
-from ultralytics.nn.tasks import attempt_load_one_weight
-import torch
-from typing import Tuple, List, Optional
-
-from tools.modules import Exporter, DetectV10
-from tools.utils import get_first_conv2d_in_channels
 
 class YoloV10Exporter(Exporter):
     def __init__(
@@ -35,11 +36,13 @@ class YoloV10Exporter(Exporter):
         if isinstance(model.model[-1], (Detect)):
             model.model[-1] = DetectV10(model.model[-1], self.use_rvc2)
 
-        
-
-        self.names = model.module.names if hasattr(model, 'module') else model.names  # get class names
+        self.names = (
+            model.module.names if hasattr(model, "module") else model.names
+        )  # get class names
         # check num classes and labels
-        assert model.yaml["nc"] == len(self.names), f'Model class count {model.yaml["nc"]} != len(names) {len(self.names)}'
+        assert model.yaml["nc"] == len(
+            self.names
+        ), f'Model class count {model.yaml["nc"]} != len(names) {len(self.names)}'
 
         try:
             self.number_of_channels = get_first_conv2d_in_channels(model)
@@ -62,21 +65,21 @@ class YoloV10Exporter(Exporter):
         model.eval()
         self.model = model
 
-
     def export_nn_archive(self, class_names: Optional[List[str]] = None):
         """
         Export the model to NN archive format.
-        
+
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
         """
         names = list(self.model.names.values())
 
         if class_names is not None:
-            assert len(class_names) == len(names), f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
+            assert len(class_names) == len(
+                names
+            ), f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
             names = class_names
-        
+
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
 
         self.make_nn_archive(names, self.model.model[-1].nc)
-        

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,26 +14,33 @@ def make_anchors(feats, strides, grid_cell_offset=0.5):
     dtype, device = feats[0].dtype, feats[0].device
     for i, stride in enumerate(strides):
         _, _, h, w = feats[i].shape
-        sx = torch.arange(end=w, device=device, dtype=dtype) + grid_cell_offset  # shift x
-        sy = torch.arange(end=h, device=device, dtype=dtype) + grid_cell_offset  # shift y
+        sx = (
+            torch.arange(end=w, device=device, dtype=dtype) + grid_cell_offset
+        )  # shift x
+        sy = (
+            torch.arange(end=h, device=device, dtype=dtype) + grid_cell_offset
+        )  # shift y
         sy, sx = torch.meshgrid(sy, sx, indexing="ij")
         anchor_points.append(torch.stack((sx, sy), -1).view(-1, 2).transpose(0, 1))
-        stride_tensor.append(torch.full((h * w, 1), stride, dtype=dtype, device=device).transpose(0, 1))
+        stride_tensor.append(
+            torch.full((h * w, 1), stride, dtype=dtype, device=device).transpose(0, 1)
+        )
     return anchor_points, stride_tensor
     # return torch.cat(anchor_points), torch.cat(stride_tensor)
 
 
 class DetectV5(nn.Module):
-    '''
+    """
     YOLOv5 Detect head for detection models.
-    '''
+    """
+
     def __init__(self, old_detect):
         super().__init__()
         self.nc = old_detect.nc  # number of classes
         self.no = old_detect.no  # number of outputs per anchor
         self.nl = old_detect.nl  # number of detection layers
         self.na = old_detect.na
-        self.grid = old_detect.grid # [torch.zeros(1)] * self.nl
+        self.grid = old_detect.grid  # [torch.zeros(1)] * self.nl
         self.anchor_grid = old_detect.anchor_grid
         self.m = old_detect.m
         self.inplace = old_detect.inplace
@@ -48,14 +56,15 @@ class DetectV5(nn.Module):
             x[i] = self.m[i](x[i])  # conv
             channel_output = torch.sigmoid(x[i])
             outputs.append(channel_output)
-        
+
         return outputs
 
 
 class DetectV7(nn.Module):
-    '''
+    """
     YOLOv7 Detect head for detection models.
-    '''
+    """
+
     def __init__(self, old_detect):
         super().__init__()
         self.nc = old_detect.nc  # number of classes
@@ -77,15 +86,16 @@ class DetectV7(nn.Module):
             x[i] = self.m[i](x[i])  # conv
             channel_output = torch.sigmoid(x[i])
             outputs.append(channel_output)
-        
+
         return outputs
 
 
 class DetectV6R1(nn.Module):
-    '''Efficient Decoupled Head
+    """Efficient Decoupled Head
     With hardware-aware degisn, the decoupled head is optimized with
     hybridchannels methods.
-    '''
+    """
+
     # def __init__(self, num_classes=80, anchors=1, num_layers=3, inplace=True, head_layers=None, use_dfl=True, reg_max=16):  # detection layer
     def __init__(self, old_detect):  # detection layer
         super().__init__()
@@ -94,7 +104,7 @@ class DetectV6R1(nn.Module):
         self.nl = old_detect.nl  # number of detection layers
         self.na = old_detect.na
         self.anchors = old_detect.anchors
-        self.grid = old_detect.grid # [torch.zeros(1)] * self.nl
+        self.grid = old_detect.grid  # [torch.zeros(1)] * self.nl
         self.prior_prob = 1e-2
         self.inplace = old_detect.inplace
         stride = [8, 16, 32]  # strides computed during build
@@ -166,7 +176,6 @@ class DetectV6R3(nn.Module):
         outputs = []
         for i in range(self.nl):
             b, _, h, w = x[i].shape
-            l = h * w
             x[i] = self.stems[i](x[i])
             cls_x = x[i]
             reg_x = x[i]
@@ -176,9 +185,9 @@ class DetectV6R3(nn.Module):
             reg_output = self.reg_preds[i](reg_feat)
 
             if self.use_dfl:
-                reg_output = reg_output.reshape([-1, 4, self.reg_max + 1, l]).permute(
-                    0, 2, 1, 3
-                )
+                reg_output = reg_output.reshape(
+                    [-1, 4, self.reg_max + 1, h * w]
+                ).permute(0, 2, 1, 3)
                 reg_output = self.proj_conv(F.softmax(reg_output, dim=1))[:, 0]
                 reg_output = reg_output.reshape([-1, 4, h, w])
 
@@ -241,8 +250,6 @@ class DetectV6R4s(nn.Module):
         outputs = []
 
         for i in range(self.nl):
-            b, _, h, w = x[i].shape
-            l = h * w
             x[i] = self.stems[i](x[i])
             cls_x = x[i]
             reg_x = x[i]
@@ -308,7 +315,6 @@ class DetectV6R4m(nn.Module):
 
         for i in range(self.nl):
             b, _, h, w = x[i].shape
-            l = h * w
             x[i] = self.stems[i](x[i])
             cls_x = x[i]
             reg_x = x[i]
@@ -318,9 +324,9 @@ class DetectV6R4m(nn.Module):
             reg_output = self.reg_preds[i](reg_feat)
 
             if self.use_dfl:
-                reg_output = reg_output.reshape([-1, 4, self.reg_max + 1, l]).permute(
-                    0, 2, 1, 3
-                )
+                reg_output = reg_output.reshape(
+                    [-1, 4, self.reg_max + 1, h * w]
+                ).permute(0, 2, 1, 3)
                 reg_output = self.proj_conv(F.softmax(reg_output, dim=1)).reshape(
                     [-1, 4, h, w]
                 )
@@ -353,7 +359,9 @@ class DetectV8(nn.Module):
         super().__init__()
         self.nc = old_detect.nc  # number of classes
         self.nl = old_detect.nl  # number of detection layers
-        self.reg_max = old_detect.reg_max # DFL channels (ch[0] // 16 to scale 4/8/12/16/20 for n/s/m/l/x)
+        self.reg_max = (
+            old_detect.reg_max
+        )  # DFL channels (ch[0] // 16 to scale 4/8/12/16/20 for n/s/m/l/x)
         self.no = old_detect.no  # number of outputs per anchor
         self.stride = old_detect.stride  # strides computed during build
 
@@ -364,7 +372,9 @@ class DetectV8(nn.Module):
 
         self.use_rvc2 = use_rvc2
 
-        self.proj_conv = nn.Conv2d(old_detect.dfl.c1, 1, 1, bias=False).requires_grad_(False)
+        self.proj_conv = nn.Conv2d(old_detect.dfl.c1, 1, 1, bias=False).requires_grad_(
+            False
+        )
         x = torch.arange(old_detect.dfl.c1, dtype=torch.float)
         self.proj_conv.weight.data[:] = nn.Parameter(x.view(1, old_detect.dfl.c1, 1, 1))
 
@@ -378,7 +388,7 @@ class DetectV8(nn.Module):
 
             # ------------------------------
             # DFL PART
-            box = box.view(bs, 4, self.reg_max, h*w).permute(0, 2, 1, 3)
+            box = box.view(bs, 4, self.reg_max, h * w).permute(0, 2, 1, 3)
             box = self.proj_conv(F.softmax(box, dim=1))[:, 0]
             box = box.reshape([bs, 4, h, w])
             # ------------------------------
@@ -401,6 +411,7 @@ class DetectV8(nn.Module):
 
 class OBBV8(DetectV8):
     """YOLOv8 OBB detection head for detection with rotation models."""
+
     def __init__(self, old_obb, use_rvc2):
         super().__init__(old_obb, use_rvc2)
         self.ne = old_obb.ne  # number of extra parameters
@@ -412,30 +423,36 @@ class OBBV8(DetectV8):
 
         # OBB part
         bs = x[0].shape[0]  # batch size
-        angle = torch.cat([self.cv4[i](x[i]).view(bs, self.ne, -1) for i in range(self.nl)], 2)  # OBB theta logits
+        angle = torch.cat(
+            [self.cv4[i](x[i]).view(bs, self.ne, -1) for i in range(self.nl)], 2
+        )  # OBB theta logits
         # NOTE: set `angle` as an attribute so that `decode_bboxes` could use it.
         angle = (angle.sigmoid() - 0.25) * math.pi  # [-pi/4, 3pi/4]
         # Append the angle
         outputs.append(angle)
-        
+
         return outputs
+
 
 class PoseV8(DetectV8):
     """YOLOv8 Pose head for keypoints models."""
+
     def __init__(self, old_kpts, use_rvc2):
         super().__init__(old_kpts, use_rvc2)
-        self.kpt_shape = old_kpts.kpt_shape # number of keypoints, number of dims (2 for x,y or 3 for x,y,visible)
+        self.kpt_shape = (
+            old_kpts.kpt_shape
+        )  # number of keypoints, number of dims (2 for x,y or 3 for x,y,visible)
         self.nk = old_kpts.nk  # number of keypoints total
         self.cv4 = old_kpts.cv4
         self.use_rvc2 = use_rvc2
-    
+
     def forward(self, x):
         """Perform forward pass through YOLO model and return predictions."""
         bs = x[0].shape[0]  # batch size
         if self.shape != bs:
             self.anchors, self.strides = make_anchors(x, self.stride, 0.5)
             self.shape = bs
-        
+
         # Detection part
         outputs = super().forward(x)
 
@@ -459,6 +476,7 @@ class PoseV8(DetectV8):
 
 class SegmentV8(DetectV8):
     """YOLOv8 Segment head for segmentation models."""
+
     def __init__(self, old_segment, use_rvc2):
         super().__init__(old_segment, use_rvc2)
         self.nm = old_segment.nm  # number of masks
@@ -480,6 +498,7 @@ class SegmentV8(DetectV8):
 
 class ClassifyV8(nn.Module):
     """YOLOv8 classification head, i.e. x(b,c1,20,20) to x(b,c2)."""
+
     def __init__(self, old_classify, use_rvc2: bool):
         super().__init__()
         self.conv = old_classify.conv
@@ -488,7 +507,7 @@ class ClassifyV8(nn.Module):
         self.linear = old_classify.linear
         self.f = old_classify.f
         self.i = old_classify.i
-        
+
         self.use_rvc2 = use_rvc2
 
     def forward(self, x):
@@ -497,10 +516,11 @@ class ClassifyV8(nn.Module):
             x = torch.cat(x, 1)
         x = self.linear(self.drop(self.pool(self.conv(x)).flatten(1)))
         return x
-    
+
 
 class DetectV10(DetectV8):
     """YOLOv10 Detect head for detection models."""
+
     def __init__(self, old_detect, use_rvc2):
         super().__init__(old_detect, use_rvc2)
         self.cv2 = old_detect.one2one_cv2
