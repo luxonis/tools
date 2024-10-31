@@ -1,19 +1,26 @@
+from __future__ import annotations
+
 import sys
-
-sys.path.append("tools/yolov6r3/YOLOv6R3")
-
-from yolov6.layers.common import RepVGGBlock
-from yolov6.models.efficientrep import (
-    CSPBepBackbone,
-    CSPBepBackbone_P6,
-    EfficientRep,
-    EfficientRep6,
-)
-from yolov6.utils.checkpoint import load_checkpoint
 from typing import Tuple
 
-from tools.modules import Exporter, YoloV6BackBone, DetectV6R3
+from tools.modules import DetectV6R3, Exporter, YoloV6BackBone
 from tools.utils import get_first_conv2d_in_channels
+
+sys.path.append("tools/yolov6r3/YOLOv6R3")  # noqa: E402
+from yolov6.layers.common import RepVGGBlock  # noqa: E402
+from yolov6.utils.checkpoint import load_checkpoint  # noqa: E402
+
+try:
+    from yolov6.models.efficientrep import (
+        CSPBepBackbone,  # noqa: E402
+        CSPBepBackbone_P6,  # noqa: E402
+        EfficientRep,  # noqa: E402
+        EfficientRep6,  # noqa: E402
+    )
+except Exception as e:
+    raise ImportError(
+        "Error while importing EfficientRep, CSPBepBackbone, CSPBepBackbone_P6 or EfficientRep6: {e}"
+    ) from e
 
 
 class YoloV6R3Exporter(Exporter):

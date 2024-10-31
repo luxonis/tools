@@ -39,12 +39,11 @@ optional-dependencies = { dev = { file = ["requirements-dev.txt"] } }
 
 [tool.ruff]
 target-version = "py38"
-line-length = 88
-indent-width = 4
+exclude = ["tools/yolov7/yolov7/"]
 
 [tool.ruff.lint]
-ignore = ["F403", "B028", "B905", "D1", "W191"]
-select = ["E4", "E7", "E9", "F", "W", "B", "I"]
+ignore = ["F403", "B028", "B905", "D1"]
+select = ["E4", "E7", "E9", "F", "W", "B", "I", "FA"]
 
 [tool.ruff.pydocstyle]
 convention = "google"

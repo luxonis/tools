@@ -10,7 +10,9 @@ YOLOV6R3_CONVERSION = "yolov6r3"
 YOLOV6R4_CONVERSION = "yolov6r4"
 YOLOV7_CONVERSION = "yolov7"
 YOLOV8_CONVERSION = "yolov8"
+YOLOV9_CONVERSION = "yolov9"
 YOLOV10_CONVERSION = "yolov10"
+YOLOV11_CONVERSION = "yolov11"
 GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
 
@@ -45,15 +47,17 @@ def detect_version(path: str, debug: bool = False) -> str:
                 print(data.decode(errors="replace"))
             content = data.decode("latin1")
 
-            if "yolov10" in content or "v10DetectLoss" in content:
+            if "yolo11" in content:
+                return YOLOV11_CONVERSION
+            elif "yolov10" in content or "v10DetectLoss" in content:
                 return YOLOV10_CONVERSION
+            elif "yolov9" in content or ("v9-model" and "ultralytics" in content):
+                return YOLOV9_CONVERSION
             elif (
                 "YOLOv5u" in content
                 or "YOLOv8" in content
                 or "yolov8" in content
                 or ("v8DetectionLoss" in content and "ultralytics" in content)
-                or "yolov9" in content 
-                or ("v9-model" and "ultralytics" in content)
             ):
                 return YOLOV8_CONVERSION
             elif "yolov6" in content:
@@ -78,7 +82,7 @@ def detect_version(path: str, debug: bool = False) -> str:
 
         # Remove the output folder
         subprocess.check_output("rm -r extracted_model", shell=True)
-    except subprocess.CalledProcessError:
-        raise RuntimeError()
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError() from e
 
     return UNRECOGNIZED

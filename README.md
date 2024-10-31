@@ -1,8 +1,7 @@
 # Tools-CLI
 
-> [!NOTE]  
+> \[!NOTE\]\
 > This is the latest version of tools CLI. If you are looking for the tools web application, please refer to the [web-app](https://github.com/luxonis/tools/tree/web-app) branch.
-
 
 This application is used for exporting Yolo V5, V6, V7, V8 (OBB, instance segmentation, pose estimation, cls) and Gold YOLO object detection models to .ONNX.
 
@@ -50,14 +49,14 @@ tools shared_with_container/models/yolov6nr4.pt --imgsz "416"
 
 ### Arguments
 
-* `model: str` = Path to the model.
-* `imgsz: str` = Image input shape in the format `width height` or `width`. Default value `"416 416"`.
-* `version: Optional[str]` = 
-* `use_rvc2: bool` = Whether to export for RVC2 or RVC3 devices. Default value `True`.
-* `class_names: Optional[str]` = Optional list of classes separated by a comma, e.g. `"person, dog, cat"`
-* `output_remote_url: Optional[str]` = Remote output url for the output .onnx model.
-* `config_path: Optional[str]` = Optional path to an optional config.
-* `put_file_plugin: Optional[str]` = Which plugin to use. Optional.
+- `model: str` = Path to the model.
+- `imgsz: str` = Image input shape in the format `width height` or `width`. Default value `"416 416"`.
+- `version: Optional[str]` =
+- `use_rvc2: bool` = Whether to export for RVC2 or RVC3 devices. Default value `True`.
+- `class_names: Optional[str]` = Optional list of classes separated by a comma, e.g. `"person, dog, cat"`
+- `output_remote_url: Optional[str]` = Remote output url for the output .onnx model.
+- `config_path: Optional[str]` = Optional path to an optional config.
+- `put_file_plugin: Optional[str]` = Which plugin to use. Optional.
 
 ## Credits
 
