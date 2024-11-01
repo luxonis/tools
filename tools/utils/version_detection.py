@@ -51,7 +51,9 @@ def detect_version(path: str, debug: bool = False) -> str:
                 return YOLOV11_CONVERSION
             elif "yolov10" in content or "v10DetectLoss" in content:
                 return YOLOV10_CONVERSION
-            elif "yolov9" in content or ("v9-model" and "ultralytics" in content):
+            elif "yolov9" in content or (
+                "v9-model" in content and "ultralytics" in content
+            ):
                 return YOLOV9_CONVERSION
             elif (
                 "YOLOv5u" in content
