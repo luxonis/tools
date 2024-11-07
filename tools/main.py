@@ -146,7 +146,7 @@ def convert(
     try:
         logger.info("Creating NN archive...")
         exporter.export_nn_archive(config.class_names)
-        logger.info("NN archive created.")
+        logger.info(f"NN archive created in {exporter.output_folder}.")
     except Exception as e:
         logger.error(f"Error creating NN archive: {e}")
         raise typer.Exit(code=1) from e
