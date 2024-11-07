@@ -3,7 +3,7 @@ torchvision>=0.10.1
 Pillow>=7.1.2
 PyYAML>=5.3.1
 gcsfs
-luxonis-ml[data,nn_archive]>=0.4.0
+luxonis-ml[data,nn_archive]>=0.4.1
 # luxonis-ml[data,nn_archive] @ git+https://github.com/luxonis/luxonis-ml@dev
 onnx>=1.10.1
 onnxruntime
