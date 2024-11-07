@@ -3,15 +3,26 @@
 > \[!NOTE\]\
 > This is the latest version of tools CLI. If you are looking for the tools web application, please refer to the [web-app](https://github.com/luxonis/tools/tree/web-app) branch.
 
-This application is used for exporting Yolo V5, V6, V7, V8 (OBB, instance segmentation, pose estimation, cls) and Gold YOLO object detection models to .ONNX.
+This application is used for exporting Yolo V5, V6, V7, V8 (OBB, instance segmentation, pose estimation, cls), V9, V10, V11 (OBB, instance segmentation, pose estimation, cls), and Gold YOLO object detection models to Open Neural Network Exchange (ONNX) format.
 
 ## Running
 
-You can either export a model stored on cloud (e.g. S3) or locally. To export a local model, please put it inside a `shared-component` folder.
+You can either export a model stored on the cloud (e.g. S3) or locally. You can choose to install the toolkit through pip or using Docker. In the sections below, we'll describe both options.
 
-The output files are going to be in `shared-component/output` folder.
+### Using Python package
 
-### Prerequisites
+```bash
+# Install the package
+pip install tools@git+https://github.com/luxonis/tools.git@main
+# Running the package
+tools yolov6nr4.pt --imgsz "416"
+```
+
+### Using Docker or Docker Compose
+
+This option requires you to have Docker installed on your device. Additionally, to export a local model, please put it inside a `shared-component/models/` folder in the root folder of the project.
+
+#### Prerequisites
 
 ```bash
 # Cloning the tools repository and all submodules
@@ -20,7 +31,7 @@ git clone --recursive https://github.com/luxonis/tools.git
 cd tools
 ```
 
-### Using Docker
+#### Using Docker
 
 ```bash
 # Building Docker image
@@ -29,7 +40,7 @@ docker build -t tools_cli .
 docker run -v "${PWD}/shared_with_container:/app/shared_with_container" tools_cli shared_with_container/models/yolov8n-seg.pt --imgsz "416"
 ```
 
-### Using Docker compose
+#### Using Docker compose
 
 ```bash
 # Building Docker image
@@ -38,14 +49,7 @@ docker compose build
 docker compose run tools_cli shared_with_container/models/yolov6nr4.pt
 ```
 
-### Using Python package
-
-```bash
-# Building the package
-pip install .
-# Running the package
-tools shared_with_container/models/yolov6nr4.pt --imgsz "416"
-```
+The output files are going to be in `shared-component/output` folder.
 
 ### Arguments
 
@@ -60,7 +64,7 @@ tools shared_with_container/models/yolov6nr4.pt --imgsz "416"
 
 ## Credits
 
-This application uses source code of the following repositories: [YOLOv5](https://github.com/ultralytics/yolov5), [YOLOv6](https://github.com/meituan/YOLOv6), [GoldYOLO](https://github.com/huawei-noah/Efficient-Computing) [YOLOv7](https://github.com/WongKinYiu/yolov7), and [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) (see each of them for more information).
+This application uses source code of the following repositories: [YOLOv5](https://github.com/ultralytics/yolov5), [YOLOv6](https://github.com/meituan/YOLOv6), [GoldYOLO](https://github.com/huawei-noah/Efficient-Computing) [YOLOv7](https://github.com/WongKinYiu/yolov7), and [Ultralytics](https://github.com/ultralytics/ultralytics) (see each of them for more information).
 
 ## License
 
