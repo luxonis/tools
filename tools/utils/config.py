@@ -12,7 +12,7 @@ class Config(LuxonisConfig):
         default=[416, 416],
         min_length=2,
         max_length=2,
-        min_ledescription="Image size [width, height].",
+        min_ledescription="Input image size [width, height].",
     )
     class_names: Optional[List[str]] = Field(None, description="List of class names.")
     use_rvc2: Literal[False, True] = Field(True, description="Whether to use RVC2.")
