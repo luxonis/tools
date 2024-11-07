@@ -3,7 +3,10 @@
 > \[!NOTE\]\
 > This is the latest version of tools CLI. If you are looking for the tools web application, please refer to the [web-app](https://github.com/luxonis/tools/tree/web-app) branch.
 
-This application is used for exporting Yolo V5, V6, V7, V8 (OBB, instance segmentation, pose estimation, cls), V9, V10, V11 (OBB, instance segmentation, pose estimation, cls), and Gold YOLO object detection models to Open Neural Network Exchange (ONNX) format.
+This is a command-line tool that simplifies the conversion process of YOLO models. It supports the conversion of YOLOs ranging from V5 through V11 and Gold Yolo including oriented bounding boxes object detection (OBB), pose estimation, and instance segmentation variants of YOLOv8 and YOLO11 to ONNX format.
+
+> \[!NOTE\]\
+> Please note that for the moment, we support conversion of YOLOv9 weights only from [Ultralytics](https://docs.ultralytics.com/models/yolov9/#performance-on-ms-coco-dataset).
 
 ## Running
 
