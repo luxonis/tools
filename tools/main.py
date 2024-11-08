@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 import typer
+from typing_extensions import Annotated
 
 from tools.utils import (
     GOLD_YOLO_CONVERSION,
@@ -46,14 +47,38 @@ YOLO_VERSIONS = [
 
 @app.command()
 def convert(
-    model: str,
-    imgsz: str = "416 416",
-    version: Optional[str] = None,
-    use_rvc2: bool = True,
-    class_names: Optional[str] = None,
-    output_remote_url: Optional[str] = None,
-    config_path: Optional[str] = None,
-    put_file_plugin: Optional[str] = None,
+    model: Annotated[str, typer.Argument(help="Path to the model file.")],
+    imgsz: Annotated[
+        str, typer.Option(help="Input image size [width, height].")
+    ] = "416 416",
+    version: Annotated[
+        Optional[str],
+        typer.Option(
+            help='YOLO version (e.g. `"yolov8"`). If `None`, the toolkit will run an automatic version detector.'
+        ),
+    ] = None,
+    use_rvc2: Annotated[
+        bool, typer.Option(help="Whether the target platform is RVC2 or RVC3.")
+    ] = True,
+    class_names: Annotated[
+        Optional[str],
+        typer.Option(
+            help='A list of class names the model is capable of recognizing (e.g. `"person, bicycle, car"`).'
+        ),
+    ] = None,
+    output_remote_url: Annotated[
+        Optional[str], typer.Option(help="An URL to upload the output to.")
+    ] = None,
+    config_path: Annotated[
+        Optional[str],
+        typer.Option(help="An optional path to a conversion config file."),
+    ] = None,
+    put_file_plugin: Annotated[
+        Optional[str],
+        typer.Option(
+            help="The name of a registered function under the PUT_FILE_REGISTRY."
+        ),
+    ] = None,
 ):
     logger = logging.getLogger(__name__)
     logger.info("Converting model...")
@@ -146,7 +171,7 @@ def convert(
     try:
         logger.info("Creating NN archive...")
         exporter.export_nn_archive(config.class_names)
-        logger.info("NN archive created.")
+        logger.info(f"NN archive created in {exporter.output_folder}.")
     except Exception as e:
         logger.error(f"Error creating NN archive: {e}")
         raise typer.Exit(code=1) from e
