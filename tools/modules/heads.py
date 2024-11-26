@@ -482,7 +482,6 @@ class SegmentV8(DetectV8):
         self.nm = old_segment.nm  # number of masks
         self.npr = old_segment.npr  # number of protos
         self.proto = old_segment.proto  # protos
-        self.detect = old_segment.detect
         self.cv4 = old_segment.cv4
 
     def forward(self, x):
