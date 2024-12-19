@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "feat/add-dependabot"
+    # Labels on pull requests for version updates only
+    labels:
+      - "pip dependencies"
