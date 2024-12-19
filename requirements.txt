@@ -12,5 +12,5 @@ s3fs
 s3transfer
 typer>=0.12.3
 psutil
-mmcv==1.5.0
+mmcv==2.2.0
 seaborn
