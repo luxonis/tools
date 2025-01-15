@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import platform
 import shutil
 import subprocess
 from os import listdir
@@ -34,7 +35,10 @@ def detect_version(path: str, debug: bool = False) -> str:
         subprocess.check_output("mkdir extracted_model", shell=True)
 
         # Extract the tar file into the extracted_model directory
-        subprocess.check_output(f"tar -xf {path} -C extracted_model", shell=True)
+        if platform.system() == "Windows":
+            subprocess.check_output(f"tar -xf {path} -C extracted_model", shell=True)
+        else:
+            subprocess.check_output(f"unzip {path} -d extracted_model", shell=True)
 
         folder = [
             f for f in listdir("extracted_model") if isdir(join("extracted_model", f))
