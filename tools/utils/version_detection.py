@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import subprocess
 from os import listdir
 from os.path import exists, isdir, join
@@ -27,12 +28,14 @@ def detect_version(path: str, debug: bool = False) -> str:
         str: The detected version
     """
     try:
-        if exists("extracted_model") and isdir("extracted_model"):
-            subprocess.check_output(
-                f"rm -r extracted_model && unzip {path} -d extracted_model", shell=True
-            )
-        else:
-            subprocess.check_output(f"unzip {path} -d extracted_model", shell=True)
+        # Remove and recreate the extracted_model directory
+        if exists("extracted_model"):
+            shutil.rmtree("extracted_model")
+        subprocess.check_output("mkdir extracted_model", shell=True)
+
+        # Extract the tar file into the extracted_model directory
+        subprocess.check_output(f"tar -xf {path} -C extracted_model", shell=True)
+
         folder = [
             f for f in listdir("extracted_model") if isdir(join("extracted_model", f))
         ][0]
@@ -82,9 +85,11 @@ def detect_version(path: str, debug: bool = False) -> str:
             ):
                 return YOLOV5_CONVERSION
 
-        # Remove the output folder
-        subprocess.check_output("rm -r extracted_model", shell=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError() from e
+    finally:
+        # Ensure the extracted_model directory is removed after processing
+        if exists("extracted_model"):
+            shutil.rmtree("extracted_model")
 
     return UNRECOGNIZED
