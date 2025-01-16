@@ -8,12 +8,12 @@ from tools.yolo.yolov8_exporter import YoloV8Exporter
 
 def test_automatic_version_detection():
     """Test the autodetection of the model version."""
-    assert detect_version("yolov8n.pt") == "yolov8"
+    assert detect_version("tests/yolov8n.pt") == "yolov8"
 
 
 def test_model_conversion():
     """Test the conversion of a model."""
-    exporter = YoloV8Exporter("yolov8n.pt", (416, 416), True)
+    exporter = YoloV8Exporter("tests/yolov8n.pt", (416, 416), True)
     exporter.export_onnx()
     exporter.export_nn_archive()
 
