@@ -23,20 +23,7 @@ This is a command-line tool that simplifies the conversion process of YOLO model
 
 You can either export a model stored on the cloud (e.g. S3) or locally. You can choose to install the toolkit through pip or using Docker. In the sections below, we'll describe both options.
 
-### Using Python package
-
-```bash
-# Install the package
-pip install tools@git+https://github.com/luxonis/tools.git@main
-# Running the package
-tools yolov6nr4.pt --imgsz "416"
-```
-
-### Using Docker or Docker Compose
-
-This option requires you to have Docker installed on your device. Additionally, to export a local model, please put it inside a `shared-component/models/` folder in the root folder of the project.
-
-#### Prerequisites
+### Prerequisites
 
 ```bash
 # Cloning the tools repository and all submodules
@@ -44,6 +31,21 @@ git clone --recursive https://github.com/luxonis/tools.git
 # Change folder
 cd tools
 ```
+
+### Using Python package
+
+For this to work, you need to be located in the root folder of the project.
+
+```bash
+# Install the package 
+pip install .
+# Running the package 
+tools yolov6nr4.pt --imgsz "416"
+```
+
+### Using Docker or Docker Compose
+
+This option requires you to have Docker installed on your device. Additionally, to export a local model, please put it inside a `shared-component/models/` folder in the root folder of the project.
 
 #### Using Docker
 
