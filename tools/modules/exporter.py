@@ -162,7 +162,6 @@ class Exporter:
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
-                                "reverse_channels": True,
                             },
                         }
                     ],

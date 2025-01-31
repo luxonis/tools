@@ -235,7 +235,6 @@ class YoloV8Exporter(Exporter):
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
-                                "reverse_channels": True,
                             },
                         }
                     ],
@@ -248,7 +247,7 @@ class YoloV8Exporter(Exporter):
                     ],
                     "heads": [
                         Head(
-                            parser="Classification",
+                            parser="ClassificationParser",
                             metadata=HeadClassificationMetadata(
                                 is_softmax=False,
                                 n_classes=n_classes,
