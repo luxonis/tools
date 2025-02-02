@@ -47,7 +47,7 @@ def get_output_names(mode: int) -> List[str]:
         List[str]: List of output names
     """
     if mode == DETECT_MODE:
-        return ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+        return ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
     elif mode == SEGMENT_MODE:
         return [
             "output1_yolov8",
