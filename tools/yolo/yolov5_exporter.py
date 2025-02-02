@@ -80,8 +80,8 @@ class YoloV5Exporter(Exporter):
         except Exception as e:
             print(f"Error while getting number of channels: {e}")
 
-        m = model.module.model[-1] if hasattr(model, "module") else model.model[-1]
-        self.num_branches = len(m.anchor_grid)
+        self.m = model.module.model[-1] if hasattr(model, "module") else model.model[-1]
+        self.num_branches = len(self.m.anchor_grid)
 
     def export_nn_archive(self, class_names: Optional[List[str]] = None):
         """
@@ -98,4 +98,10 @@ class YoloV5Exporter(Exporter):
             ), f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
             names = class_names
 
-        self.make_nn_archive(names, self.model.nc)
+        anchors = [
+            self.m.anchor_grid[i][0, :, 0, 0].numpy().tolist()
+            for i in range(self.num_branches)
+        ]
+        self.make_nn_archive(
+            names, self.model.nc, parser="YOLOExtendedParser", anchors=anchors
+        )

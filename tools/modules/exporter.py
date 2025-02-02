@@ -47,6 +47,7 @@ class Exporter:
         self.model_path = model_path
         self.imgsz = imgsz
         self.model_name = os.path.basename(self.model_path).split(".")[0]
+        self.model = None
         # Set up file paths
         self.f_onnx = None
         self.f_nn_archive = None
@@ -113,6 +114,7 @@ class Exporter:
         n_prototypes: Optional[int] = None,
         n_keypoints: Optional[int] = None,
         is_softmax: Optional[bool] = None,
+        anchors: Optional[List[List[List[float]]]] = None,
         output_kwargs: Optional[dict] = None,
     ):
         """Export the model to NN archive format.
@@ -129,6 +131,7 @@ class Exporter:
             n_prototypes (Optional[int], optional): Number of prototypes. Defaults to None.
             n_keypoints (Optional[int], optional): Number of keypoints. Defaults to None.
             is_softmax (Optional[bool], optional): Whether to use softmax. Defaults to None.
+            anchors (Optional[List[List[List[float]]]], optional): Anchors. Defaults to None.
             output_kwargs (Optional[dict], optional): Output keyword arguments. Defaults to None.
         """
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
@@ -159,7 +162,6 @@ class Exporter:
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
-                                "reverse_channels": True,
                             },
                         }
                     ],
@@ -185,6 +187,7 @@ class Exporter:
                                 n_prototypes=n_prototypes,
                                 n_keypoints=n_keypoints,
                                 is_softmax=is_softmax,
+                                anchors=anchors,
                                 **output_kwargs,
                             ),
                             outputs=self.all_output_names,
