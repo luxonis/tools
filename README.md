@@ -3,7 +3,7 @@
 > \[!NOTE\]\
 > This is the latest version of tools CLI. If you are looking for the tools web application, please refer to the [web-app](https://github.com/luxonis/tools/tree/web-app) branch.
 
-This is a command-line tool that simplifies the conversion process of YOLO models. It supports the conversion of YOLOs ranging from V5 through V11 and Gold Yolo including oriented bounding boxes object detection (OBB), pose estimation, and instance segmentation variants of YOLOv8 and YOLO11 to ONNX format.
+This is a command-line tool that simplifies the conversion process of YOLO models. It supports the conversion of YOLOs ranging from V5 through V11 and Gold Yolo including oriented bounding boxes object detection (OBB), pose estimation, and instance segmentation variants of YOLOv8 and YOLO11 to ONNX format and archiving them in the NN Archive format.
 
 > \[!WARNING\]\
 > Please note that for the moment, we support conversion of YOLOv9 weights only from [Ultralytics](https://docs.ultralytics.com/models/yolov9/#performance-on-ms-coco-dataset).
@@ -33,8 +33,6 @@ cd tools
 ```
 
 ### Using Python package
-
-For this to work, you need to be located in the root folder of the project.
 
 ```bash
 # Install the package 

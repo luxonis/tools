@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
-import logging
 from typing import Optional
 
 import typer
+from loguru import logger
+
+# import logging
+from luxonis_ml.utils import setup_logging
 from typing_extensions import Annotated
 
 from tools.utils import (
@@ -24,9 +28,7 @@ from tools.utils import (
 )
 from tools.utils.constants import MISC_DIR
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.INFO)
-
+setup_logging()
 
 app = typer.Typer(help="Tools CLI", add_completion=False, rich_markup_mode="markdown")
 
@@ -80,9 +82,6 @@ def convert(
         ),
     ] = None,
 ):
-    logger = logging.getLogger(__name__)
-    logger.info("Converting model...")
-
     if version is not None and version not in YOLO_VERSIONS:
         logger.error("Wrong YOLO version selected!")
         raise typer.Exit(code=1) from None
