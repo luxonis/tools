@@ -13,6 +13,6 @@ tqdm
 s3transfer
 typer>=0.12.3
 psutil
-mmcv==1.5.0
+mmcv>=1.5.0
 seaborn
 loguru>=0.7.0
