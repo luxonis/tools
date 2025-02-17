@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
 import sys
 from typing import List, Optional, Tuple
 
 import torch
+from loguru import logger
 from luxonis_ml.nn_archive import ArchiveGenerator
 from luxonis_ml.nn_archive.config_building_blocks import (
     DataType,
@@ -25,7 +27,10 @@ from tools.modules import (
 )
 from tools.utils import get_first_conv2d_in_channels
 
-sys.path.append("./tools/yolo/ultralytics")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+yolo_path = os.path.join(current_dir, "ultralytics")
+sys.path.append(yolo_path)
+
 from ultralytics.nn.modules import OBB, Classify, Detect, Pose, Segment  # noqa: E402
 from ultralytics.nn.tasks import attempt_load_one_weight  # noqa: E402
 
@@ -125,7 +130,7 @@ class YoloV8Exporter(Exporter):
             self.number_of_channels = get_first_conv2d_in_channels(model)
             # print(f"Number of channels: {self.number_of_channels}")
         except Exception as e:
-            print(f"Error while getting number of channels: {e}")
+            logger.error(f"Error while getting number of channels: {e}")
 
         # Get output names
         self.all_output_names = get_output_names(self.mode)

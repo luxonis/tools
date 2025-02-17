@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import os
 import sys
 from typing import List, Optional, Tuple
+
+from loguru import logger
 
 from tools.modules import DetectV10, Exporter
 from tools.utils import get_first_conv2d_in_channels
 
-sys.path.append("./tools/yolo/ultralytics")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+yolo_path = os.path.join(current_dir, "ultralytics")
+sys.path.append(yolo_path)
+
 from ultralytics.nn.modules import Detect  # noqa: E402
 from ultralytics.nn.tasks import attempt_load_one_weight  # noqa: E402
 
@@ -48,7 +54,7 @@ class YoloV10Exporter(Exporter):
             self.number_of_channels = get_first_conv2d_in_channels(model)
             # print(f"Number of channels: {self.number_of_channels}")
         except Exception as e:
-            print(f"Error while getting number of channels: {e}")
+            logger.error(f"Error while getting number of channels: {e}")
 
         # check if image size is suitable
         gs = max(int(model.stride.max()), 32)  # model stride

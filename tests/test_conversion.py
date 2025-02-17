@@ -5,8 +5,12 @@ import os
 import requests
 
 from tools.utils.version_detection import detect_version
+from tools.yolo.yolov5_exporter import YoloV5Exporter
+from tools.yolo.yolov6_exporter import YoloV6R4Exporter
 from tools.yolo.yolov8_exporter import YoloV8Exporter
 from tools.yolo.yolov10_exporter import YoloV10Exporter
+from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
+from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
 from tools.yolov7.yolov7_exporter import YoloV7Exporter
 
 
@@ -58,6 +62,14 @@ def test_yolov5n_automatic_version_detection():
     _remove_file("tests/yolov5n.pt")
 
 
+def test_yolov5n_model_conversion():
+    """Test the conversion of an YOLOv5n model."""
+    _download_file(
+        "https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n.pt"
+    )
+    _test_model_conversion(YoloV5Exporter, "tests/yolov5n.pt", (640, 480), True)
+
+
 def test_yolov6nr1_automatic_version_detection():
     """Test the YOLOv6nr1 autodetection of the model version."""
     _download_file(
@@ -65,6 +77,14 @@ def test_yolov6nr1_automatic_version_detection():
     )
     assert detect_version("tests/yolov6n.pt") == "yolov6r1"
     _remove_file("tests/yolov6n.pt")
+
+
+def test_yolov6nr1_model_conversion():
+    """Test the conversion of an YOLOv6nr1 model."""
+    _download_file(
+        "https://github.com/meituan/YOLOv6/releases/download/0.1.0/yolov6n.pt"
+    )
+    _test_model_conversion(YoloV6R1Exporter, "tests/yolov6n.pt", (640, 480), True)
 
 
 def test_yolov6nr2_automatic_version_detection():
@@ -76,6 +96,14 @@ def test_yolov6nr2_automatic_version_detection():
     _remove_file("tests/yolov6n.pt")
 
 
+def test_yolov6nr2_model_conversion():
+    """Test the conversion of an YOLOv6nr2 model."""
+    _download_file(
+        "https://github.com/meituan/YOLOv6/releases/download/0.2.0/yolov6n.pt"
+    )
+    _test_model_conversion(YoloV6R3Exporter, "tests/yolov6n.pt", (640, 480), True)
+
+
 def test_yolov6nr3_automatic_version_detection():
     """Test the YOLOv6nr3 autodetection of the model version."""
     _download_file(
@@ -85,6 +113,14 @@ def test_yolov6nr3_automatic_version_detection():
     _remove_file("tests/yolov6n.pt")
 
 
+def test_yolov6nr3_model_conversion():
+    """Test the conversion of an YOLOv6nr3 model."""
+    _download_file(
+        "https://github.com/meituan/YOLOv6/releases/download/0.3.0/yolov6n.pt"
+    )
+    _test_model_conversion(YoloV6R3Exporter, "tests/yolov6n.pt", (640, 480), True)
+
+
 def test_yolov6nr4_automatic_version_detection():
     """Test the YOLOv6nr4 autodetection of the model version."""
     _download_file(
@@ -92,6 +128,14 @@ def test_yolov6nr4_automatic_version_detection():
     )
     assert detect_version("tests/yolov6n.pt") == "yolov6r4"
     _remove_file("tests/yolov6n.pt")
+
+
+def test_yolov6nr4_model_conversion():
+    """Test the conversion of an YOLOv6nr4 model."""
+    _download_file(
+        "https://github.com/meituan/YOLOv6/releases/download/0.4.0/yolov6n.pt"
+    )
+    _test_model_conversion(YoloV6R4Exporter, "tests/yolov6n.pt", (640, 480), True)
 
 
 def test_yolov7t_automatic_version_detection():

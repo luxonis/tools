@@ -1,16 +1,23 @@
 from __future__ import annotations
 
+import os
 import sys
 from typing import Tuple
+
+from loguru import logger
 
 from tools.modules import DetectV6R3, Exporter
 from tools.utils import get_first_conv2d_in_channels
 
-sys.path.append("./tools/yolov6r3/Efficient-Computing/Detection/Gold-YOLO/")
-sys.path.append("./tools/yolov6r3/Efficient-Computing/Detection/Gold-YOLO/gold_yolo/")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(current_dir, "Efficient-Computing/Detection/Gold-YOLO/"))
 sys.path.append(
-    "./tools/yolov6r3/Efficient-Computing/Detection/Gold-YOLO/yolov6/utils/"
+    os.path.join(current_dir, "Efficient-Computing/Detection/Gold-YOLO/gold_yolo/")
 )
+sys.path.append(
+    os.path.join(current_dir, "Efficient-Computing/Detection/Gold-YOLO/yolov6/utils/")
+)
+
 from checkpoint import load_checkpoint as load_checkpoint_gold_yolo  # noqa: E402
 from switch_tool import switch_to_deploy  # noqa: E402
 
@@ -45,7 +52,7 @@ class GoldYoloExporter(Exporter):
             self.number_of_channels = get_first_conv2d_in_channels(model)
             # print(f"Number of channels: {self.number_of_channels}")
         except Exception as e:
-            print(f"Error while getting number of channels: {e}")
+            logger.error(f"Error while getting number of channels: {e}")
 
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32
