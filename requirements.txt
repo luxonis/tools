@@ -12,4 +12,5 @@ tqdm
 s3transfer
 typer>=0.12.3
 psutil
+seaborn
 mmcv>=1.5.0,<2.0.0
