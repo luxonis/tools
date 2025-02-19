@@ -1,6 +1,6 @@
 [project]
 name = "tools"
-version = "0.2.1"
+version = "0.2.3"
 description = "Converter for YOLO models into .ONNX format."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -49,7 +49,7 @@ select = ["E4", "E7", "E9", "F", "W", "B", "I", "FA"]
 convention = "google"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 ignore_missing_imports = true
 
 [tool.pyright]

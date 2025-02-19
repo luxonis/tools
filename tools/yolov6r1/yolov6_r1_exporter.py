@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import os
 import sys
 from typing import Tuple
+
+from loguru import logger
 
 from tools.modules import DetectV6R1, Exporter
 from tools.utils import get_first_conv2d_in_channels
 
-sys.path.append("./tools/yolov6r1/YOLOv6R1")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+yolo_path = os.path.join(current_dir, "YOLOv6R1")
+sys.path.append(yolo_path)
+
 from yolov6.layers.common import RepVGGBlock  # noqa: E402
 from yolov6.utils.checkpoint import load_checkpoint  # noqa: E402
 
@@ -51,7 +57,7 @@ class YoloV6R1Exporter(Exporter):
             self.number_of_channels = get_first_conv2d_in_channels(model)
             # print(f"Number of channels: {self.number_of_channels}")
         except Exception as e:
-            print(f"Error while getting number of channels: {e}")
+            logger.error(f"Error while getting number of channels: {e}")
 
         # check if image size is suitable
         gs = 2 ** (2 + self.num_branches)  # 1 = 8, 2 = 16, 3 = 32

@@ -5,6 +5,7 @@ import os
 import requests
 
 from tools.utils.version_detection import detect_version
+from tools.yolo.yolov6_exporter import YoloV6R4Exporter
 from tools.yolo.yolov8_exporter import YoloV8Exporter
 from tools.yolo.yolov10_exporter import YoloV10Exporter
 from tools.yolov7.yolov7_exporter import YoloV7Exporter
@@ -92,6 +93,14 @@ def test_yolov6nr4_automatic_version_detection():
     )
     assert detect_version("tests/yolov6n.pt") == "yolov6r4"
     _remove_file("tests/yolov6n.pt")
+
+
+def test_yolov6nr4_model_conversion():
+    """Test the conversion of an YOLOv6nr4 model."""
+    _download_file(
+        "https://github.com/meituan/YOLOv6/releases/download/0.4.0/yolov6n.pt"
+    )
+    _test_model_conversion(YoloV6R4Exporter, "tests/yolov6n.pt", (640, 480), True)
 
 
 def test_yolov7t_automatic_version_detection():
