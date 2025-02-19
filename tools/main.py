@@ -5,8 +5,6 @@ from typing import Optional
 
 import typer
 from loguru import logger
-
-# import logging
 from luxonis_ml.utils import setup_logging
 from typing_extensions import Annotated
 

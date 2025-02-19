@@ -15,8 +15,8 @@ yolov5_path = os.path.join(current_dir, "yolov5")
 sys.path.append(yolov5_path)
 
 from models.common import Conv  # noqa: E402
-from models.experimental import attempt_load  # noqa: E402
-from models.yolo import Detect  # noqa: E402
+from models.experimental import attempt_load as attempt_load_yolov5  # noqa: E402
+from models.yolo import Detect as DetectYOLOv5  # noqa: E402
 from utils.activations import SiLU  # noqa: E402
 
 
@@ -39,7 +39,7 @@ class YoloV5Exporter(Exporter):
     def load_model(self):
         # code based on export.py from YoloV5 repository
         # load the model
-        model = attempt_load(self.model_path, device="cpu")  # load FP32 model
+        model = attempt_load_yolov5(self.model_path, device="cpu")  # load FP32 model
 
         # check num classes and labels
         assert model.nc == len(
@@ -64,7 +64,7 @@ class YoloV5Exporter(Exporter):
             if isinstance(m, Conv):  # assign export-friendly activations
                 if isinstance(m.act, nn.SiLU):
                     m.act = SiLU()
-            elif isinstance(m, Detect):
+            elif isinstance(m, DetectYOLOv5):
                 m.inplace = inplace
                 m.onnx_dynamic = False
                 if hasattr(m, "forward_export"):

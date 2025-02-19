@@ -49,7 +49,7 @@ select = ["E4", "E7", "E9", "F", "W", "B", "I", "FA"]
 convention = "google"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.10"
 ignore_missing_imports = true
 
 [tool.pyright]
