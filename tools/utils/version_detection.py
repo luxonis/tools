@@ -36,9 +36,9 @@ def detect_version(path: str, debug: bool = False) -> str:
 
         # Extract the tar file into the extracted_model directory
         if platform.system() == "Windows":
-            subprocess.check_output(f"tar -xf {path} -C extracted_model", shell=True)
+            subprocess.check_output(["tar", "-xf", path, "-C", "extracted_model"])
         else:
-            subprocess.check_output(f"unzip {path} -d extracted_model", shell=True)
+            subprocess.check_output(["unzip", path, "-d", "extracted_model"])
 
         folder = [
             f for f in listdir("extracted_model") if isdir(join("extracted_model", f))
