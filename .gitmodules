@@ -6,8 +6,8 @@
 	url = https://github.com/meituan/YOLOv6
     branch = main
 [submodule "yolov7"]
-    path = tools/yolov7/yolov7
-    url = https://github.com/WongKinYiu/yolov7
+	path = tools/yolov7/yolov7
+	url = https://github.com/WongKinYiu/yolov7.git
     branch = main
 [submodule "tools/yolo/ultralytics"]
 	path = tools/yolo/ultralytics
