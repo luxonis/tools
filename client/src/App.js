@@ -172,7 +172,7 @@ function App() {
                       <div className="mb-3">
                         <div className={`advanced-option ${advanced ? 'expanded' : ''}`}>
                           <div className="display-column">
-                            <label htmlFor="nShaves" className="form-label"><a className="form-label-link" href="https://docs.luxonis.com/en/latest/pages/faq/#what-are-the-shaves" target="_blank">Shaves:</a> {config.nShaves}</label>
+                            <label htmlFor="nShaves" className="form-label"><a className="form-label-link" href="https://docs.luxonis.com/software/ai-inference/conversion/#Conversion-Advanced%20Settings-Model%20Compiler%20Flags-Shaves" target="_blank">Shaves:</a> {config.nShaves}</label>
                             <input type="range" id="nShaves" name="nShaves" min={1} max={16} onChange={e => update({nShaves: e.target.value})} value={config.nShaves}/>
                             <div className="shaves-ticks">
                               <span>1</span>
