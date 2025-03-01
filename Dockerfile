@@ -1,4 +1,4 @@
-FROM python:3.8-bullseye
+FROM python:3.9-bullseye
 
 RUN python3 -m pip install -U pip
 # RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
