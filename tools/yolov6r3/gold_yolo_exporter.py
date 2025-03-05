@@ -33,7 +33,7 @@ class GoldYoloExporter(Exporter):
             model_path,
             imgsz,
             use_rvc2,
-            subtype="yolov6",
+            subtype="yolov6r2",
             output_names=["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"],
         )
         self.load_model()
