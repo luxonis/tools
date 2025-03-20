@@ -89,7 +89,7 @@ class YoloV8Exporter(Exporter):
             imgsz,
             use_rvc2,
             subtype="yolov8",
-            output_names=["output1_yolov8", "output2_yolov8", "output3_yolov8"],
+            output_names=["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"],
         )
         self.load_model()
 
