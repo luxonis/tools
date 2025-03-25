@@ -31,7 +31,6 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 
 [tool.setuptools.package-data]
-[tool.setuptools.package-data]
 tools = [
     "docker-compose.yaml", 
     "docker-compose-dev.yaml",
