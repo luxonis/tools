@@ -31,7 +31,14 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 
 [tool.setuptools.package-data]
-tools = ["docker-compose.yaml", "docker-compose-dev.yaml"]
+[tool.setuptools.package-data]
+tools = [
+    "docker-compose.yaml", 
+    "docker-compose-dev.yaml",
+    "yolo/ultralytics/ultralytics/cfg/*.yaml",
+    "yolo/yolov5/models/*.yaml",
+    "yolov7/yolov7/cfg/**/*.yaml"
+]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
