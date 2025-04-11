@@ -15,8 +15,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 yolov5_path = os.path.join(current_dir, "yolov5")
 sys.path.append(yolov5_path)
 
-from models.common import Conv  # noqa: E402
 import models.experimental  # noqa: E402
+from models.common import Conv  # noqa: E402
 from models.yolo import Detect as DetectYOLOv5  # noqa: E402
 from utils.activations import SiLU  # noqa: E402
 
@@ -27,16 +27,22 @@ def attempt_load_yolov5(weights, device=None, inplace=True, fuse=True):
 
     model = models.experimental.Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
-        ckpt = torch.load(models.experimental.attempt_download(w), map_location='cpu', weights_only=False)  # load
-        ckpt = (ckpt.get('ema') or ckpt['model']).to(device).float()  # FP32 model
+        ckpt = torch.load(
+            models.experimental.attempt_download(w),
+            map_location="cpu",
+            weights_only=False,
+        )  # load
+        ckpt = (ckpt.get("ema") or ckpt["model"]).to(device).float()  # FP32 model
 
         # Model compatibility updates
-        if not hasattr(ckpt, 'stride'):
-            ckpt.stride = torch.tensor([32.])
-        if hasattr(ckpt, 'names') and isinstance(ckpt.names, (list, tuple)):
+        if not hasattr(ckpt, "stride"):
+            ckpt.stride = torch.tensor([32.0])
+        if hasattr(ckpt, "names") and isinstance(ckpt.names, (list, tuple)):
             ckpt.names = dict(enumerate(ckpt.names))  # convert to dict
 
-        model.append(ckpt.fuse().eval() if fuse and hasattr(ckpt, 'fuse') else ckpt.eval())  # model in eval mode
+        model.append(
+            ckpt.fuse().eval() if fuse and hasattr(ckpt, "fuse") else ckpt.eval()
+        )  # model in eval mode
 
     # Module compatibility updates
     for m in model.modules():
@@ -44,9 +50,9 @@ def attempt_load_yolov5(weights, device=None, inplace=True, fuse=True):
         if t in (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, Model):
             m.inplace = inplace  # torch 1.7.0 compatibility
             if t is Detect and not isinstance(m.anchor_grid, list):
-                delattr(m, 'anchor_grid')
-                setattr(m, 'anchor_grid', [torch.zeros(1)] * m.nl)
-        elif t is nn.Upsample and not hasattr(m, 'recompute_scale_factor'):
+                delattr(m, "anchor_grid")
+                m.anchor_grid = [torch.zeros(1)] * m.nl
+        elif t is nn.Upsample and not hasattr(m, "recompute_scale_factor"):
             m.recompute_scale_factor = None  # torch 1.11.0 compatibility
 
     # Return model
@@ -54,12 +60,17 @@ def attempt_load_yolov5(weights, device=None, inplace=True, fuse=True):
         return model[-1]
 
     # Return detection ensemble
-    print(f'Ensemble created with {weights}\n')
-    for k in 'names', 'nc', 'yaml':
+    print(f"Ensemble created with {weights}\n")
+    for k in "names", "nc", "yaml":
         setattr(model, k, getattr(model[0], k))
-    model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride  # max stride
-    assert all(model[0].nc == m.nc for m in model), f'Models have different class counts: {[m.nc for m in model]}'
+    model.stride = model[
+        torch.argmax(torch.tensor([m.stride.max() for m in model])).int()
+    ].stride  # max stride
+    assert all(
+        model[0].nc == m.nc for m in model
+    ), f"Models have different class counts: {[m.nc for m in model]}"
     return model
+
 
 # Replace the original function
 models.experimental.attempt_load = attempt_load_yolov5

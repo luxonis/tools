@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 import sys
-import torch
-import torch.nn as nn
 from typing import List, Optional, Tuple
 
+import torch
+import torch.nn as nn
 from loguru import logger
 
 from tools.modules import DetectV7, Exporter
@@ -19,7 +19,7 @@ import models.experimental  # noqa: E402
 
 
 def attempt_load(weights, map_location=None):
-    from models.common import Conv, DWConv  # noqa: E402
+    from models.common import Conv  # noqa: E402
     from utils.google_utils import attempt_download  # noqa: E402
 
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
@@ -27,8 +27,10 @@ def attempt_load(weights, map_location=None):
     for w in weights if isinstance(weights, list) else [weights]:
         attempt_download(w)
         ckpt = torch.load(w, map_location=map_location, weights_only=False)  # load
-        model.append(ckpt['ema' if ckpt.get('ema') else 'model'].float().fuse().eval())  # FP32 model
-    
+        model.append(
+            ckpt["ema" if ckpt.get("ema") else "model"].float().fuse().eval()
+        )  # FP32 model
+
     # Compatibility updates
     for m in model.modules():
         if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
@@ -37,14 +39,15 @@ def attempt_load(weights, map_location=None):
             m.recompute_scale_factor = None  # torch 1.11.0 compatibility
         elif type(m) is Conv:
             m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatibility
-    
+
     if len(model) == 1:
         return model[-1]  # return model
     else:
-        print('Ensemble created with %s\n' % weights)
-        for k in ['names', 'stride']:
+        print("Ensemble created with %s\n" % weights)
+        for k in ["names", "stride"]:
             setattr(model, k, getattr(model[-1], k))
         return model  # return ensemble
+
 
 models.experimental.attempt_load = attempt_load
 
