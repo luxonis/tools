@@ -4,6 +4,7 @@ import os
 import sys
 from typing import Tuple
 
+import torch
 from loguru import logger
 
 from tools.modules import DetectV6R3, Exporter
@@ -18,8 +19,29 @@ sys.path.append(
     os.path.join(current_dir, "Efficient-Computing/Detection/Gold-YOLO/yolov6/utils/")
 )
 
-from checkpoint import load_checkpoint as load_checkpoint_gold_yolo  # noqa: E402
+import checkpoint  # noqa: E402
 from switch_tool import switch_to_deploy  # noqa: E402
+
+
+# Override with your custom implementation
+def load_checkpoint_gold_yolo(weights, map_location=None, inplace=True, fuse=True):
+    """Load model from checkpoint file."""
+    from yolov6.utils.events import LOGGER  # noqa: E402
+    from yolov6.utils.torch_utils import fuse_model  # noqa: E402
+
+    LOGGER.info("Loading checkpoint from {}".format(weights))
+    ckpt = torch.load(weights, map_location=map_location, weights_only=False)  # load
+    model = ckpt["ema" if ckpt.get("ema") else "model"].float()
+    if fuse:
+        LOGGER.info("\nFusing model...")
+        model = fuse_model(model).eval()
+    else:
+        model = model.eval()
+    return model
+
+
+# Replace the original function
+checkpoint.load_checkpoint = load_checkpoint_gold_yolo
 
 
 class GoldYoloExporter(Exporter):
