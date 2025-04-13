@@ -4,7 +4,7 @@ sys.path.append("./yolo/YOLOv6")
 import torch
 from yolov6.models.heads.effidehead_distill_ns import Detect
 from yolov6.layers.common import RepVGGBlock
-from yolov6.utils.checkpoint import load_checkpoint
+import yolov6.utils.checkpoint
 import onnx
 from exporter import Exporter
 
@@ -14,7 +14,26 @@ from yolo.detect_head import DetectV6R4s, DetectV6R4m
 from yolo.backbones import YoloV6BackBone
 
 
-DIR_TMP = "./tmp"
+# Override with your custom implementation
+def load_checkpoint(weights, map_location=None, inplace=True, fuse=True):
+  """Load model from checkpoint file with weights only set to `False`."""
+  from yolov6.utils.events import LOGGER
+  from yolov6.utils.torch_utils import fuse_model
+
+  LOGGER.info("Loading checkpoint from {}".format(weights))
+  ckpt = torch.load(weights, map_location=map_location, weights_only=False)  # load
+  model = ckpt['ema' if ckpt.get('ema') else 'model'].float()
+  if fuse:
+      LOGGER.info("\nFusing model...")
+      model = fuse_model(model).eval()
+  else:
+      model = model.eval()
+  return model
+
+
+# Replace the original function
+yolov6.utils.checkpoint.load_checkpoint = load_checkpoint
+
 
 class YoloV6R4Exporter(Exporter):
 
