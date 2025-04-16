@@ -4,6 +4,8 @@ import os
 import sys
 from typing import List, Optional, Tuple
 
+import torch
+import torch.nn as nn
 from loguru import logger
 
 from tools.modules import DetectV7, Exporter
@@ -13,7 +15,41 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 yolo_path = os.path.join(current_dir, "yolov7")
 sys.path.append(yolo_path)
 
-from models.experimental import attempt_load  # noqa: E402
+import models.experimental  # noqa: E402
+
+
+def attempt_load(weights, map_location=None):
+    from models.common import Conv  # noqa: E402
+    from utils.google_utils import attempt_download  # noqa: E402
+
+    # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
+    model = models.experimental.Ensemble()
+    for w in weights if isinstance(weights, list) else [weights]:
+        attempt_download(w)
+        ckpt = torch.load(w, map_location=map_location, weights_only=False)  # load
+        model.append(
+            ckpt["ema" if ckpt.get("ema") else "model"].float().fuse().eval()
+        )  # FP32 model
+
+    # Compatibility updates
+    for m in model.modules():
+        if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
+            m.inplace = True  # pytorch 1.7.0 compatibility
+        elif type(m) is nn.Upsample:
+            m.recompute_scale_factor = None  # torch 1.11.0 compatibility
+        elif type(m) is Conv:
+            m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatibility
+
+    if len(model) == 1:
+        return model[-1]  # return model
+    else:
+        print("Ensemble created with %s\n" % weights)
+        for k in ["names", "stride"]:
+            setattr(model, k, getattr(model[-1], k))
+        return model  # return ensemble
+
+
+models.experimental.attempt_load = attempt_load
 
 
 class YoloV7Exporter(Exporter):
