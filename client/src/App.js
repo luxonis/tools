@@ -55,6 +55,13 @@ function App() {
       <div className="container py-5 h-100">
         <div className="row d-flex justify-content-center align-items-center h-100">
           <div className="col-xl-10">
+            {/* OUTDATED banner at top level */}
+            <div className="w-100 text-center bg-danger text-white py-3 mb-3">
+              <strong>⚠️ OUTDATED:</strong> This tool is no longer maintained. Results may be inaccurate or incompatible with newer devices.
+              <br />
+              Please refer to <a href="https://rvc4.docs.luxonis.com/cloud/hubai/features/model-conversion/" target="_blank" className="text-white text-decoration-underline">HubAI Conversion</a> to get the most up-to-date results.
+            </div>
+
             <div className="card rounded-3 text-black mb-3">
               <div className="row g-0">
                 <div className="col-lg-6 d-flex align-items-center gradient-custom-2">
