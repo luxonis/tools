@@ -7,6 +7,7 @@ from os import listdir
 from os.path import exists, isdir, join
 
 YOLOV5_CONVERSION = "yolov5"
+YOLOV5U_CONVERSION = "yolov5u"
 YOLOV6R1_CONVERSION = "yolov6r1"
 YOLOV6R3_CONVERSION = "yolov6r3"
 YOLOV6R4_CONVERSION = "yolov6r4"
@@ -53,7 +54,6 @@ def detect_version(path: str, debug: bool = False) -> str:
             if debug:
                 print(data.decode(errors="replace"))
             content = data.decode("latin1")
-
             if "yolo11" in content:
                 return YOLOV11_CONVERSION
             elif "yolov10" in content or "v10DetectLoss" in content:
@@ -62,11 +62,8 @@ def detect_version(path: str, debug: bool = False) -> str:
                 "v9-model" in content and "ultralytics" in content
             ):
                 return YOLOV9_CONVERSION
-            elif (
-                "YOLOv5u" in content
-                or "YOLOv8" in content
-                or "yolov8" in content
-                or ("v8DetectionLoss" in content and "ultralytics" in content)
+            elif "yolov8" in content or (
+                "v8DetectionLoss" in content and "ultralytics" in content
             ):
                 return YOLOV8_CONVERSION
             elif "yolov6" in content:
@@ -79,6 +76,10 @@ def detect_version(path: str, debug: bool = False) -> str:
                 return YOLOV6R3_CONVERSION
             elif "yolov7" in content:
                 return YOLOV7_CONVERSION
+            elif "yolov5u" in content or (
+                "yolov5" in content and "ultralytics" in content
+            ):
+                return YOLOV5U_CONVERSION
             elif (
                 "SPPF" in content
                 or "yolov5" in content
