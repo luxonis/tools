@@ -9,6 +9,17 @@ on:
       - 'tools/**'
       - '.github/workflows/unittests.yaml'
 
+  workflow_call:
+    inputs:
+      ml_ref:
+        description: 'luxonis-ml version (branch/tag/SHA)'
+        required: true
+        type: string
+      tools_ref:
+        description: 'tools version (branch/tag/SHA)'
+        required: true
+        type: string
+
 jobs:
   run_tests:
     strategy:
@@ -20,11 +31,21 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: Checkout at tools_ref
+      if: ${{ github.event_name != 'pull_request' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Luxonis/tools
+        ref:        ${{ inputs.tools_ref }}
+        path:       tools
+
     - name: Checkout
+      if: ${{ github.event_name == 'pull_request' }}
       uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
         submodules: recursive  # Ensures submodules are cloned
+        path: tools
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -33,24 +54,36 @@ jobs:
         cache: pip
 
     - name: Install dependencies
+      working-directory: tools
       run: |
         pip install -e .[dev]
         pip install coverage-badge>=1.1.0 pytest-cov>=4.1.0
 
+    - name: Install specified luxonis-ml
+      env:
+        ML_REF: ${{ inputs.ml_ref }}
+      run: |
+        pip uninstall luxonis-ml -y;
+        pip install "luxonis-ml[data,nn_archive,utils] @ git+https://github.com/luxonis/luxonis-ml.git@${ML_REF}" --upgrade --force-reinstall
+
     - name: Run tests with coverage [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
+      working-directory: tools
       run: pytest tests --cov=tools --cov-report xml --junit-xml pytest.xml
 
     - name: Run tests [Windows, macOS]
       if: matrix.os != 'ubuntu-latest' || matrix.version != '3.10'
+      working-directory: tools
       run: pytest tests --junit-xml pytest.xml
 
     - name: Generate coverage badge [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
+      working-directory: tools
       run: coverage-badge -o media/coverage_badge.svg -f
 
     - name: Generate coverage report [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
+      working-directory: tools
       uses: orgoro/coverage@v3.1
       with:
         coverageFile: coverage.xml
@@ -58,6 +91,7 @@ jobs:
 
     - name: Commit coverage badge [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
+      working-directory: tools
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
@@ -67,12 +101,14 @@ jobs:
         }
     - name: Push changes [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
+      working-directory: tools
       uses: ad-m/github-push-action@master
       with:
         branch: ${{ github.head_ref }}
 
     - name: Upload Test Results
       if: always()
+      working-directory: tools
       uses: actions/upload-artifact@v4
       with:
         name: Test Results [${{ matrix.os }}] (Python ${{ matrix.version }})
@@ -87,7 +123,7 @@ jobs:
     permissions:
       checks: write
       pull-requests: write
-    if: always()
+    if: always() && github.event_name == 'pull_request'
 
     steps:
       - name: Checkout
