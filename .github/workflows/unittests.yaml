@@ -62,6 +62,7 @@ jobs:
     - name: Install specified luxonis-ml
       env:
         ML_REF: ${{ inputs.ml_ref }}
+      if: ${{ github.event_name != 'pull_request' }}
       run: |
         pip uninstall luxonis-ml -y;
         pip install "luxonis-ml[data,nn_archive,utils] @ git+https://github.com/luxonis/luxonis-ml.git@${ML_REF}" --upgrade --force-reinstall
@@ -77,21 +78,18 @@ jobs:
       run: pytest tests --junit-xml pytest.xml
 
     - name: Generate coverage badge [Ubuntu]
-      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
-      working-directory: tools
+      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && github.event_name == 'pull_request'
       run: coverage-badge -o media/coverage_badge.svg -f
 
     - name: Generate coverage report [Ubuntu]
-      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
-      working-directory: tools
+      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && github.event_name == 'pull_request'
       uses: orgoro/coverage@v3.1
       with:
         coverageFile: coverage.xml
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Commit coverage badge [Ubuntu]
-      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
-      working-directory: tools
+      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && github.event_name == 'pull_request'
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
@@ -100,15 +98,13 @@ jobs:
           git commit -m "[Automated] Updated coverage badge"
         }
     - name: Push changes [Ubuntu]
-      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
-      working-directory: tools
+      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && github.event_name == 'pull_request'
       uses: ad-m/github-push-action@master
       with:
         branch: ${{ github.head_ref }}
 
     - name: Upload Test Results
-      if: always()
-      working-directory: tools
+      if: always() && github.event_name == 'pull_request'
       uses: actions/upload-artifact@v4
       with:
         name: Test Results [${{ matrix.os }}] (Python ${{ matrix.version }})
