@@ -83,7 +83,7 @@ def detect_version(path: str, debug: bool = False) -> str:
             elif "yolov5u" in content or (
                 "yolov5" in content
                 and "ultralytics.nn.modules" in content
-                # the second condition signals that the Ultralytics package was used to build the model
+                # the second condition checks if the new version of the Ultralytics package was used to build the model which signals the "u" variant
             ):
                 return YOLOV5U_CONVERSION
             elif (
