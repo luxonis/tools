@@ -62,8 +62,12 @@ def detect_version(path: str, debug: bool = False) -> str:
                 "v9-model" in content and "ultralytics" in content
             ):
                 return YOLOV9_CONVERSION
-            elif "yolov8" in content or (
-                "v8DetectionLoss" in content and "ultralytics" in content
+            elif (
+                "yolov8" in content
+                or (
+                    "YOLOv8" in content and "yolov5" not in content
+                )  # the second condition is to avoid yolov5u being detected as yolov8
+                or ("v8DetectionLoss" in content and "ultralytics" in content)
             ):
                 return YOLOV8_CONVERSION
             elif "yolov6" in content:
