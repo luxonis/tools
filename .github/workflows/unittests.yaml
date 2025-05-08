@@ -62,6 +62,7 @@ jobs:
 
     - name: Install specified luxonis-ml
       shell: bash
+      if: github.event_name != 'pull_request'
       working-directory: tools
       env:
         ML_REF: ${{ inputs.ml_ref }}
