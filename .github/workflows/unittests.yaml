@@ -61,7 +61,7 @@ jobs:
 
     - name: Install specified luxonis-ml
       shell: bash
-      if: inputs.tools_ref != ''
+      if: inputs.ml_ref != ''
       working-directory: tools
       env:
         ML_REF: ${{ inputs.ml_ref }}
