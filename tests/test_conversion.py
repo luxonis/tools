@@ -59,6 +59,23 @@ def test_yolov5n_automatic_version_detection():
     _remove_file("tests/yolov5n.pt")
 
 
+def test_yolov5nu_automatic_version_detection():
+    """Test the YOLOv5nu autodetection of the model version."""
+    _download_file(
+        "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov5nu.pt"
+    )
+    assert detect_version("tests/yolov5nu.pt") == "yolov5u"
+    _remove_file("tests/yolov5nu.pt")
+
+
+def test_yolov5nu_model_conversion():
+    """Test the conversion of an YOLOv5nu model."""
+    _download_file(
+        "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov5nu.pt"
+    )
+    _test_model_conversion(YoloV8Exporter, "tests/yolov5nu.pt", (64, 64), True)
+
+
 def test_yolov6nr1_automatic_version_detection():
     """Test the YOLOv6nr1 autodetection of the model version."""
     _download_file(

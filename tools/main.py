@@ -11,6 +11,7 @@ from typing_extensions import Annotated
 from tools.utils import (
     GOLD_YOLO_CONVERSION,
     YOLOV5_CONVERSION,
+    YOLOV5U_CONVERSION,
     YOLOV6R1_CONVERSION,
     YOLOV6R3_CONVERSION,
     YOLOV6R4_CONVERSION,
@@ -34,6 +35,7 @@ app = typer.Typer(help="Tools CLI", add_completion=False, rich_markup_mode="mark
 YOLO_VERSIONS = [
     GOLD_YOLO_CONVERSION,
     YOLOV5_CONVERSION,
+    YOLOV5U_CONVERSION,
     YOLOV6R1_CONVERSION,
     YOLOV6R3_CONVERSION,
     YOLOV6R4_CONVERSION,
@@ -111,7 +113,12 @@ def convert(
 
     if version is None:
         version = detect_version(str(model_path))
-        logger.info(f"Detected version: {version}")
+        version_note = (
+            "(This is an anchor-free version of the YOLOv5 model obtained by a more recent version of Ultralytics. Therefore, YOLOv8 conversion will be used instead of the standard YOLOv5 conversion)"
+            if version == YOLOV5U_CONVERSION
+            else ""
+        )
+        logger.info(f"Detected version: {version} {version_note}")
 
     try:
         # Create exporter
@@ -140,7 +147,12 @@ def convert(
             from tools.yolov7.yolov7_exporter import YoloV7Exporter
 
             exporter = YoloV7Exporter(str(model_path), config.imgsz, config.use_rvc2)
-        elif version in [YOLOV8_CONVERSION, YOLOV9_CONVERSION, YOLOV11_CONVERSION]:
+        elif version in [
+            YOLOV5U_CONVERSION,
+            YOLOV8_CONVERSION,
+            YOLOV9_CONVERSION,
+            YOLOV11_CONVERSION,
+        ]:
             from tools.yolo.yolov8_exporter import YoloV8Exporter
 
             exporter = YoloV8Exporter(str(model_path), config.imgsz, config.use_rvc2)
