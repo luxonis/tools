@@ -57,9 +57,9 @@ function App() {
           <div className="col-xl-10">
             {/* OUTDATED banner at top level */}
             <div className="w-100 text-center bg-danger text-white py-3 mb-3">
-              <strong>⚠️ DEPRECATED ⚠️</strong> 
+              <strong>⚠️ DEPRECATION NOTICE (v3) ⚠️</strong> 
               <br />
-              This tool is no longer maintained. The conversion results are not compatible with our newer devices and DepthAI V3.
+              This tool is no longer maintained. Results should remain compatible with older devices and DepthAI v2, but may not work with newer devices or DepthAI v3.
               <br />
               Please refer to <a href="https://rvc4.docs.luxonis.com/cloud/hubai/features/model-conversion/" target="_blank" className="text-white text-decoration-underline">HubAI Model Conversion</a> to get the most up-to-date results,
               or read more about the conversion process in our <a href="https://rvc4.docs.luxonis.com/software/ai-inference/conversion/" target="_blank" className="text-white text-decoration-underline">documentation</a>.
