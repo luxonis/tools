@@ -1,15 +1,11 @@
 import sys
+
 sys.path.append("./yolo/ultralytics")
 
-import re
 import torch
 import torch.nn as nn
-import onnxsim
-import onnx
 from pathlib import Path
-import json
 
-from exporter import Exporter
 from ultralytics.nn.tasks import temporary_modules, guess_model_task, Ensemble
 from ultralytics.utils import DEFAULT_CFG_DICT, LOGGER, emojis
 from ultralytics.utils.checks import check_suffix, check_requirements
@@ -50,7 +46,7 @@ def torch_safe_load(weight):
             },
         ):
             ckpt = torch.load(file, map_location="cpu")
-    
+
     except ModuleNotFoundError as e:  # e.name is missing module name
         if e.name == "models":
             raise TypeError(
@@ -88,7 +84,9 @@ def attempt_load_yolov10_weights(weights, device=None, inplace=True, fuse=False)
     ensemble = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
         ckpt, w = torch_safe_load(w)  # load ckpt
-        args = {**DEFAULT_CFG_DICT, **ckpt["train_args"]} if "train_args" in ckpt else None  # combined args
+        args = (
+            {**DEFAULT_CFG_DICT, **ckpt["train_args"]} if "train_args" in ckpt else None
+        )  # combined args
         model = (ckpt.get("ema") or ckpt["model"]).to(device).float()  # FP32 model
 
         # Model compatibility updates
@@ -99,7 +97,9 @@ def attempt_load_yolov10_weights(weights, device=None, inplace=True, fuse=False)
             model.stride = torch.tensor([32.0])
 
         # Append
-        ensemble.append(model.fuse().eval() if fuse and hasattr(model, "fuse") else model.eval())  # model in eval mode
+        ensemble.append(
+            model.fuse().eval() if fuse and hasattr(model, "fuse") else model.eval()
+        )  # model in eval mode
 
     # Module updates
     for m in ensemble.modules():
@@ -116,25 +116,51 @@ def attempt_load_yolov10_weights(weights, device=None, inplace=True, fuse=False)
     LOGGER.info(f"Ensemble created with {weights}\n")
     for k in "names", "nc", "yaml":
         setattr(ensemble, k, getattr(ensemble[0], k))
-    ensemble.stride = ensemble[int(torch.argmax(torch.tensor([m.stride.max() for m in ensemble])))].stride
-    assert all(ensemble[0].nc == m.nc for m in ensemble), f"Models differ in class counts {[m.nc for m in ensemble]}"
+    ensemble.stride = ensemble[
+        int(torch.argmax(torch.tensor([m.stride.max() for m in ensemble])))
+    ].stride
+    assert all(ensemble[0].nc == m.nc for m in ensemble), (
+        f"Models differ in class counts {[m.nc for m in ensemble]}"
+    )
     return ensemble
 
 
 class YoloV10Exporter(YoloV8Exporter):
-
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='true'):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
+    def __init__(
+        self,
+        conv_path: str,
+        weights_filename: str,
+        imgsz: tuple[int, int],
+        conv_id: str,
+        n_shaves: int = 6,
+        use_legacy_frontend: bool = False,
+        use_rvc2: bool = True,
+    ):
+        super().__init__(
+            conv_path=conv_path,
+            weights_filename=weights_filename,
+            imgsz=imgsz,
+            conv_id=conv_id,
+            n_shaves=n_shaves,
+            use_legacy_frontend=use_legacy_frontend,
+            use_rvc2=use_rvc2,
+        )
         self.load_model()
-    
+
     def load_model(self):
         # load the model
-        model = attempt_load_yolov10_weights(str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True)
+        model = attempt_load_yolov10_weights(
+            str(self.weights_path.resolve()), device="cpu", inplace=True, fuse=True
+        )
 
-        names = model.module.names if hasattr(model, 'module') else model.names  # get class names
-        
+        names = (
+            model.module.names if hasattr(model, "module") else model.names
+        )  # get class names
+
         # check num classes and labels
-        assert model.yaml["nc"] == len(names), f'Model class count {model.yaml["nc"]} != len(names) {len(names)}'
+        assert model.yaml["nc"] == len(names), (
+            f"Model class count {model.yaml['nc']} != len(names) {len(names)}"
+        )
 
         # Replace with the custom Detection Head
         if isinstance(model.model[-1], (Detect)):
@@ -144,19 +170,13 @@ class YoloV10Exporter(YoloV8Exporter):
 
         # check if image size is suitable
         gs = max(int(model.stride.max()), 32)  # model stride
-        if isinstance(self.imgsz, int):
-            self.imgsz = [self.imgsz, self.imgsz]
         for sz in self.imgsz:
             if sz % gs != 0:
                 raise ValueError(f"Image size is not a multiple of maximum stride {gs}")
 
-        # ensure correct length
-        if len(self.imgsz) != 2:
-            raise ValueError(f"Image size must be of length 1 or 2.")
-
         model.eval()
         self.model = model
-    
+
 
 if __name__ == "__main__":
     # Test the YoloV10Exporter
@@ -165,9 +185,11 @@ if __name__ == "__main__":
     imgsz = 640
     conv_id = "test"
     nShaves = 6
-    useLegacyFrontend = 'false'
-    useRVC2 = 'false'
-    exporter = YoloV10Exporter(conv_path, weights_filename, imgsz, conv_id, nShaves, useLegacyFrontend, useRVC2)
+    useLegacyFrontend = "false"
+    useRVC2 = "false"
+    exporter = YoloV10Exporter(
+        conv_path, weights_filename, imgsz, conv_id, nShaves, useLegacyFrontend, useRVC2
+    )
     exporter.export_onnx()
     exporter.export_openvino("v6r2")
     exporter.export_json()

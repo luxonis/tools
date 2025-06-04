@@ -2,12 +2,13 @@ import shutil
 import sys
 from multiprocessing import Manager
 from pathlib import Path
+from pydantic import BaseModel, field_validator, Field, ValidationError, ConfigDict
 
 from sanic import Sanic, response
 from sanic.config import Config
 from sanic.log import logger
 from sanic.exceptions import SanicException
-  
+
 import sentry_sdk
 
 from yolo.export_yolov5 import YoloV5Exporter
@@ -24,18 +25,38 @@ Config.KEEP_ALIVE = False
 Config.RESPONSE_TIMEOUT = 1000
 app = Sanic(__name__)
 print(app.start_method, app.START_METHOD_SET)
-app.config.static_path = (Path(__file__).parent / './client/build/static').resolve().absolute()
+app.config.static_path = (
+    (Path(__file__).parent / "./client/build/static").resolve().absolute()
+)
 if not app.config.static_path.exists():
-    raise RuntimeError("Client was not built. Please run `npm install && npm run build` to build the client")
-app.static('/static', app.config.static_path)
+    raise RuntimeError(
+        "Client was not built. Please run `npm install && npm run build` to build the client"
+    )
+app.static("/static", app.config.static_path)
 manager = Manager()
 conversions = manager.dict()
 app.config.workdir = Path(__file__).parent / "tmp"
 app.config.workdir.mkdir(exist_ok=True)
 app.config.REQUEST_MAX_SIZE = 300_000_000
-DEFAULT_NSHAVES = 6
-DEFAULT_USE_LEGACY_FRONTEND = 'true'
-DEFAULT_USE_RVC2 = 'true'
+
+
+class RequestForm(BaseModel):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
+    id: str = Field(default="", alias="id")
+    version: str = Field(..., alias="version")
+    file: str = Field(default="", alias="file")
+    input_shape: tuple[int, int] = Field(..., alias="inputshape")
+    n_shaves: int = Field(default=6, alias="nShaves")
+    use_legacy_frontend: bool = Field(default=True, alias="useLegacyFrontend")
+    use_rvc2: bool = Field(default=True, alias="useRVC2")
+
+    @field_validator("input_shape", mode="before")
+    def parse_input_shape(cls, value):
+        parts = value.strip().split()
+        if len(parts) == 1:
+            return tuple([int(parts[0]), int(parts[0])])
+        return tuple([int(p) for p in parts])
 
 
 @app.get("/")
@@ -48,76 +69,105 @@ async def progress(request, key):
     return response.json({"progress": conversions.get(key, "none")})
 
 
-@app.post('/upload')
+@app.post("/upload")
 async def upload_file(request):
-    conv_id = str(request.form["id"][0])
-    logger.info(f"CONVERSION_ID: {conv_id}")
+    try:
+        request_form = RequestForm(**{k: v[0] for k, v in request.form.items()})
+        logger.info(f"Request form: {request_form}")
+    except ValidationError as e:
+        sentry_sdk.capture_exception(e)
+        raise SanicException(
+            message=f"Validation error for request `{request.form}`: {e}"
+        )
+
+    conv_id = request_form.id
     conversions[conv_id] = "new"
-
-    nShaves = request.form["nShaves"][0] if "nShaves" in request.form else DEFAULT_NSHAVES
-    logger.info(f"nShaves: {nShaves}")
-
-    useLegacyFrontend = request.form["useLegacyFrontend"][0] if "useLegacyFrontend" in request.form else DEFAULT_USE_LEGACY_FRONTEND
-    logger.info(f"useLegacyFrontend: {useLegacyFrontend}")
-    
-    useRVC2 = request.form["useRVC2"][0] if "useRVC2" in request.form else DEFAULT_USE_RVC2
-    logger.info(f"useRVC2: {useRVC2}")
-
-    imgsz = request.form["inputshape"][0]
-    if " " in imgsz:
-        imgsz = imgsz.split(" ")
-        input_shape = [int(imgsz[0]), int(imgsz[1])]
-    else:
-        input_shape = int(imgsz)
 
     filename = request.files["file"][0].name
 
     conv_path = app.config.workdir / conv_id
     conv_path.mkdir(exist_ok=True)
-    async with aiofiles.open(conv_path / filename, 'wb') as f:
+    async with aiofiles.open(conv_path / filename, "wb") as f:
         await f.write(request.files["file"][0].body)
 
-    version = request.form["version"][0]
-    
     # load exporter and do conversion process
     conversions[conv_id] = "read"
     try:
         sys.path.remove("/app/yolo/yolov5")
     except:
         pass
-    if version == "v5":
+    if request_form.version == "v5":
         try:
-            exporter = YoloV5Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
+            exporter = YoloV5Exporter(
+                conv_path=conv_path,
+                weights_filename=filename,
+                imgsz=request_form.input_shape,
+                conv_id=conv_id,
+                n_shaves=request_form.n_shaves,
+                use_legacy_frontend=request_form.use_legacy_frontend,
+                use_rvc2=request_form.use_rvc2,
+            )
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise SanicException(message=str(ve), status_code=518)
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise SanicException(message="Error while loading model", status_code=520)
-    elif version == "v6r4":
+    elif request_form.version == "v6r4":
         try:
-            exporter = YoloV6R4Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
+            exporter = YoloV6R4Exporter(
+                conv_path=conv_path,
+                weights_filename=filename,
+                imgsz=request_form.input_shape,
+                conv_id=conv_id,
+                n_shaves=request_form.n_shaves,
+                use_legacy_frontend=request_form.use_legacy_frontend,
+                use_rvc2=request_form.use_rvc2,
+            )
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise SanicException(message=str(ve), status_code=518)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            raise SanicException(message="Error while loading model (This may be caused by trying to convert older releases 1.0, 2.0 or 3.0, in which case, try to convert using the 'YoloV6 (R1)' or 'YoloV6 (R2, R3)' option).", status_code=516)
-    elif version == "v8" or version == "v9" or version == "v11":
+            raise SanicException(
+                message="Error while loading model (This may be caused by trying to convert older releases 1.0, 2.0 or 3.0, in which case, try to convert using the 'YoloV6 (R1)' or 'YoloV6 (R2, R3)' option).",
+                status_code=516,
+            )
+    elif request_form.version in ["v8", "v9", "v11"]:
         try:
-            exporter = YoloV8Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
+            exporter = YoloV8Exporter(
+                conv_path=conv_path,
+                weights_filename=filename,
+                imgsz=request_form.input_shape,
+                conv_id=conv_id,
+                n_shaves=request_form.n_shaves,
+                use_legacy_frontend=request_form.use_legacy_frontend,
+                use_rvc2=request_form.use_rvc2,
+            )
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise SanicException(message=str(ve), status_code=518)
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            if version == "v8":
-                raise SanicException(message="Error while loading model", status_code=520)
+            if request_form.version == "v8":
+                raise SanicException(
+                    message="Error while loading model", status_code=520
+                )
             else:
-                raise SanicException(message="Error while loading model", status_code=515)
-    elif version == "v10":
+                raise SanicException(
+                    message="Error while loading model", status_code=515
+                )
+    elif request_form.version == "v10":
         try:
-            exporter = YoloV10Exporter(conv_path, filename, input_shape, conv_id, nShaves, useLegacyFrontend, useRVC2)
+            exporter = YoloV10Exporter(
+                conv_path=conv_path,
+                weights_filename=filename,
+                imgsz=request_form.input_shape,
+                conv_id=conv_id,
+                n_shaves=request_form.n_shaves,
+                use_legacy_frontend=request_form.use_legacy_frontend,
+                use_rvc2=request_form.use_rvc2,
+            )
         except ValueError as ve:
             sentry_sdk.capture_exception(ve)
             raise SanicException(message=str(ve), status_code=518)
@@ -125,68 +175,68 @@ async def upload_file(request):
             sentry_sdk.capture_exception(e)
             raise SanicException(message="Error while loading model", status_code=520)
     else:
-        raise ValueError(f"Yolo version {version} is not supported.")
-    
+        raise ValueError(f"Yolo version {request_form.version} is not supported.")
+
     conversions[conv_id] = "initialized"
     try:
         exporter.export_onnx()
     except Exception as e:
         sentry_sdk.capture_exception(e)
         raise SanicException(message="Error while converting to onnx", status_code=521)
-
     conversions[conv_id] = "onnx"
+
     try:
-        exporter.export_openvino(version)
+        exporter.export_openvino(request_form.version)
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise SanicException(message="Error while converting to openvino", status_code=522)
-
+        raise SanicException(
+            message="Error while converting to openvino", status_code=522
+        )
     conversions[conv_id] = "openvino"
+
     try:
         exporter.export_blob()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise SanicException(message="Error when exporting to blob, likely due to certain operations being unsupported on RVC3. If interested in further information, please open a GitHub issue.", status_code=526)
+        raise SanicException(
+            message="Error when exporting to blob, likely due to certain operations being unsupported on RVC3. If interested in further information, please open a GitHub issue.",
+            status_code=526,
+        )
         # raise SanicException(message="Error while converting to blob", status_code=523)
-
     conversions[conv_id] = "blob"
+
     try:
         exporter.export_json()
     except Exception as e:
         sentry_sdk.capture_exception(e)
         raise SanicException(message="Error while making json", status_code=524)
-
     conversions[conv_id] = "json"
+
     try:
         zip_file = exporter.make_zip()
     except Exception as e:
         sentry_sdk.capture_exception(e)
         raise SanicException(message="Error while making zip", status_code=525)
-
     conversions[conv_id] = "zip"
 
-    return await response.file(
-        location=zip_file.resolve(),
-        mime_type="application/zip"
-    )
+    return await response.file(location=zip_file.resolve(), mime_type="application/zip")
+
 
 @app.on_response
 async def cleanup(request, response):
-   if request.path == "/upload":
-       conv_id = str(request.form["id"][0])
-       shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
+    if request.path == "/upload":
+        conv_id = str(request.form["id"][0])
+        shutil.rmtree(app.config.workdir / conv_id, ignore_errors=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     runtime = os.getenv("RUNTIME", "debug")
     SENTRY_TOKEN = os.getenv("SENTRY_TOKEN")
     logger.info(f"SENTRY_TOKEN: {SENTRY_TOKEN}")
     logger.info(f"RVC3_BLOBCONVERTER: {os.getenv('RVC3_BLOBCONVERTER')}")
     if SENTRY_TOKEN is not None:
-        sentry_sdk.init(
-            dsn=SENTRY_TOKEN
-        )
-    
+        sentry_sdk.init(dsn=SENTRY_TOKEN)
+
     if runtime == "prod":
         app.run(host="0.0.0.0", access_log=False, workers=8)
     else:
