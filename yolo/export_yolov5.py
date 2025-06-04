@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("./yolo/yolov5")
 import torch
 
@@ -10,7 +11,6 @@ from yolov5.utils.activations import SiLU
 import torch.nn as nn
 import onnx
 from exporter import Exporter
-# import sparseml
 
 
 def attempt_load(weights, device=None, inplace=True, fuse=True):
@@ -58,9 +58,9 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
     model.stride = model[
         torch.argmax(torch.tensor([m.stride.max() for m in model])).int()
     ].stride  # max stride
-    assert all(
-        model[0].nc == m.nc for m in model
-    ), f"Models have different class counts: {[m.nc for m in model]}"
+    assert all(model[0].nc == m.nc for m in model), (
+        f"Models have different class counts: {[m.nc for m in model]}"
+    )
     return model
 
 
@@ -69,31 +69,45 @@ yolov5.models.experimental.attempt_load = attempt_load
 
 
 class YoloV5Exporter(Exporter):
-    def __init__(self, conv_path, weights_filename, imgsz, conv_id, n_shaves=6, use_legacy_frontend='false', use_rvc2='true'):
-        super().__init__(conv_path, weights_filename, imgsz, conv_id, n_shaves, use_legacy_frontend, use_rvc2)
+    def __init__(
+        self,
+        conv_path: str,
+        weights_filename: str,
+        imgsz: tuple[int, int],
+        conv_id: str,
+        n_shaves: int = 6,
+        use_legacy_frontend: bool = False,
+        use_rvc2: bool = True,
+    ):
+        super().__init__(
+            conv_path=conv_path,
+            weights_filename=weights_filename,
+            imgsz=imgsz,
+            conv_id=conv_id,
+            n_shaves=n_shaves,
+            use_legacy_frontend=use_legacy_frontend,
+            use_rvc2=use_rvc2,
+        )
         self.load_model()
 
     def load_model(self):
-
         # code based on export.py from YoloV5 repository
         # load the model
-        model = attempt_load(self.weights_path.resolve(), device=torch.device('cpu'))  # load FP32 model
+        model = attempt_load(
+            self.weights_path.resolve(), device=torch.device("cpu")
+        )  # load FP32 model
 
         # check num classes and labels
-        assert model.nc == len(model.names), f'Model class count {model.nc} != len(names) {len(model.names)}'
+        assert model.nc == len(model.names), (
+            f"Model class count {model.nc} != len(names) {len(model.names)}"
+        )
 
         # check if image size is suitable
         gs = int(max(model.stride))  # grid size (max stride)
-        if isinstance(self.imgsz, int):
-            self.imgsz = [self.imgsz, self.imgsz]
         for sz in self.imgsz:
             if sz % gs != 0:
                 raise ValueError(f"Image size is not a multiple of maximum stride {gs}")
 
-        # ensure correct length
-        if len(self.imgsz) != 2:
-            raise ValueError(f"Image size must be of length 1 or 2.")
-        
         inplace = True
 
         model.eval()
@@ -104,17 +118,17 @@ class YoloV5Exporter(Exporter):
             elif isinstance(m, Detect):
                 m.inplace = inplace
                 m.onnx_dynamic = False
-                if hasattr(m, 'forward_export'):
+                if hasattr(m, "forward_export"):
                     m.forward = m.forward_export  # assign custom forward (optional)
 
         self.model = model
 
-        m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]
+        m = model.module.model[-1] if hasattr(model, "module") else model.model[-1]
         self.num_branches = len(m.anchor_grid)
 
     def export_onnx(self):
         onnx_model, check = self.get_onnx()
-        assert check, 'assert check failed'
+        assert check, "assert check failed"
 
         # add named sigmoids for prunning in OpenVINO
         conv_indices = []
@@ -122,16 +136,16 @@ class YoloV5Exporter(Exporter):
             if "Conv" in n.name:
                 conv_indices.append(i)
 
-        inputs = conv_indices[-self.num_branches:]
+        inputs = conv_indices[-self.num_branches :]
 
         # Names of the node outputs you want to set as model outputs
         node_output_names = []
         for i, inp in enumerate(inputs):
-            node_output_names.append(f'output{i+1}_yolov5')
+            node_output_names.append(f"output{i + 1}_yolov5")
             sigmoid = onnx.helper.make_node(
-                'Sigmoid',
+                "Sigmoid",
                 inputs=[onnx_model.graph.node[inp].output[0]],
-                outputs=[f'output{i+1}_yolov5'],
+                outputs=[f"output{i + 1}_yolov5"],
             )
             onnx_model.graph.node.append(sigmoid)
 
@@ -147,7 +161,7 @@ class YoloV5Exporter(Exporter):
                             output_value_infos.append(value_info)
 
         # Clear the existing outputs
-        onnx_model.graph.ClearField('output')
+        onnx_model.graph.ClearField("output")
 
         # Add the new outputs
         for value_info in output_value_infos:
@@ -156,25 +170,31 @@ class YoloV5Exporter(Exporter):
         onnx.checker.check_model(onnx_model)  # check onnx model
 
         # save the simplified model
-        self.f_simplified = (self.conv_path / f"{self.model_name}-simplified.onnx").resolve()
+        self.f_simplified = (
+            self.conv_path / f"{self.model_name}-simplified.onnx"
+        ).resolve()
         onnx.save(onnx_model, self.f_simplified)
         return self.f_simplified
 
     def export_json(self):
         # generate anchors and sides
         anchors, sides = [], []
-        m = self.model.module.model[-1] if hasattr(self.model, 'module') else self.model.model[-1]
+        m = (
+            self.model.module.model[-1]
+            if hasattr(self.model, "module")
+            else self.model.model[-1]
+        )
         for i in range(self.num_branches):
             sides.append(m.anchor_grid[i].size()[3])
             for j in range(m.anchor_grid[i].size()[1]):
                 anchors.extend(m.anchor_grid[i][0, j, 0, 0].numpy())
         anchors = [float(x) for x in anchors]
-        #sides.sort()
+        # sides.sort()
 
         # generate masks
         masks = dict()
-        #for i, num in enumerate(sides[::-1]):
+        # for i, num in enumerate(sides[::-1]):
         for i, num in enumerate(sides):
-            masks[f"side{num}"] = list(range(i*3, i*3+3))
+            masks[f"side{num}"] = list(range(i * 3, i * 3 + 3))
 
         return self.write_json(anchors, masks)

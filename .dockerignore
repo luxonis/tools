@@ -1,4 +1,5 @@
 venv
+env/
 yolo/YoloV5_export_playground.ipynb
 tmp
 export
@@ -9,3 +10,8 @@ docker-compose.yml
 Dockerfile
 .gitignore
 .dockerignore
+shared_with_container/
+yolov6r1/
+yolov6r3/
+yolov7/
+tests/
