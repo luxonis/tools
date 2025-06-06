@@ -24,7 +24,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set up frontend (React/Vite/etc.)
+# Build frontend
 WORKDIR /app/client
 COPY client/package.json client/package-lock.json ./
 RUN npm install
@@ -32,9 +32,15 @@ COPY client/public ./public
 COPY client/src ./src
 RUN npm run build
 
-# Copy backend code (after npm build to leverage Docker layer cache)
+# Save the build output before overwriting
+RUN cp -r /app/client/build /app/client_build
+
+# Move to backend
 WORKDIR /app
 COPY . .
+
+# Restore frontend
+RUN rm -rf /app/client/build && mv /app/client_build /app/client/build
 
 # Runtime environment
 ENV RUNTIME=prod
