@@ -95,6 +95,33 @@ function App() {
             <div className="container py-5 h-100">
                 <div className="row d-flex justify-content-center align-items-center h-100">
                     <div className="col-xl-10">
+                        {/* OUTDATED banner at top level */}
+                        <div className="w-100 text-center bg-danger text-white py-3 mb-3">
+                            <strong>⚠️ DEPRECATION NOTICE (v3) ⚠️</strong>
+                            <br />
+                            This tool is no longer maintained. Results should
+                            remain compatible with older devices and DepthAI v2,
+                            but may not work with newer devices or DepthAI v3.
+                            <br />
+                            Please refer to{" "}
+                            <a
+                                href="https://docs.luxonis.com/cloud/hubai/features/model-conversion/"
+                                target="_blank"
+                                className="text-white text-decoration-underline"
+                            >
+                                HubAI Model Conversion
+                            </a>{" "}
+                            to get the most up-to-date results. You can read
+                            more about the migration from Tools in our{" "}
+                            <a
+                                href="https://docs.luxonis.com/software-v3/ai-inference/conversion/rvc-conversion/online/hubai/#HubAI-Migration%20from%20tools.luxonis.com"
+                                target="_blank"
+                                className="text-white text-decoration-underline"
+                            >
+                                documentation
+                            </a>
+                            .
+                        </div>
                         <div className="card rounded-3 text-black mb-3">
                             <div className="row g-0">
                                 <div className="col-lg-6 d-flex align-items-center gradient-custom-2">
