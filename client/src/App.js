@@ -61,8 +61,8 @@ function App() {
               <br />
               This tool is no longer maintained. Results should remain compatible with older devices and DepthAI v2, but may not work with newer devices or DepthAI v3.
               <br />
-              Please refer to <a href="https://rvc4.docs.luxonis.com/cloud/hubai/features/model-conversion/" target="_blank" className="text-white text-decoration-underline">HubAI Model Conversion</a> to get the most up-to-date results,
-              or read more about the conversion process in our <a href="https://rvc4.docs.luxonis.com/software/ai-inference/conversion/" target="_blank" className="text-white text-decoration-underline">documentation</a>.
+              Please refer to <a href="https://docs.luxonis.com/cloud/hubai/features/model-conversion/" target="_blank" className="text-white text-decoration-underline">HubAI Model Conversion</a> to get the most up-to-date results. 
+              You can read more about the migration from Tools in our <a href="https://docs.luxonis.com/software-v3/ai-inference/conversion/rvc-conversion/online/hubai/#HubAI-Migration%20from%20tools.luxonis.com" target="_blank" className="text-white text-decoration-underline">documentation</a>.
             </div>
 
             <div className="card rounded-3 text-black mb-3">
