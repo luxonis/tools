@@ -1,34 +1,49 @@
-FROM python:3.9-bullseye
+FROM python:3.10-slim
 
-RUN python3 -m pip install -U pip
-# RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip
 
-RUN apt-get update && apt-get install -y ca-certificates curl gnupg
-RUN mkdir -p /etc/apt/keyrings
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-ENV NODE_MAJOR=20
-RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-RUN apt-get install nodejs -y
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Basic system tools
+    curl gnupg ca-certificates \
+    # OpenCV dependencies
+    libgl1 libglib2.0-0 libsm6 libxrender1 libxext6 && \
+    # Node
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
+    gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y nodejs build-essential cmake git pkg-config libgtk-3-dev \
-    libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
-    libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev \
-    gfortran openexr libatlas-base-dev python3-dev python3-numpy \
-    libtbb2 libtbb-dev libdc1394-22-dev libopenexr-dev \
-    libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev
-
+# Set working directory
 WORKDIR /app
-ADD requirements.txt /app/requirements.txt
-RUN python3 -m pip install -r requirements.txt
+
+# Install Python requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Build frontend
 WORKDIR /app/client
-ADD client/package.json /app/client/package.json
-ADD client/package-lock.json /app/client/package-lock.json
+COPY client/package.json client/package-lock.json ./
 RUN npm install
-ADD client/public /app/client/public
-ADD client/src /app/client/src
+COPY client/public ./public
+COPY client/src ./src
 RUN npm run build
+
+# Save the build output before overwriting
+RUN cp -r /app/client/build /app/client_build
+
+# Move to backend
 WORKDIR /app
-ADD . .
-#RUN python3 -m pip install -r yolo/yolov5/requirements.txt
-ENV RUNTIME prod
+COPY . .
+
+# Restore frontend
+RUN rm -rf /app/client/build && mv /app/client_build /app/client/build
+
+# Runtime environment
+ENV RUNTIME=prod
+
+# Run the Python app
 CMD ["python3", "/app/main.py"]

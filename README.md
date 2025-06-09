@@ -83,25 +83,30 @@ version: '2'
 services:
   api:
     build: .
+    image: tools/api:latest
     ports:
       - 8000:8000
   yolov7:
     build: ./yolov7
+    image: tools/yolov7:latest
     ports:
       - 8001:8001
   yolov6r1:
     build: ./yolov6r1
+    image: tools/yolov6r1:latest
     ports:
       - 8002:8002
   yolov6r3:
     build: ./yolov6r3
+    image: tools/yolov6r3:latest
     ports:
       - 8003:8003
   nginx:
     build: ./nginx
+    image: tools/nginx:latest
     ports:
-      - 80:80
-      - 443:443
+      - 8080:80
+      - 8443:443
     depends_on:
       - api
       - yolov7
@@ -126,7 +131,7 @@ or
 ```sudo docker compose up```
 
 ### Step 6: Open browser
-Open browser at [http://0.0.0.0](http://0.0.0.0).
+Open browser at [http://localhost:8080/](http://localhost:8080/).
 
 ## Credits
 

@@ -4,64 +4,23 @@ This README describes the tests of the Tools app.
 
 ## Unit Tests
 
-### Running
-
+Unit tests download the preset weights from original repositories and check if they are converted correctly using the tools web app. Here are the available parameters you can use:
 ```
-# To run the code with default arguments
-python3 unittests.py
-# To pass arguments you have to set them as environment variables specifying the output folders
-export DOWNLOAD_WEIGHTS="True" && export DELETE_OUTPUT="True" && export tools_url="http://0.0.0.0" && export v5_folder="../../YoloV5Weights/" && export v6r1_folder="../../YOLOv6-Weights/R1/" && export v6r2_folder="../../YOLOv6-Weights/R2/" && export v6r21_folder="../../YOLOv6-Weights/R2.1/" && export v6r3_folder="../../YOLOv6-Weights/R3/" && export v6r4_folder="../../YOLOv6-Weights/R4/" && export v7_folder="../../YoloV7Weights/" && export v8_folder="../../YoloV8Weights/" && python3 unittests.py
-# Downloading weights and testing locally
-export DOWNLOAD_WEIGHTS="True" && export DELETE_OUTPUT="True" && export tools_url="http://0.0.0.0" && python3 unittests.py
-# Downloading weights
-export DOWNLOAD_WEIGHTS="True" && export DELETE_OUTPUT="True" && python3 unittests.py
-# Not downloading weights and deleting the converted files
-export DOWNLOAD_WEIGHTS="False" && export DELETE_OUTPUT="False" && python3 unittests.py
+--tools-url=TOOLS_URL
+                    Base URL for the tools service
+--download-weights    Download weights if not present
+--no-delete-output    Don't delete output zip files after test
+--is-local            If set then use ./weights/ for weights storing
+--yolo-version={v5,v6,v6r2,v6r4,v7,v8,v9,v10,v11}
+                    If set then test only that specific yolo version
+--test-case=TEST_CASE
+                    If set then test only that specific test case
 ```
 
-### List of supported models of the Unit tests
-
-YoloV3
-
-* yolov3-tinyu
-
-YoloV5
-
-* yolov5n
-* yolov5s
-* yolov5m
-* yolov5l
-
-YoloV6
-
-* yolov6nr1
-* yolov6tr1
-* yolov6sr1
-* yolov6nr2
-* yolov6tr2
-* yolov6sr2
-* yolov6mr2
-* yolov6nr21
-* yolov6sr21
-* yolov6mr21
-* yolov6nr3
-* yolov6sr3
-* yolov6mr3
-* yolov6nr4
-* yolov6sr4
-* yolov6mr4
-
-YoloV7
-
-* yolov7t
-* yolov7
-
-YoloV8
-
-* yolov8n
-* yolov8s
-* yolov8m
-* yolov8l
+Here is an example of the call to run in localhost:
+```
+pytest --download-weights --is-local --tools-url="http://localhost:8080/" --log-cli-level=INFO --log-file=out.log --log-file-level=DEBUG test_conversion.py
+```
 
 ## Automated GUI tests
 

@@ -122,7 +122,6 @@ function App() {
                             </a>
                             .
                         </div>
-
                         <div className="card rounded-3 text-black mb-3">
                             <div className="row g-0">
                                 <div className="col-lg-6 d-flex align-items-center gradient-custom-2">
@@ -145,8 +144,8 @@ function App() {
                                             and generated JSON file at
                                         </p>
                                         <p className="large mb-2">
-                                            <a href="https://tinyurl.com/oak-d-yolo">
-                                                DepthAI Experiments!
+                                            <a href="https://github.com/luxonis/oak-examples/tree/master/gen2-yolo/device-decoding">
+                                                OAK Examples!
                                             </a>
                                         </p>
                                     </div>
