@@ -63,6 +63,9 @@ class RequestForm(BaseModel):
 async def index(request):
     return await response.file(app.config.static_path / "../index.html")
 
+@app.get("/favicon.ico")
+async def favicon(request):
+    return await response.file(app.config.static_path / "../favicon.ico")
 
 @app.get("/progress/<key>")
 async def progress(request, key):
