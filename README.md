@@ -69,14 +69,36 @@ The output files are going to be in `shared-component/output` folder.
 
 ## ⚙️ Arguments
 
-- `model: str` = Path to the model.
-- `imgsz: str` = Image input shape in the format `width height` or `width`. Default value `"416 416"`.
-- `version: Optional[str]` = Version of the YOLO model. Default value `None`. If not specified, the version will be detected automatically. Supported versions: `yolov5`, `yolov6r1`, `yolov6r3`, `yolov6r4`, `yolov7`, `yolov8`, `yolov9`, `yolov10`, `yolov11`, `goldyolo`.
-- `use_rvc2: bool` = Whether to export for RVC2 or RVC3 devices. Default value `True`.
-- `class_names: Optional[str]` = Optional list of classes separated by a comma, e.g. `"person, dog, cat"`
-- `output_remote_url: Optional[str]` = Remote output url for the output .onnx model.
-- `config_path: Optional[str]` = Optional path to an optional config.
-- `put_file_plugin: Optional[str]` = Which plugin to use. Optional.
+```
+                                                                                                                                                                               
+ Usage: tools [OPTIONS] MODEL                                                                                                                                                  
+                                                                                                                                                                               
+╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ *    model      TEXT  Path to the model file.                                                                                                                               │
+│                       [default: None]                                                                                                                                       │
+│                       [required]                                                                                                                                            │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --imgsz                                 TEXT       Input image size in width height string format or size format where 'size' will be used for both width and height.       │
+│                                                    [default: 416 416]                                                                                                       │
+│ --version                               TEXT       YOLO version (e.g. "yolov8"). If None, the toolkit will run an automatic version detector.                               │
+│                                                    [default: None]                                                                                                          │
+│ --encoding                              [RGB|BGR]  Color encoding used in the input model. Must be RGB or BGR.                                                              │
+│                                                    [default: RGB]                                                                                                           │
+│ --use-rvc2             --no-use-rvc2               Whether the target platform is RVC2 or RVC3.                                                                             │
+│                                                    [default: use-rvc2]                                                                                                      │
+│ --class-names                           TEXT       A list of class names the model is capable of recognizing (e.g. "person, bicycle, car").                                 │
+│                                                    [default: None]                                                                                                          │
+│ --output-remote-url                     TEXT       An URL to upload the output to.                                                                                          │
+│                                                    [default: None]                                                                                                          │
+│ --config-path                           TEXT       An optional path to a conversion config file.                                                                            │
+│                                                    [default: None]                                                                                                          │
+│ --put-file-plugin                       TEXT       The name of a registered function under the PUT_FILE_REGISTRY.                                                           │
+│                                                    [default: None]                                                                                                          │
+│ --help                                             Show this message and exit.                                                                                              │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+```
 
 <a name="supported-models"></a>
 

@@ -10,6 +10,7 @@ from loguru import logger
 
 from tools.modules import DetectV5, Exporter
 from tools.utils import get_first_conv2d_in_channels
+from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 yolov5_path = os.path.join(current_dir, "yolov5")
@@ -66,9 +67,9 @@ def attempt_load_yolov5(weights, device=None, inplace=True, fuse=True):
     model.stride = model[
         torch.argmax(torch.tensor([m.stride.max() for m in model])).int()
     ].stride  # max stride
-    assert all(
-        model[0].nc == m.nc for m in model
-    ), f"Models have different class counts: {[m.nc for m in model]}"
+    assert all(model[0].nc == m.nc for m in model), (
+        f"Models have different class counts: {[m.nc for m in model]}"
+    )
     return model
 
 
@@ -98,9 +99,9 @@ class YoloV5Exporter(Exporter):
         model = attempt_load_yolov5(self.model_path, device="cpu")  # load FP32 model
 
         # check num classes and labels
-        assert model.nc == len(
-            model.names
-        ), f"Model class count {model.nc} != len(names) {len(model.names)}"
+        assert model.nc == len(model.names), (
+            f"Model class count {model.nc} != len(names) {len(model.names)}"
+        )
 
         # check if image size is suitable
         gs = int(max(model.stride))  # grid size (max stride)
@@ -143,19 +144,22 @@ class YoloV5Exporter(Exporter):
         self.m = model.module.model[-1] if hasattr(model, "module") else model.model[-1]
         self.num_branches = len(self.m.anchor_grid)
 
-    def export_nn_archive(self, class_names: Optional[List[str]] = None):
+    def export_nn_archive(
+        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+    ):
         """
         Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
         names = list(self.model.names.values())
 
         if class_names is not None:
-            assert (
-                len(class_names) == self.model.nc
-            ), f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            assert len(class_names) == self.model.nc, (
+                f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            )
             names = class_names
 
         anchors = [
@@ -163,5 +167,9 @@ class YoloV5Exporter(Exporter):
             for i in range(self.num_branches)
         ]
         self.make_nn_archive(
-            names, self.model.nc, parser="YOLOExtendedParser", anchors=anchors
+            class_list=names,
+            n_classes=self.model.nc,
+            parser="YOLOExtendedParser",
+            anchors=anchors,
+            encoding=encoding,
         )

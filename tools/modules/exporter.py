@@ -17,7 +17,7 @@ from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata impo
     HeadYOLOMetadata,
 )
 
-from tools.utils.constants import OUTPUTS_DIR
+from tools.utils.constants import OUTPUTS_DIR, Encoding
 
 
 class Exporter:
@@ -116,6 +116,7 @@ class Exporter:
         is_softmax: Optional[bool] = None,
         anchors: Optional[List[List[List[float]]]] = None,
         output_kwargs: Optional[dict] = None,
+        encoding: Encoding = Encoding.RGB,
     ):
         """Export the model to NN archive format.
 
@@ -133,6 +134,7 @@ class Exporter:
             is_softmax (Optional[bool], optional): Whether to use softmax. Defaults to None.
             anchors (Optional[List[List[List[float]]]], optional): Anchors. Defaults to None.
             output_kwargs (Optional[dict], optional): Output keyword arguments. Defaults to None.
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
         if stage2_executable_path is not None:
@@ -162,6 +164,7 @@ class Exporter:
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
+                                "dai_type": encoding.get_dai_type(),
                             },
                         }
                     ],
@@ -199,19 +202,22 @@ class Exporter:
         )
         archive.make_archive()
 
-    def export_nn_archive(self, class_names: Optional[List[str]] = None):
+    def export_nn_archive(
+        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+    ):
         """
         Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
         nc = self.model.detect.nc
         # If class names are provided, use them
         if class_names is not None:
-            assert (
-                len(class_names) == nc
-            ), f"Number of the given class names {len(class_names)} does not match number of classes {nc} provided in the model!"
+            assert len(class_names) == nc, (
+                f"Number of the given class names {len(class_names)} does not match number of classes {nc} provided in the model!"
+            )
             names = class_names
         else:
             # Check if the model has a names attribute
@@ -220,4 +226,4 @@ class Exporter:
             else:
                 names = [f"Class_{i}" for i in range(nc)]
 
-        self.make_nn_archive(names, nc)
+        self.make_nn_archive(class_list=names, n_classes=nc, encoding=encoding)

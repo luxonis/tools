@@ -25,7 +25,7 @@ from tools.utils import (
     resolve_path,
     upload_file_to_remote,
 )
-from tools.utils.constants import MISC_DIR
+from tools.utils.constants import MISC_DIR, Encoding
 
 setup_logging()
 
@@ -51,34 +51,54 @@ YOLO_VERSIONS = [
 def convert(
     model: Annotated[str, typer.Argument(help="Path to the model file.")],
     imgsz: Annotated[
-        str, typer.Option(help="Input image size [width, height].")
+        str,
+        typer.Option(
+            help="Input image size in `width height` string format or `size` format where 'size' will be used for both width and height.",
+            show_default=True,
+        ),
     ] = "416 416",
     version: Annotated[
         Optional[str],
         typer.Option(
-            help='YOLO version (e.g. `"yolov8"`). If `None`, the toolkit will run an automatic version detector.'
+            help='YOLO version (e.g. `"yolov8"`). If `None`, the toolkit will run an automatic version detector.',
+            show_default=True,
         ),
     ] = None,
+    encoding: Annotated[
+        Encoding,
+        typer.Option(
+            help="Color encoding used in the input model. Must be RGB or BGR.",
+            show_default=True,
+        ),
+    ] = Encoding.RGB,
     use_rvc2: Annotated[
-        bool, typer.Option(help="Whether the target platform is RVC2 or RVC3.")
+        bool,
+        typer.Option(
+            help="Whether the target platform is RVC2 or RVC3.", show_default=True
+        ),
     ] = True,
     class_names: Annotated[
         Optional[str],
         typer.Option(
-            help='A list of class names the model is capable of recognizing (e.g. `"person, bicycle, car"`).'
+            help='A list of class names the model is capable of recognizing (e.g. `"person, bicycle, car"`).',
+            show_default=True,
         ),
     ] = None,
     output_remote_url: Annotated[
-        Optional[str], typer.Option(help="An URL to upload the output to.")
+        Optional[str],
+        typer.Option(help="An URL to upload the output to.", show_default=True),
     ] = None,
     config_path: Annotated[
         Optional[str],
-        typer.Option(help="An optional path to a conversion config file."),
+        typer.Option(
+            help="An optional path to a conversion config file.", show_default=True
+        ),
     ] = None,
     put_file_plugin: Annotated[
         Optional[str],
         typer.Option(
-            help="The name of a registered function under the PUT_FILE_REGISTRY."
+            help="The name of a registered function under the PUT_FILE_REGISTRY.",
+            show_default=True,
         ),
     ] = None,
 ):
@@ -87,22 +107,27 @@ def convert(
         raise typer.Exit(code=1) from None
 
     try:
-        imgsz = list(map(int, imgsz.split(" "))) if " " in imgsz else [int(imgsz)] * 2
+        imgsz_list = (
+            list(map(int, imgsz.split(" "))) if " " in imgsz else [int(imgsz)] * 2
+        )
     except ValueError as e:
-        logger.error('Invalid image size format. Must be "width height" or "width".')
-        raise typer.Exit(code=1) from e
+        logger.error('Invalid image size format. Must be "width height" or "size".')
+        raise typer.Exit(code=2) from e
 
     if class_names:
-        class_names = [class_name.strip() for class_name in class_names.split(",")]
-        logger.info(f"Class names: {class_names}")
+        class_names_list = [class_name.strip() for class_name in class_names.split(",")]
+        logger.info(f"Class names: {class_names_list}")
+    else:
+        class_names_list = class_names
 
     config = Config.get_config(
         config_path,
         {
             "model": model,
-            "imgsz": imgsz,
+            "imgsz": imgsz_list,
+            "encoding": encoding,
             "use_rvc2": use_rvc2,
-            "class_names": class_names,
+            "class_names": class_names_list,
             "output_remote_url": output_remote_url,
             "put_file_plugin": put_file_plugin,
         },
@@ -110,7 +135,6 @@ def convert(
 
     # Resolve model path
     model_path = resolve_path(config.model, MISC_DIR)
-
     if version is None:
         version = detect_version(str(model_path))
         version_note = (
@@ -162,11 +186,11 @@ def convert(
             exporter = YoloV10Exporter(str(model_path), config.imgsz, config.use_rvc2)
         else:
             logger.error("Unrecognized model version.")
-            raise typer.Exit(code=1) from None
+            raise typer.Exit(code=3) from None
         logger.info("Model loaded.")
     except Exception as e:
         logger.error(f"Error creating exporter: {e}")
-        raise typer.Exit(code=1) from e
+        raise typer.Exit(code=4) from e
 
     # Export model
     try:
@@ -175,15 +199,17 @@ def convert(
         logger.info("Model exported.")
     except Exception as e:
         logger.error(f"Error exporting model: {e}")
-        raise typer.Exit(code=1) from e
+        raise typer.Exit(code=5) from e
     # Create NN archive
     try:
         logger.info("Creating NN archive...")
-        exporter.export_nn_archive(config.class_names)
+        exporter.export_nn_archive(
+            class_names=config.class_names, encoding=config.encoding
+        )
         logger.info(f"NN archive created in {exporter.output_folder}.")
     except Exception as e:
         logger.error(f"Error creating NN archive: {e}")
-        raise typer.Exit(code=1) from e
+        raise typer.Exit(code=6) from e
 
     # Upload to remote
     if config.output_remote_url:
