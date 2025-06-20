@@ -22,7 +22,7 @@ logger.setLevel(logging.INFO)
     ids=[model["name"] for model in TEST_MODELS],
 )
 def test_cli_conversion(model: dict, test_config: dict, subtests):
-    """Tests the whole CLI conversion flow with no extra params specified"""
+    """Tests the whole CLI conversion flow with no extra params specified."""
     logger.info(f"Testing model: {model['name']}")
 
     if (
@@ -103,7 +103,7 @@ MODEL_EXPLICIT_VERSION = [
     ids=[model[0] for model in MODEL_EXPLICIT_VERSION],
 )
 def test_explicit_version(model_info: tuple[str, str]):
-    """Tests setting explicit version"""
+    """Tests setting explicit version."""
     model_name = model_info[0]
     version = model_info[1]
     model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
@@ -149,7 +149,7 @@ def test_wrong_explicit_version(version: str, expected_exit_code: int):
 
 @pytest.mark.parametrize("input_size", ["64", "64 64", "128 64"])
 def test_explicit_input_size(input_size: str):
-    """Tests setting explicit input size"""
+    """Tests setting explicit input size."""
     model_name = "yolov8n"
     model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
     if not os.path.exists(model_path):
@@ -177,7 +177,7 @@ def test_explicit_input_size(input_size: str):
 
 @pytest.mark.parametrize("input_size", ["64 a", "a", "a a"])
 def test_wrong_explicit_input_size(input_size: str):
-    """Tests setting wrong explicit input size"""
+    """Tests setting wrong explicit input size."""
     model_name = "yolov8n"
     expected_exit_code = 2
     model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
@@ -197,7 +197,7 @@ def test_wrong_explicit_input_size(input_size: str):
 
 @pytest.mark.parametrize("encoding", ["RGB", "BGR"])
 def test_explicit_encoding(encoding: str):
-    """Tests setting explicit encoding"""
+    """Tests setting explicit encoding."""
     model_name = "yolov8n"
     model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
     if not os.path.exists(model_path):
@@ -223,7 +223,7 @@ def test_explicit_encoding(encoding: str):
 
 @pytest.mark.parametrize("encoding", ["rgb", "gray", "a"])
 def test_wrong_explicit_encoding(encoding: str):
-    """Tests setting wrong explicit encoding"""
+    """Tests setting wrong explicit encoding."""
     model_name = "yolov8n"
     model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
     if not os.path.exists(model_path):
@@ -241,7 +241,7 @@ def test_wrong_explicit_encoding(encoding: str):
 
 
 def test_explicit_class_names():
-    """Tests setting explicit class_names"""
+    """Tests setting explicit class_names."""
     model_name = "yolov8n"
     model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
     if not os.path.exists(model_path):
@@ -268,7 +268,7 @@ def test_explicit_class_names():
 
 
 def test_wrong_explicit_class_names():
-    """Tests setting wrong explicit class names"""
+    """Tests setting wrong explicit class names."""
     model_name = "yolov8n"
     expected_exit_code = 6
     model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
@@ -301,8 +301,8 @@ def download_model(model_name: str, folder: str):
     return file_path
 
 
-def nn_archive_checker(extra_keys_to_check: list = []):
-    """Tests the content of the exported NNArchive"""
+def nn_archive_checker(extra_keys_to_check: list = []):  # noqa: B006
+    """Tests the content of the exported NNArchive."""
     output_dir = "shared_with_container/outputs"
     subdirs = [
         d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))

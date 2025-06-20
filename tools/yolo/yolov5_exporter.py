@@ -150,8 +150,7 @@ class YoloV5Exporter(Exporter):
     def export_nn_archive(
         self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
     ):
-        """
-        Export the model to NN archive format.
+        """Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.

@@ -43,8 +43,7 @@ POSE_MODE = 4
 
 
 def get_output_names(mode: int) -> List[str]:
-    """
-    Get the output names based on the mode.
+    """Get the output names based on the mode.
 
     Args:
         mode (int): Mode of the model
@@ -168,8 +167,7 @@ class YoloV8Exporter(Exporter):
     def export_nn_archive(
         self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
     ):
-        """
-        Export the model to NN archive format.
+        """Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.

@@ -5,6 +5,7 @@ This README describes the tests of the Tools app.
 ## Unit Tests
 
 Unit tests download the preset weights from original repositories and check if they are converted correctly using the tools CLI. Here are the available parameters you can use:
+
 ```
 --download-weights    Download weights if not present
 --no-delete-output    Don't delete output files after test
@@ -16,7 +17,9 @@ Unit tests download the preset weights from original repositories and check if t
 ```
 
 Here is an example of the call to run:
+
 ```
 pytest --download-weights --log-cli-level=INFO --log-file=out.log --log-file-level=DEBUG .
 ```
+
 This will run the full test suite on all the supported models and store the DEBUG logs into the out.log file.

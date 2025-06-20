@@ -32,8 +32,7 @@ class Exporter:
         output_names: List[str] = None,
         all_output_names: Optional[List[str]] = None,
     ):
-        """
-        Initialize the Exporter class.
+        """Initialize the Exporter class.
 
         Args:
             model_path (str): Path to the model's weights
@@ -205,8 +204,7 @@ class Exporter:
     def export_nn_archive(
         self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
     ):
-        """
-        Export the model to NN archive format.
+        """Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.

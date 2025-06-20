@@ -14,4 +14,3 @@ services:
       MLFLOW_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
     volumes:
       - ${PWD}/shared_with_container:/app/shared_with_container
-

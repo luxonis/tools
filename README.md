@@ -35,9 +35,9 @@ cd tools
 ### Using Python package
 
 ```bash
-# Install the package 
+# Install the package
 pip install .
-# Running the package 
+# Running the package
 tools yolov6nr4.pt --imgsz "416"
 ```
 
@@ -70,9 +70,9 @@ The output files are going to be in `shared-component/output` folder.
 ## ⚙️ Arguments
 
 ```
-                                                                                                                                                                               
- Usage: tools [OPTIONS] MODEL                                                                                                                                                  
-                                                                                                                                                                               
+
+ Usage: tools [OPTIONS] MODEL
+
 ╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ *    model      TEXT  Path to the model file.                                                                                                                               │
 │                       [default: None]                                                                                                                                       │
