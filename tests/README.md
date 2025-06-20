@@ -12,6 +12,7 @@ Unit tests download the preset weights from original repositories and check if t
                     If set then test only that specific yolo version
 --test-case=TEST_CASE
                     If set then test only that specific test case
+--delete-weights-now  Clean weights after every test to save space - but longer test time.
 ```
 
 Here is an example of the call to run:

@@ -74,12 +74,12 @@ jobs:
     - name: Run tests with coverage [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
-      run: pytest tests --cov=tools --cov-report xml --junit-xml pytest.xml
+      run: pytest tests--download-weights --delete-weights-now --cov=tools --cov-report xml --junit-xml pytest.xml
 
     - name: Run tests [Windows, macOS]
       if: matrix.os != 'ubuntu-latest' || matrix.version != '3.10'
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
-      run: pytest tests --junit-xml pytest.xml
+      run: pytest tests--download-weights --delete-weights-now --junit-xml pytest.xml
 
     - name: Generate coverage badge [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == ''
