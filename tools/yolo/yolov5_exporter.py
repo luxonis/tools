@@ -14,7 +14,10 @@ from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 yolov5_path = os.path.join(current_dir, "yolov5")
-sys.path.append(yolov5_path)
+# Ensure it's first in sys.path
+if yolov5_path not in sys.path:
+    sys.path.insert(0, yolov5_path)
+
 
 import models.experimental  # noqa: E402
 from models.common import Conv  # noqa: E402

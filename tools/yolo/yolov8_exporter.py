@@ -123,7 +123,7 @@ class YoloV8Exporter(Exporter):
                 model.module.names if hasattr(model, "module") else model.names
             )  # get class names
             # check num classes and labels
-            assert model.nc == len(self.names), (
+            assert model.model[-1].nc == len(self.names), (
                 f"Model class count {model.nc} != len(names) {len(self.names)}"
             )
 

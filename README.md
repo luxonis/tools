@@ -91,8 +91,6 @@ The output files are going to be in `shared-component/output` folder.
 │                                                    [default: None]                                                                                                          │
 │ --output-remote-url                     TEXT       An URL to upload the output to.                                                                                          │
 │                                                    [default: None]                                                                                                          │
-│ --config-path                           TEXT       An optional path to a conversion config file.                                                                            │
-│                                                    [default: None]                                                                                                          │
 │ --put-file-plugin                       TEXT       The name of a registered function under the PUT_FILE_REGISTRY.                                                           │
 │                                                    [default: None]                                                                                                          │
 │ --help                                             Show this message and exit.                                                                                              │

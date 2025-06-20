@@ -42,10 +42,11 @@ def test_config(pytestconfig):
     }
 
 
-@pytest.fixture(scope="session", autouse=True)
-def cleanup_after_tests():
+@pytest.fixture(scope="function", autouse=True)
+def cleanup_after_tests(test_config):
     yield  # Tests run here
-    folder_to_delete = "shared_with_container"
-    if os.path.exists(folder_to_delete):
-        shutil.rmtree(folder_to_delete)
-        logger.info(f"Removed test artifacts from {folder_to_delete}")
+    if test_config["delete_output"]:
+        folder_to_delete = "shared_with_container"
+        if os.path.exists(folder_to_delete):
+            shutil.rmtree(folder_to_delete)
+            logger.info(f"Removed test artifacts from {folder_to_delete}")

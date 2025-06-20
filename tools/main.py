@@ -88,12 +88,6 @@ def convert(
         Optional[str],
         typer.Option(help="An URL to upload the output to.", show_default=True),
     ] = None,
-    config_path: Annotated[
-        Optional[str],
-        typer.Option(
-            help="An optional path to a conversion config file.", show_default=True
-        ),
-    ] = None,
     put_file_plugin: Annotated[
         Optional[str],
         typer.Option(
@@ -121,7 +115,6 @@ def convert(
         class_names_list = class_names
 
     config = Config.get_config(
-        config_path,
         {
             "model": model,
             "imgsz": imgsz_list,
@@ -130,7 +123,7 @@ def convert(
             "class_names": class_names_list,
             "output_remote_url": output_remote_url,
             "put_file_plugin": put_file_plugin,
-        },
+        }
     )
 
     # Resolve model path
