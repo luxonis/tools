@@ -1,3 +1,6 @@
+default_language_version:
+  python: python3.10
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.9
@@ -5,10 +8,9 @@ repos:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
         types_or: [python, pyi, jupyter]
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: ruff-format
         types_or: [python, pyi, jupyter]
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
+    exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
 
   - repo: local
     hooks:
@@ -21,43 +23,32 @@ repos:
         args: [--in-place, --black, --style=epytext]
         exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
 
-
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.10
     hooks:
       - id: mdformat
-        additional_dependencies:
-          - mdformat-gfm==0.3.6
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
+        additional_dependencies: [mdformat-gfm==0.3.6]
+    exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
 
   - repo: https://github.com/ComPWA/taplo-pre-commit
     rev: v0.9.3
     hooks:
       - id: taplo-format
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
+    exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: check-docstring-first
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: check-executables-have-shebangs
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: check-illegal-windows-names
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: end-of-file-fixer
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: mixed-line-ending
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: check-yaml
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: check-json
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: detect-private-key
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: check-toml
-        exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/
       - id: no-commit-to-branch
         args: [--branch, main]
+    exclude: ^tools/(yolo/(YOLOv6|ultralytics|yolov5)|yolov6r1/YOLOv6R1|yolov6r3/(Efficient-Computing|YOLOv6R3)|yolov7/yolov7)/

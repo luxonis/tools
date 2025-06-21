@@ -1,0 +1,40 @@
+name: End2End Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - 'tools/**'
+      - '.github/workflows/end2end_tests.yaml'
+
+jobs:
+  run_tests:
+    name: E2E Tests on ${{ matrix.os }} / Python ${{ matrix.version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        version: ['3.10']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+        submodules: recursive  # Ensures submodules are cloned
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.version }}
+        cache: pip
+
+    - name: Install dependencies
+      run: pip install -e .[dev]
+
+    - name: Run tests
+      run: pytest tests/end2end.py --download-weights --delete-weights-now

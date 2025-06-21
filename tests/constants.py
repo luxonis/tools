@@ -140,6 +140,7 @@ MODEL_TYPE2URL: dict[str, str] = {
     "yolov11s": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s.pt",
     "yolov11m": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11m.pt",
     "yolov11l": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11l.pt",
+    "yolov11x": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11x.pt",
     "yolov11n-cls": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-cls.pt",
     "yolov11n-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt",
     "yolov11n-pose": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-pose.pt",
