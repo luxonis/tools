@@ -9,6 +9,10 @@ on:
       - 'tools/**'
       - '.github/workflows/end2end_tests.yaml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run_tests:
     name: E2E Tests on ${{ matrix.os }} / Python ${{ matrix.version }}
