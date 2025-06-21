@@ -30,9 +30,7 @@ def make_anchors(feats, strides, grid_cell_offset=0.5):
 
 
 class DetectV5(nn.Module):
-    """
-    YOLOv5 Detect head for detection models.
-    """
+    """YOLOv5 Detect head for detection models."""
 
     def __init__(self, old_detect):
         super().__init__()
@@ -61,9 +59,7 @@ class DetectV5(nn.Module):
 
 
 class DetectV7(nn.Module):
-    """
-    YOLOv7 Detect head for detection models.
-    """
+    """YOLOv7 Detect head for detection models."""
 
     def __init__(self, old_detect):
         super().__init__()
@@ -91,10 +87,8 @@ class DetectV7(nn.Module):
 
 
 class DetectV6R1(nn.Module):
-    """Efficient Decoupled Head
-    With hardware-aware degisn, the decoupled head is optimized with
-    hybridchannels methods.
-    """
+    """Efficient Decoupled Head With hardware-aware degisn, the decoupled head is
+    optimized with hybridchannels methods."""
 
     # def __init__(self, num_classes=80, anchors=1, num_layers=3, inplace=True, head_layers=None, use_dfl=True, reg_max=16):  # detection layer
     def __init__(self, old_detect):  # detection layer

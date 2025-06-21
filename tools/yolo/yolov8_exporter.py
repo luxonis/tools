@@ -26,6 +26,7 @@ from tools.modules import (
     SegmentV8,
 )
 from tools.utils import get_first_conv2d_in_channels
+from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 yolo_path = os.path.join(current_dir, "ultralytics")
@@ -42,8 +43,7 @@ POSE_MODE = 4
 
 
 def get_output_names(mode: int) -> List[str]:
-    """
-    Get the output names based on the mode.
+    """Get the output names based on the mode.
 
     Args:
         mode (int): Mode of the model
@@ -122,9 +122,9 @@ class YoloV8Exporter(Exporter):
                 model.module.names if hasattr(model, "module") else model.names
             )  # get class names
             # check num classes and labels
-            assert model.nc == len(
-                self.names
-            ), f"Model class count {model.nc} != len(names) {len(self.names)}"
+            assert model.model[-1].nc == len(self.names), (
+                f"Model class count {model.nc} != len(names) {len(self.names)}"
+            )
 
         try:
             self.number_of_channels = get_first_conv2d_in_channels(model)
@@ -164,29 +164,33 @@ class YoloV8Exporter(Exporter):
             output_names=["mask"],
         )
 
-    def export_nn_archive(self, class_names: Optional[List[str]] = None):
-        """
-        Export the model to NN archive format.
+    def export_nn_archive(
+        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+    ):
+        """Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
         names = list(self.model.names.values())
 
         if class_names is not None:
-            assert len(class_names) == len(
-                names
-            ), f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
+            assert len(class_names) == len(names), (
+                f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
+            )
             names = class_names
 
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
 
         if self.mode == DETECT_MODE:
-            self.make_nn_archive(names, self.model.model[-1].nc)
+            self.make_nn_archive(
+                class_list=names, n_classes=self.model.model[-1].nc, encoding=encoding
+            )
         elif self.mode == SEGMENT_MODE:
             self.make_nn_archive(
-                names,
-                self.model.model[-1].nc,
+                class_list=names,
+                n_classes=self.model.model[-1].nc,
                 parser="YOLOExtendedParser",
                 # stage2_executable_path=str(self.f_stage2_onnx),
                 # postprocessor_path=self.stage2_filename,
@@ -196,30 +200,38 @@ class YoloV8Exporter(Exporter):
                     "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
                     "protos_outputs": "protos_output",
                 },
+                encoding=encoding,
             )
         elif self.mode == OBB_MODE:
             self.make_nn_archive(
-                names,
-                self.model.model[-1].nc,
+                class_list=names,
+                n_classes=self.model.model[-1].nc,
                 output_kwargs={"angles_outputs": ["angle_output"]},
+                encoding=encoding,
             )
         elif self.mode == POSE_MODE:
             self.make_nn_archive(
-                names,
-                self.model.model[-1].nc,
+                class_list=names,
+                n_classes=self.model.model[-1].nc,
                 parser="YOLOExtendedParser",
                 n_keypoints=17,
                 output_kwargs={"keypoints_outputs": ["kpt_output"]},
+                encoding=encoding,
             )
         elif self.mode == CLASSIFY_MODE:
-            self.make_cls_nn_archive(names, len(self.model.names))
+            self.make_cls_nn_archive(
+                class_list=names, n_classes=len(self.model.names), encoding=encoding
+            )
 
-    def make_cls_nn_archive(self, class_list: List[str], n_classes: int):
+    def make_cls_nn_archive(
+        self, class_list: List[str], n_classes: int, encoding: Encoding = Encoding.RGB
+    ):
         """Export the model to NN archive format.
 
         Args:
             class_list (List[str], optional): List of class names
             n_classes (int): Number of classes
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
         archive = ArchiveGenerator(
             archive_name=self.model_name,
@@ -240,6 +252,7 @@ class YoloV8Exporter(Exporter):
                             "preprocessing": {
                                 "mean": [0, 0, 0],
                                 "scale": [255, 255, 255],
+                                "dai_type": encoding.get_dai_type(),
                             },
                         }
                     ],

@@ -10,10 +10,13 @@ from loguru import logger
 
 from tools.modules import DetectV7, Exporter
 from tools.utils import get_first_conv2d_in_channels
+from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 yolo_path = os.path.join(current_dir, "yolov7")
-sys.path.append(yolo_path)
+# Ensure it's first in sys.path
+if yolo_path not in sys.path:
+    sys.path.insert(0, yolo_path)
 
 import models.experimental  # noqa: E402
 
@@ -73,9 +76,9 @@ class YoloV7Exporter(Exporter):
         # load the model
         model = attempt_load(self.model_path, map_location="cpu")
         # check num classes and labels
-        assert model.nc == len(
-            model.names
-        ), f"Model class count {model.nc} != len(names) {len(model.names)}"
+        assert model.nc == len(model.names), (
+            f"Model class count {model.nc} != len(names) {len(model.names)}"
+        )
 
         if hasattr(model, "module"):
             model.module.model[-1] = DetectV7(model.module.model[-1])
@@ -109,22 +112,28 @@ class YoloV7Exporter(Exporter):
         self.m = model.module.model[-1] if hasattr(model, "module") else model.model[-1]
         self.num_branches = len(self.m.anchor_grid)
 
-    def export_nn_archive(self, class_names: Optional[List[str]] = None):
-        """
-        Export the model to NN archive format.
+    def export_nn_archive(
+        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+    ):
+        """Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
         names = self.model.names
 
         if class_names is not None:
-            assert (
-                len(class_names) == self.model.nc
-            ), f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            assert len(class_names) == self.model.nc, (
+                f"Number of the given class names {len(class_names)} does not match number of classes {self.model.nc} provided in the model!"
+            )
             names = class_names
 
         anchors = self.m.anchor_grid[:, 0, :, 0, 0].numpy().tolist()
         self.make_nn_archive(
-            names, self.model.nc, parser="YOLOExtendedParser", anchors=anchors
+            names,
+            self.model.nc,
+            parser="YOLOExtendedParser",
+            anchors=anchors,
+            encoding=encoding,
         )
