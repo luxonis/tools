@@ -13,13 +13,13 @@
     path = yolov6r3/yolo/YOLOv6R3
     url = https://github.com/meituan/YOLOv6
     branch = main
-[submodule "yolov7"]
-    path = yolov7/yolo/yolov7
-    url = https://github.com/WongKinYiu/yolov7
-    branch = main
 [submodule "yolo/ultralytics"]
 	path = yolo/ultralytics
 	url = https://github.com/ultralytics/ultralytics
 [submodule "GoldYolo"]
 	path = yolov6r3/yolo/Efficient-Computing
 	url = https://github.com/huawei-noah/Efficient-Computing
+[submodule "yolov7/yolo/yolov7"]
+	path = yolov7/yolo/yolov7
+	url = https://github.com/WongKinYiu/yolov7
+	branch = main
