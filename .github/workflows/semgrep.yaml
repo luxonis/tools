@@ -32,7 +32,7 @@ jobs:
       # or use multiple flags to specify particular rules, such as
       # --config r/all --config custom/rules
         run: semgrep scan -q --sarif --config auto --config "p/secrets" . > semgrep-results.sarif
-        
+
       - name: Pretty-Print SARIF Output
         run: |
           jq . semgrep-results.sarif > formatted-semgrep-results.sarif || echo "{}"

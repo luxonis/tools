@@ -8,6 +8,7 @@ from loguru import logger
 
 from tools.modules import DetectV10, Exporter
 from tools.utils import get_first_conv2d_in_channels
+from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 yolo_path = os.path.join(current_dir, "ultralytics")
@@ -46,9 +47,9 @@ class YoloV10Exporter(Exporter):
             model.module.names if hasattr(model, "module") else model.names
         )  # get class names
         # check num classes and labels
-        assert model.yaml["nc"] == len(
-            self.names
-        ), f'Model class count {model.yaml["nc"]} != len(names) {len(self.names)}'
+        assert model.yaml["nc"] == len(self.names), (
+            f"Model class count {model.yaml['nc']} != len(names) {len(self.names)}"
+        )
 
         try:
             self.number_of_channels = get_first_conv2d_in_channels(model)
@@ -71,21 +72,25 @@ class YoloV10Exporter(Exporter):
         model.eval()
         self.model = model
 
-    def export_nn_archive(self, class_names: Optional[List[str]] = None):
-        """
-        Export the model to NN archive format.
+    def export_nn_archive(
+        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+    ):
+        """Export the model to NN archive format.
 
         Args:
             class_list (Optional[List[str]], optional): List of class names. Defaults to None.
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
         names = list(self.model.names.values())
 
         if class_names is not None:
-            assert len(class_names) == len(
-                names
-            ), f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
+            assert len(class_names) == len(names), (
+                f"Number of the given class names {len(class_names)} does not match number of classes {len(names)} provided in the model!"
+            )
             names = class_names
 
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
 
-        self.make_nn_archive(names, self.model.model[-1].nc)
+        self.make_nn_archive(
+            class_list=names, n_classes=self.model.model[-1].nc, encoding=encoding
+        )
