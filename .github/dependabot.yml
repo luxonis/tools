@@ -1,17 +1,5 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "main"
-    # Labels on pull requests for version updates only
-    labels:
-      - "pip dependencies"
-
-
-version: 2
-updates:
   # Python dependencies in root of MAIN branch
   - package-ecosystem: "pip"
     directory: "/"
