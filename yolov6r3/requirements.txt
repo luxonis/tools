@@ -33,6 +33,6 @@ sentry-sdk # logging
 websockets==10.4
 # openvino-dev[onnx]==2022.1.0
 # openvino-dev[onnx]==2022.3.0
-mmcv==1.5.0
+mmcv==2.2.0
 
 pydantic
