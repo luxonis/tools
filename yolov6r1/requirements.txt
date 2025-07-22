@@ -7,7 +7,7 @@ onnx>=1.16.0
 onnx-simplifier>=0.3.6
 # openvino==2022.1.0
 # openvino-dev==2022.1.0
-openvino==2022.3.0
+openvino==2025.2.0
 openvino-dev==2022.3.0
 # blobconverter==1.2.9
 blobconverter>=1.4.2

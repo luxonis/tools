@@ -6,7 +6,7 @@ torchvision>=0.10.1
 
 onnx>=1.16.0
 onnx-simplifier>=0.3.6
-openvino==2023.0.1
+openvino==2025.2.0
 openvino-dev==2023.0.1
 
 blobconverter>=1.4.2
