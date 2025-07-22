@@ -18,7 +18,7 @@
     "react-scripts": "^5.0.0",
     "reactstrap": "^9.0.1",
     "uuid": "^8.3.2",
-    "web-vitals": "^2.1.4",
+    "web-vitals": "^5.0.3",
     "@zip.js/zip.js": "^2.7.15"
   },
   "scripts": {
