@@ -1,10 +1,28 @@
 version: 2
 updates:
+  # Python dependencies in root of MAIN branch
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
     target-branch: "main"
-    # Labels on pull requests for version updates only
     labels:
       - "pip dependencies"
+
+  # Python dependencies in root of WEB-APP branch
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "web-app"
+    labels:
+      - "pip dependencies"
+
+  # npm dependencies in client/ directory of WEB-APP branch
+  - package-ecosystem: "npm"
+    directory: "/client"
+    schedule:
+      interval: "weekly"
+    target-branch: "web-app"
+    labels:
+      - "npm dependencies"
