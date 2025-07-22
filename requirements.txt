@@ -35,7 +35,7 @@ thop  # FLOPs computation
 
 # sparseml>=1.8.0
 
-websockets==10.4
+websockets==15.0.1
 # openvino-dev[onnx]==2022.3.0
 # openvino-dev[onnx]==2022.1.0
 dill
