@@ -489,6 +489,27 @@ class SegmentV8(DetectV8):
         return outputs
 
 
+class YOLOESegmentV8(DetectV8):
+    """YOLOEv8 Segment head for segmentation models."""
+
+    def __init__(self, old_segment, use_rvc2):
+        super().__init__(old_segment, use_rvc2)
+        self.nm = old_segment.nm  # number of masks
+        self.npr = old_segment.npr  # number of protos
+        self.proto = old_segment.proto  # protos
+        self.cv4 = old_segment.cv4
+
+    def forward(self, x):
+        # Detection part
+        outputs = super().forward(x)
+        # Masks
+        outputs.extend([self.cv4[i](x[i], x[i]) for i in range(self.nl)])
+        # Mask protos
+        outputs.append(self.proto(x[0]))
+
+        return outputs
+
+
 class ClassifyV8(nn.Module):
     """YOLOv8 classification head, i.e. x(b,c1,20,20) to x(b,c2)."""
 

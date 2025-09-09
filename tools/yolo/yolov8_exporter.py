@@ -24,6 +24,7 @@ from tools.modules import (
     Multiplier,
     PoseV8,
     SegmentV8,
+    YOLOESegmentV8,
 )
 from tools.utils import get_first_conv2d_in_channels
 from tools.utils.constants import Encoding
@@ -32,8 +33,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 yolo_path = os.path.join(current_dir, "ultralytics")
 sys.path.append(yolo_path)
 
-from ultralytics.nn.modules import OBB, Classify, Detect, Pose, Segment  # noqa: E402
-from ultralytics.nn.tasks import attempt_load_one_weight  # noqa: E402
+from ultralytics.nn.modules import OBB, Classify, Detect, Pose, Segment, YOLOESegment  # noqa: E402
+from ultralytics.nn.tasks import load_checkpoint  # noqa: E402
 
 DETECT_MODE = 0
 SEGMENT_MODE = 1
@@ -95,13 +96,17 @@ class YoloV8Exporter(Exporter):
 
     def load_model(self):
         # load the model
-        model, _ = attempt_load_one_weight(
+        model, _ = load_checkpoint(
             self.model_path, device="cpu", inplace=True, fuse=True
         )
 
         self.mode = -1
         if isinstance(model.model[-1], (Segment)):
             model.model[-1] = SegmentV8(model.model[-1], self.use_rvc2)
+            self.mode = SEGMENT_MODE
+            # self.export_stage2_multiplier()
+        elif isinstance(model.model[-1], (YOLOESegment)):
+            model.model[-1] = YOLOESegmentV8(model.model[-1], self.use_rvc2)
             self.mode = SEGMENT_MODE
             # self.export_stage2_multiplier()
         elif isinstance(model.model[-1], (OBB)):

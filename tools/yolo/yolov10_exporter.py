@@ -15,7 +15,7 @@ yolo_path = os.path.join(current_dir, "ultralytics")
 sys.path.append(yolo_path)
 
 from ultralytics.nn.modules import Detect  # noqa: E402
-from ultralytics.nn.tasks import attempt_load_one_weight  # noqa: E402
+from ultralytics.nn.tasks import load_checkpoint  # noqa: E402
 
 
 class YoloV10Exporter(Exporter):
@@ -36,7 +36,7 @@ class YoloV10Exporter(Exporter):
 
     def load_model(self):
         # load the model
-        model, _ = attempt_load_one_weight(
+        model, _ = load_checkpoint(
             self.model_path, device="cpu", inplace=True, fuse=True
         )
 

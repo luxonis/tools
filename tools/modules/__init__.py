@@ -15,6 +15,7 @@ from .heads import (
     DetectV10,
     PoseV8,
     SegmentV8,
+    YOLOESegmentV8,
 )
 from .stage2 import Multiplier
 
@@ -29,6 +30,7 @@ __all__ = [
     "PoseV8",
     "OBBV8",
     "SegmentV8",
+    "YOLOESegmentV8",
     "ClassifyV8",
     "Multiplier",
     "DetectV5",
