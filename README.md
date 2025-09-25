@@ -115,7 +115,10 @@ Currently, the following models are supported:
 | `yolov9`      | YOLOv9t, YOLOv9s, YOLOv9m, YOLOv9c                                                                                                                                                                                                                                                  |
 | `yolov10`     | YOLOv10n, YOLOv10s, YOLOv10m, YOLOv10b, YOLOv10l, YOLOv10x                                                                                                                                                                                                                          |
 | `yolov11`     | **Detection, Instance Segmentation, Pose, Oriented Detection, Classification:** YOLO11n, YOLO11s, YOLO11m, YOLO11l, YOLO11x                                                                                                                                                         |
+| `yoloe`       | **Detection, Instance Segmentation:** YOLOE-11s, YOLOE-11m, YOLOE-11l; YOLOE-v8s, YOLOE-v8m, YOLOE-v8l                                                                                                                                                                              |
 | `goldyolo`    | Gold-YOLO-N, Gold-YOLO-S, Gold-YOLO-M, Gold-YOLO-L                                                                                                                                                                                                                                  |
+
+YOLOE models must be re-parameterized before conversion to be compatible with YOLOv8 and YOLOv11 formats.
 
 If you don't find your model in the list, it is possible that it can be converted, however, this is not guaranteed.
 

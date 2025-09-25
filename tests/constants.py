@@ -72,6 +72,12 @@ TEST_MODELS = [
     {"name": "yolov11n-seg", "version": "v11"},
     {"name": "yolov11n-pose", "version": "v11"},
     {"name": "yolov11n-obb", "version": "v11"},
+    {"name": "yoloe-11s-seg", "version": "v11"},
+    {"name": "yoloe-11m-seg", "version": "v11"},
+    {"name": "yoloe-11l-seg", "version": "v11"},
+    {"name": "yoloe-v8s-seg", "version": "v8"},
+    {"name": "yoloe-v8m-seg", "version": "v8"},
+    {"name": "yoloe-v8l-seg", "version": "v8"},
 ]
 
 
@@ -145,4 +151,10 @@ MODEL_TYPE2URL: dict[str, str] = {
     "yolov11n-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt",
     "yolov11n-pose": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-pose.pt",
     "yolov11n-obb": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-obb.pt",
+    "yoloe-11s-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-11s-seg-coco.pt",
+    "yoloe-11m-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-11m-seg-coco.pt",
+    "yoloe-11l-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-11l-seg-coco.pt",
+    "yoloe-v8s-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-v8s-seg-coco.pt",
+    "yoloe-v8m-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-v8m-seg-coco.pt",
+    "yoloe-v8l-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-v8l-seg-coco.pt",
 }
