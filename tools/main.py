@@ -31,7 +31,7 @@ setup_logging()
 
 app = typer.Typer(help="Tools CLI", add_completion=False, rich_markup_mode="markdown")
 
-
+# ONE COMMENT TO TRIGGER THE TESTS
 YOLO_VERSIONS = [
     GOLD_YOLO_CONVERSION,
     YOLOV5_CONVERSION,
