@@ -9,6 +9,12 @@ from luxonis_ml.utils import setup_logging
 from typing_extensions import Annotated
 
 from tools.utils import (
+    Config,
+    resolve_path,
+    upload_file_to_remote,
+)
+from tools.utils.constants import MISC_DIR, Encoding
+from tools.version_detection import (
     GOLD_YOLO_CONVERSION,
     YOLOV5_CONVERSION,
     YOLOV5U_CONVERSION,
@@ -20,12 +26,8 @@ from tools.utils import (
     YOLOV9_CONVERSION,
     YOLOV10_CONVERSION,
     YOLOV11_CONVERSION,
-    Config,
     detect_version,
-    resolve_path,
-    upload_file_to_remote,
 )
-from tools.utils.constants import MISC_DIR, Encoding
 
 setup_logging()
 
