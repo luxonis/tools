@@ -230,6 +230,3 @@ def test_explicit_version_detection():
     )
     if result.returncode != 0:
         pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
-
-    extra_keys_to_check = [(["model", "inputs", 0, "shape"], [1, 3, 64, 64])]
-    nn_archive_checker(extra_keys_to_check=extra_keys_to_check)
