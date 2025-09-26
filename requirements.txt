@@ -4,7 +4,7 @@ Pillow>=7.1.2
 PyYAML>=5.3.1
 gcsfs
 luxonis-ml[data,nn_archive,utils]>=0.6.5,<0.7
-onnx>=1.17.0
+onnx==1.17.0
 numpy>=1.19.5,<2.1.0
 onnxruntime>=1.20.1
 onnxsim>=0.4.36
