@@ -41,4 +41,4 @@ jobs:
       run: pip install -e .[dev]
 
     - name: Run tests
-      run: pytest tests/test_end2end.py --download-weights --delete-weights-now
+      run: pytest tests/test_end2end.py --download-weights --delete-weights-now -s -v
