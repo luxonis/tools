@@ -213,3 +213,20 @@ def test_wrong_explicit_class_names():
     assert result.returncode == expected_exit_code, (
         f"Expected to fail for invalid --class-names `{class_names_str}`, got exit code: {result.returncode}. "
     )
+
+
+def test_explicit_version_detection():
+    """Tests setting explicit version detection."""
+    model_name = "yolov8n"
+    model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
+    if not os.path.exists(model_path):
+        download_model(model_name, SAVE_FOLDER)
+
+    command = ["tools", model_path]
+    logger.debug(f"CLI command: {command}")
+
+    result = subprocess.run(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    if result.returncode != 0:
+        pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")

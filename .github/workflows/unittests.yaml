@@ -78,14 +78,14 @@ jobs:
         COVERAGE_PROCESS_START: .coveragerc
       run: |
         coverage erase
-        coverage run -m pytest tests/test_unittests.py --download-weights --delete-weights-now --junit-xml pytest.xml
+        coverage run -m pytest tests/test_unittests.py --download-weights --delete-weights-now -s -v --junit-xml pytest.xml
         coverage combine
         coverage xml -o coverage.xml
 
     - name: Run tests [Windows, macOS]
       if: matrix.os != 'ubuntu-latest' || matrix.version != '3.10'
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
-      run: pytest tests/test_unittests.py --download-weights --delete-weights-now --junit-xml pytest.xml
+      run: pytest tests/test_unittests.py --download-weights --delete-weights-now -s -v --junit-xml pytest.xml
 
     - name: Generate coverage badge [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == ''
