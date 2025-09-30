@@ -68,6 +68,14 @@ def detect_version(path: str, debug: bool = False) -> str:
                     "YOLOv8" in content and "yolov5" not in content
                 )  # the second condition is to avoid yolov5u being detected as yolov8
                 or ("v8DetectionLoss" in content and "ultralytics" in content)
+                or (
+                    "ultralytics.nn.modules.head.Detect"
+                    in content  # v8 detection head used not present in v5/v7
+                    and "ultralytics.nn.modules.block.C2f"
+                    in content  # v8 specific block (C2f = Cross Concat & Fusion)
+                    and "ultralytics.nn.modules.block.SPPF"
+                    in content  # SPP/SPPF layers appear in v5 too, but this namespace ties it to v8
+                )
             ):
                 return YOLOV8_CONVERSION
             elif "yolov6" in content:
