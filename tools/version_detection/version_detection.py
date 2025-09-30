@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import platform
-import shutil
 import subprocess
 from os import listdir
-from os.path import exists, isdir, join
+from os.path import isdir, join
+from tempfile import TemporaryDirectory
 
 YOLOV5_CONVERSION = "yolov5"
 YOLOV5U_CONVERSION = "yolov5u"
@@ -29,27 +29,26 @@ def detect_version(path: str, debug: bool = False) -> str:
     Returns:
         str: The detected version
     """
-    try:
-        # Remove and recreate the extracted_model directory
-        if exists("extracted_model"):
-            shutil.rmtree("extracted_model")
-        subprocess.check_output("mkdir extracted_model", shell=True)
+    # Create a temporary directory
+    temp_dir = TemporaryDirectory()
+    temp_dir_path = temp_dir.name
 
-        # Extract the tar file into the extracted_model directory
+    try:
+        # Extract the tar file into the temporary directory
         if platform.system() == "Windows":
-            subprocess.check_output(["tar", "-xf", path, "-C", "extracted_model"])
+            subprocess.check_output(["tar", "-xf", path, "-C", temp_dir_path])
         else:
-            subprocess.check_output(["unzip", path, "-d", "extracted_model"])
+            subprocess.check_output(["unzip", path, "-d", temp_dir_path])
 
         folder = [
-            f for f in listdir("extracted_model") if isdir(join("extracted_model", f))
+            f for f in listdir(temp_dir_path) if isdir(join(temp_dir_path, f))
         ][0]
 
         if "yolov8" in folder.lower():
             return YOLOV8_CONVERSION
 
         # open a file, where you stored the pickled data
-        with open(f"extracted_model/{folder}/data.pkl", "rb") as file:
+        with open(f"{temp_dir_path}/{folder}/data.pkl", "rb") as file:
             data = file.read()
             if debug:
                 print(data.decode(errors="replace"))
@@ -107,7 +106,6 @@ def detect_version(path: str, debug: bool = False) -> str:
         raise RuntimeError() from e
     finally:
         # Ensure the extracted_model directory is removed after processing
-        if exists("extracted_model"):
-            shutil.rmtree("extracted_model")
+        temp_dir.cleanup()
 
     return UNRECOGNIZED
