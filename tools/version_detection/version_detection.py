@@ -40,9 +40,7 @@ def detect_version(path: str, debug: bool = False) -> str:
         else:
             subprocess.check_output(["unzip", path, "-d", temp_dir_path])
 
-        folder = [
-            f for f in listdir(temp_dir_path) if isdir(join(temp_dir_path, f))
-        ][0]
+        folder = [f for f in listdir(temp_dir_path) if isdir(join(temp_dir_path, f))][0]
 
         if "yolov8" in folder.lower():
             return YOLOV8_CONVERSION
