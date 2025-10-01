@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import platform
-import subprocess
+import tarfile
+import zipfile
 from os import listdir
 from os.path import isdir, join
 from tempfile import TemporaryDirectory
@@ -20,6 +20,31 @@ GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
 
 
+def _extract_archive(archive_path: str, extract_to: str) -> None:
+    """Extract an archive to a specified directory.
+
+    Supports both tar and zip formats, automatically detecting the format.
+
+    Args:
+        archive_path (str): Path to the archive file
+        extract_to (str): Directory to extract to
+    """
+    # Try tar first
+    if tarfile.is_tarfile(archive_path):
+        with tarfile.open(archive_path, "r:*") as tar:
+            tar.extractall(path=extract_to)
+        return
+
+    # Try zip
+    if zipfile.is_zipfile(archive_path):
+        with zipfile.ZipFile(archive_path, "r") as zip_file:
+            zip_file.extractall(path=extract_to)
+        return
+
+    # If neither worked, raise an error
+    raise ValueError(f"Unsupported archive format: {archive_path}")
+
+
 def detect_version(path: str, debug: bool = False) -> str:
     """Detect the version of the model weights.
 
@@ -34,11 +59,8 @@ def detect_version(path: str, debug: bool = False) -> str:
     temp_dir_path = temp_dir.name
 
     try:
-        # Extract the tar file into the temporary directory
-        if platform.system() == "Windows":
-            subprocess.check_output(["tar", "-xf", path, "-C", temp_dir_path])
-        else:
-            subprocess.check_output(["unzip", path, "-d", temp_dir_path])
+        # Try to extract the archive using appropriate method
+        _extract_archive(path, temp_dir_path)
 
         folder = [f for f in listdir(temp_dir_path) if isdir(join(temp_dir_path, f))][0]
 
@@ -100,8 +122,8 @@ def detect_version(path: str, debug: bool = False) -> str:
             ):
                 return YOLOV5_CONVERSION
 
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError() from e
+    except (tarfile.TarError, zipfile.BadZipFile, ValueError, OSError) as e:
+        raise RuntimeError(f"Failed to extract archive: {e}") from e
     finally:
         # Ensure the extracted_model directory is removed after processing
         temp_dir.cleanup()
