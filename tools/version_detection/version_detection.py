@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import platform
-import shutil
-import subprocess
+import tarfile
+import zipfile
 from os import listdir
-from os.path import exists, isdir, join
+from os.path import isdir, join
+from tempfile import TemporaryDirectory
 
 YOLOV5_CONVERSION = "yolov5"
 YOLOV5U_CONVERSION = "yolov5u"
@@ -20,6 +20,31 @@ GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
 
 
+def _extract_archive(archive_path: str, extract_to: str) -> None:
+    """Extract an archive to a specified directory.
+
+    Supports both tar and zip formats, automatically detecting the format.
+
+    Args:
+        archive_path (str): Path to the archive file
+        extract_to (str): Directory to extract to
+    """
+    # Try tar first
+    if tarfile.is_tarfile(archive_path):
+        with tarfile.open(archive_path, "r:*") as tar:
+            tar.extractall(path=extract_to)
+        return
+
+    # Try zip
+    if zipfile.is_zipfile(archive_path):
+        with zipfile.ZipFile(archive_path, "r") as zip_file:
+            zip_file.extractall(path=extract_to)
+        return
+
+    # If neither worked, raise an error
+    raise ValueError(f"Unsupported archive format: {archive_path}")
+
+
 def detect_version(path: str, debug: bool = False) -> str:
     """Detect the version of the model weights.
 
@@ -29,27 +54,21 @@ def detect_version(path: str, debug: bool = False) -> str:
     Returns:
         str: The detected version
     """
+    # Create a temporary directory
+    temp_dir = TemporaryDirectory()
+    temp_dir_path = temp_dir.name
+
     try:
-        # Remove and recreate the extracted_model directory
-        if exists("extracted_model"):
-            shutil.rmtree("extracted_model")
-        subprocess.check_output("mkdir extracted_model", shell=True)
+        # Try to extract the archive using appropriate method
+        _extract_archive(path, temp_dir_path)
 
-        # Extract the tar file into the extracted_model directory
-        if platform.system() == "Windows":
-            subprocess.check_output(["tar", "-xf", path, "-C", "extracted_model"])
-        else:
-            subprocess.check_output(["unzip", path, "-d", "extracted_model"])
-
-        folder = [
-            f for f in listdir("extracted_model") if isdir(join("extracted_model", f))
-        ][0]
+        folder = [f for f in listdir(temp_dir_path) if isdir(join(temp_dir_path, f))][0]
 
         if "yolov8" in folder.lower():
             return YOLOV8_CONVERSION
 
         # open a file, where you stored the pickled data
-        with open(f"extracted_model/{folder}/data.pkl", "rb") as file:
+        with open(f"{temp_dir_path}/{folder}/data.pkl", "rb") as file:
             data = file.read()
             if debug:
                 print(data.decode(errors="replace"))
@@ -103,11 +122,10 @@ def detect_version(path: str, debug: bool = False) -> str:
             ):
                 return YOLOV5_CONVERSION
 
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError() from e
+    except (tarfile.TarError, zipfile.BadZipFile, ValueError, OSError) as e:
+        raise RuntimeError(f"Failed to extract archive: {e}") from e
     finally:
         # Ensure the extracted_model directory is removed after processing
-        if exists("extracted_model"):
-            shutil.rmtree("extracted_model")
+        temp_dir.cleanup()
 
     return UNRECOGNIZED
