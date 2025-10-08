@@ -67,7 +67,7 @@ def detect_version(path: str, debug: bool = False) -> str:
         if "yolov8" in folder.lower():
             return YOLOV8_CONVERSION
 
-        # open a file, where you stored the pickled data
+        # open pickled data
         with open(f"{temp_dir_path}/{folder}/data.pkl", "rb") as file:
             data = file.read()
             if debug:
