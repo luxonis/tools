@@ -59,7 +59,7 @@ def detect_version(path: str, debug: bool = False) -> str:
     temp_dir_path = temp_dir.name
 
     try:
-        # Try to extract the archive using appropriate method
+        # Try extracting the archive using appropriate method
         _extract_archive(path, temp_dir_path)
 
         folder = [f for f in listdir(temp_dir_path) if isdir(join(temp_dir_path, f))][0]
