@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from typing import List, Optional, Tuple
-from packaging import version
 
 import onnx
 import onnxsim
@@ -17,6 +16,7 @@ from luxonis_ml.nn_archive.config_building_blocks import (
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
     HeadYOLOMetadata,
 )
+from packaging import version
 
 from tools.utils.constants import OUTPUTS_DIR, Encoding
 
@@ -89,7 +89,7 @@ class Exporter:
             input_names=["images"],
             output_names=self.all_output_names,
             dynamic_axes=None,
-            **kwargs
+            **kwargs,
         )
 
         # check if the arhcitecture is correct
