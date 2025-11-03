@@ -6,6 +6,7 @@ import subprocess
 import blobconverter
 from zipfile import ZipFile
 from pathlib import Path
+from packaging import version
 
 
 class Exporter:
@@ -45,6 +46,10 @@ class Exporter:
         im = torch.zeros(
             1, 3, *self.imgsz[::-1]
         )  # .to(device)  # image size(1,3,320,192) BCHW iDetection
+        
+        if version.parse(torch.__version__) >= version.parse("2.5.0"):
+            kwargs = {"dynamo": False}
+
         torch.onnx.export(
             self.model,
             im,
@@ -56,6 +61,7 @@ class Exporter:
             input_names=["images"],
             output_names=["output"],
             dynamic_axes=None,
+            **kwargs
         )
 
         # check if the arhcitecture is correct
