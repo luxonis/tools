@@ -16,6 +16,7 @@ from luxonis_ml.nn_archive.config_building_blocks import (
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
     HeadYOLOMetadata,
 )
+from packaging import version
 
 from tools.utils.constants import OUTPUTS_DIR, Encoding
 
@@ -74,6 +75,9 @@ class Exporter:
         self.f_onnx = (self.output_folder / f"{self.model_name}.onnx").resolve()
         im = torch.zeros(1, self.number_of_channels, *self.imgsz[::-1])
         # export onnx model
+        if version.parse(torch.__version__) >= version.parse("2.5.0"):
+            kwargs = {"dynamo": False}
+
         torch.onnx.export(
             self.model,
             im,
@@ -85,6 +89,7 @@ class Exporter:
             input_names=["images"],
             output_names=self.all_output_names,
             dynamic_axes=None,
+            **kwargs,
         )
 
         # check if the arhcitecture is correct
