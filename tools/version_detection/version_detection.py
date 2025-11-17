@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import importlib
+import os
+import sys
 import tarfile
 import zipfile
+from contextlib import contextmanager
 from os import listdir
 from os.path import isdir, join
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 YOLOV5_CONVERSION = "yolov5"
@@ -18,6 +23,8 @@ YOLOV10_CONVERSION = "yolov10"
 YOLOV11_CONVERSION = "yolov11"
 GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
+
+CURRENT_DIR = Path(__file__).resolve().parent.parent
 
 
 def _extract_archive(archive_path: str, extract_to: str) -> None:
@@ -127,5 +134,132 @@ def detect_version(path: str, debug: bool = False) -> str:
     finally:
         # Ensure the extracted_model directory is removed after processing
         temp_dir.cleanup()
+
+    return detect_by_loading(path)  # Fallback to model loading detection
+
+
+@contextmanager
+def yolo_repo_import(repo_root: Path, cleanup: bool = True):
+    """Temporarily add a YOLO repo to sys.path and isolate its imports.
+
+    Any modules imported while inside this context will be removed from
+    sys.modules afterwards, so different repos with the same names
+    (e.g. `models.experimental`) don't clash.
+    """
+    repo_root = Path(repo_root).resolve()
+
+    if cleanup:
+        old_modules = set(sys.modules.keys())
+
+    sys.path.insert(0, str(repo_root))
+
+    try:
+        yield
+    finally:
+        sys.path.remove(str(repo_root))
+
+        if cleanup:
+            new_modules = set(sys.modules.keys()) - old_modules
+            repo_root_str = str(repo_root)
+            for name in new_modules:
+                mod = sys.modules.get(name)
+                filename = getattr(mod, "__file__", None)
+                if filename and repo_root_str in os.path.abspath(filename):
+                    sys.modules.pop(name, None)
+
+
+def fix_yolov6_imports():
+    for name in list(sys.modules):
+        if name == "yolov6" or name.startswith("yolov6."):
+            del sys.modules[name]
+
+    module = importlib.import_module("yolov6.utils.checkpoint")
+    return module.load_checkpoint
+
+
+def fix_yolov5_yolov7_imports():
+    for name in list(sys.modules):
+        if name.startswith("models.") or name.startswith("utils."):
+            del sys.modules[name]
+
+    module = importlib.import_module("models.experimental")
+    return module.attempt_load
+
+
+def try_yolov5_load(weights_path: str):
+    with yolo_repo_import(CURRENT_DIR / "yolo" / "yolov5"):
+        fix_yolov5_yolov7_imports()
+        from tools.yolo.yolov5_exporter import YoloV5Exporter
+
+        exporter = YoloV5Exporter(weights_path, [320, 320], True)
+        return exporter
+
+
+def try_yolov6r1_load(weights_path: str):
+    with yolo_repo_import(CURRENT_DIR / "yolov6r1" / "YOLOv6R1", cleanup=False):
+        fix_yolov6_imports()
+        from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
+
+        exporter = YoloV6R1Exporter(weights_path, [320, 320], True)
+        return exporter
+
+
+def try_yolov6r3_load(weights_path: str):
+    with yolo_repo_import(CURRENT_DIR / "yolov6r3" / "YOLOv6R3", cleanup=False):
+        fix_yolov6_imports()
+        from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
+
+        exporter = YoloV6R3Exporter(weights_path, [320, 320], True)
+        return exporter
+
+
+def try_yolov6r4_load(weights_path: str):
+    with yolo_repo_import(CURRENT_DIR / "yolo" / "YOLOv6", cleanup=False):
+        fix_yolov6_imports()
+        from tools.yolo.yolov6_exporter import YoloV6R4Exporter
+
+        exporter = YoloV6R4Exporter(weights_path, [320, 320], True)
+        return exporter
+
+
+def try_yolov7_load(weights_path: str):
+    with yolo_repo_import(CURRENT_DIR / "yolov7" / "yolov7"):
+        fix_yolov5_yolov7_imports()
+        from tools.yolov7.yolov7_exporter import YoloV7Exporter
+
+        exporter = YoloV7Exporter(weights_path, [320, 320], True)
+        return exporter
+
+
+def try_goldyolo_load(weights_path: str):
+    with yolo_repo_import(CURRENT_DIR / "yolov6r3" / "Efficient-Computing"):
+        from tools.yolov6r3.gold_yolo_exporter import GoldYoloExporter
+
+        exporter = GoldYoloExporter(weights_path, [320, 320], True)
+        return exporter
+
+
+def detect_by_loading(path: str) -> str:
+    """Try to detect YOLO version by attempting to load the model with different
+    loaders.
+
+    Returns the version name if successful, otherwise returns UNRECOGNIZED.
+    """
+
+    candidates = [
+        (YOLOV5_CONVERSION, try_yolov5_load),
+        (YOLOV6R1_CONVERSION, try_yolov6r1_load),
+        (YOLOV6R3_CONVERSION, try_yolov6r3_load),
+        (YOLOV6R4_CONVERSION, try_yolov6r4_load),
+        (YOLOV7_CONVERSION, try_yolov7_load),
+        (GOLD_YOLO_CONVERSION, try_goldyolo_load),
+    ]
+
+    for version_name, loader in candidates:
+        try:
+            loader(path)
+            return version_name
+        except Exception:
+            continue
 
     return UNRECOGNIZED

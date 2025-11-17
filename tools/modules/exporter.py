@@ -8,11 +8,7 @@ import onnx
 import onnxsim
 import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
-from luxonis_ml.nn_archive.config_building_blocks import (
-    DataType,
-    Head,
-    InputType,
-)
+from luxonis_ml.nn_archive.config_building_blocks import DataType, Head, InputType
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
     HeadYOLOMetadata,
 )
@@ -89,7 +85,7 @@ class Exporter:
             input_names=["images"],
             output_names=self.all_output_names,
             dynamic_axes=None,
-            **kwargs,
+            **kwargs if "kwargs" in locals() else {},
         )
 
         # check if the arhcitecture is correct
