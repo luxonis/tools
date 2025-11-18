@@ -107,6 +107,12 @@ def detect_version(path: str, debug: bool = False) -> str:
                 return YOLOV6R3_CONVERSION
             elif "yolov7" in content:
                 return YOLOV7_CONVERSION
+            elif (
+                "models.yolo" in content
+                and "models.common.SP" in content
+                and not ("SPPF" in content or "SPPr" in content)
+            ):
+                return YOLOV7_CONVERSION
             elif "yolov5u" in content or (
                 "yolov5" in content and "ultralytics.nn.modules" in content
                 # the second condition checks if the new version of the Ultralytics package was used to build the model which signals the "u" variant
