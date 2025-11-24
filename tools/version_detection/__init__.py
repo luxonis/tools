@@ -11,6 +11,7 @@ from .version_detection import (
     YOLOV9_CONVERSION,
     YOLOV10_CONVERSION,
     YOLOV11_CONVERSION,
+    YOLOV12_CONVERSION,
     detect_version,
 )
 
@@ -26,6 +27,7 @@ __all__ = [
     "YOLOV9_CONVERSION",
     "YOLOV10_CONVERSION",
     "YOLOV11_CONVERSION",
+    "YOLOV12_CONVERSION",
     "GOLD_YOLO_CONVERSION",
     "UNRECOGNIZED",
 ]
