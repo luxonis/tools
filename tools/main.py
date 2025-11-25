@@ -47,7 +47,7 @@ YOLO_VERSIONS = [
     YOLOV9_CONVERSION,
     YOLOV10_CONVERSION,
     YOLOV11_CONVERSION,
-    YOLOV12_CONVERSION
+    YOLOV12_CONVERSION,
 ]
 
 
@@ -173,7 +173,7 @@ def convert(
             YOLOV8_CONVERSION,
             YOLOV9_CONVERSION,
             YOLOV11_CONVERSION,
-            YOLOV12_CONVERSION
+            YOLOV12_CONVERSION,
         ]:
             from tools.yolo.yolov8_exporter import YoloV8Exporter
 
