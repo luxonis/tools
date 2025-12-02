@@ -24,6 +24,7 @@ from models.common import Conv  # noqa: E402
 from models.yolo import Detect as DetectYOLOv5  # noqa: E402
 from utils.activations import SiLU  # noqa: E402
 
+
 def attempt_load_yolov5(weights, device=None, inplace=True, fuse=True):
     patch_pathlib_for_cross_platform()
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
