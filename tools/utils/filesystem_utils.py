@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+import pathlib
 from pathlib import Path
+import os
 from typing import Optional, Union
 
 from luxonis_ml.utils import LuxonisFileSystem
 
 from tools.utils.constants import SHARED_DIR
 
+def patch_pathlib_for_cross_platform():
+    if os.name == "nt":  # Windows
+        pathlib.PosixPath = pathlib.WindowsPath
+    else:  # Linux macOS and WSL
+        pathlib.WindowsPath = pathlib.PosixPath
 
 def resolve_path(string: str, dest: Path) -> Path:
     """Downloads the file from remote or returns the path otherwise."""

@@ -9,7 +9,7 @@ import torch.nn as nn
 from loguru import logger
 
 from tools.modules import DetectV5, Exporter
-from tools.utils import get_first_conv2d_in_channels
+from tools.utils import get_first_conv2d_in_channels, patch_pathlib_for_cross_platform
 from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -24,8 +24,8 @@ from models.common import Conv  # noqa: E402
 from models.yolo import Detect as DetectYOLOv5  # noqa: E402
 from utils.activations import SiLU  # noqa: E402
 
-
 def attempt_load_yolov5(weights, device=None, inplace=True, fuse=True):
+    patch_pathlib_for_cross_platform()
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
     from models.yolo import Detect, Model  # noqa: E402
 
