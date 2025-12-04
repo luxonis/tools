@@ -84,6 +84,22 @@ def get_output_names(mode: int) -> List[str]:
     return ["output"]
 
 
+def get_yolo_output_names(mode: int) -> List[str]:
+    """Get the output names based on the mode.
+
+    Args:
+        mode (int): Mode of the model
+
+    Returns:
+        List[str]: List of output names
+    """
+    if mode == DETECT_MODE:
+        return ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
+    elif mode in {SEGMENT_MODE, OBB_MODE, POSE_MODE}:
+        return ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+    return ["output"]
+
+
 class YoloV8Exporter(Exporter):
     def __init__(
         self,
@@ -143,6 +159,7 @@ class YoloV8Exporter(Exporter):
 
         # Get output names
         self.all_output_names = get_output_names(self.mode)
+        self.output_names = get_yolo_output_names(self.mode)
 
         # check if image size is suitable
         gs = max(int(model.stride.max()), 32)  # model stride
@@ -203,7 +220,7 @@ class YoloV8Exporter(Exporter):
                 parser="YOLOExtendedParser",
                 # stage2_executable_path=str(self.f_stage2_onnx),
                 # postprocessor_path=self.stage2_filename,
-                n_prototypes=32,
+                n_prototypes=self.model.model[-1].npr,
                 is_softmax=True,
                 output_kwargs={
                     "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
@@ -223,7 +240,7 @@ class YoloV8Exporter(Exporter):
                 class_list=names,
                 n_classes=self.model.model[-1].nc,
                 parser="YOLOExtendedParser",
-                n_keypoints=17,
+                n_keypoints=self.model.model[-1].kpt_shape[0],
                 output_kwargs={"keypoints_outputs": ["kpt_output"]},
                 encoding=encoding,
             )
