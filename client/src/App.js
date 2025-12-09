@@ -105,7 +105,7 @@ function App() {
                             <br />
                             Please refer to{" "}
                             <a
-                                href="https://docs.luxonis.com/cloud/hubai/features/model-conversion/"
+                                href="https://docs.luxonis.com/cloud/hubai/quick-conversion/"
                                 target="_blank"
                                 className="text-white text-decoration-underline"
                             >
