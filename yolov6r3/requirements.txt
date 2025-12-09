@@ -3,7 +3,7 @@ torch>=2.2.0,<2.6.0
 
 torchvision>=0.11.3
 
-onnx>=1.16.0
+onnx>=1.16.0,<1.19
 onnx-simplifier>=0.3.6
 # openvino==2022.1.0
 # openvino-dev==2022.1.0
