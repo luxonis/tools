@@ -80,8 +80,8 @@ jobs:
       run: |
         coverage erase
         coverage run -m pytest tests/test_unittests.py --download-weights --delete-weights-now -s -v --junit-xml pytest.xml
-        coverage combine --ignore-errors # Recent changes to coverage 7.13 make it stricter where it was previously passing https://coverage.readthedocs.io/en/7.13.0/messages.html#error-no-source
-        coverage xml -o coverage.xml --ignore-errors
+        coverage combine
+        coverage xml -o coverage.xml -i # Recent changes to coverage 7.13 make it stricter where it was previously passing https://coverage.readthedocs.io/en/7.13.0/messages.html#error-no-source
 
 
     - name: Run tests [Windows, macOS]
