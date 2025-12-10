@@ -1,3 +1,11 @@
 [run]
 parallel = true
 source = .
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+omit =
+    */config*.py
+    tests/*
