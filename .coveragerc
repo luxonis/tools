@@ -1,11 +1,18 @@
 [run]
 parallel = true
 source = .
+omit =
+    */tests/*
+    */__init__.py
+    config*.py
+    .coverage*
+    */__pycache__/*
+    */.venv/*
 
 [report]
 exclude_lines =
     pragma: no cover
     def __repr__
-omit =
-    */config*.py
-    tests/*
+    raise AssertionError
+    raise NotImplementedError
+    if TYPE_CHECKING:
