@@ -21,7 +21,7 @@ This is a command-line tool that simplifies the conversion process of YOLO model
 
 ## 💻 How to run
 
-You can either export a model stored on the cloud (e.g. S3) or locally. You can choose to install the toolkit through pip or using Docker. In the sections below, we'll describe both options.
+You can either export a model stored on the cloud (e.g. S3 or GCS) or locally. You can choose to install the toolkit through pip or using Docker. In the sections below, we'll describe both options.
 
 ### Prerequisites
 
