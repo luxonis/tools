@@ -1,13 +1,9 @@
 [run]
 parallel = true
-source = .
+source = tools
 omit =
-    */tests/*
     */__init__.py
-    config*.py
-    .coverage*
-    */__pycache__/*
-    */.venv/*
+    */config*.py
 
 [report]
 exclude_lines =
