@@ -1,3 +1,9 @@
 [run]
 parallel = true
-source = .
+source = tools
+omit =
+    */__init__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
