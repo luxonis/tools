@@ -3,7 +3,6 @@ parallel = true
 source = tools
 omit =
     */__init__.py
-    */config*.py
 
 [report]
 exclude_lines =
