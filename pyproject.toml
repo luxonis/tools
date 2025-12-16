@@ -1,6 +1,5 @@
 [project]
 name = "tools"
-version = "0.3.1"
 description = "Converter for YOLO models into .ONNX format."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -51,6 +50,8 @@ tools = [
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 optional-dependencies = { dev = { file = ["requirements-dev.txt"] } }
+version = { attr = "tools.__version__" }
+
 
 [tool.ruff]
 target-version = "py38"
