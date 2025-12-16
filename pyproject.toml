@@ -15,7 +15,7 @@ keywords = [
   "keypoint detection",
   "OBB",
 ]
-dynamic = ["dependencies", "optional-dependencies"]
+dynamic = ["dependencies", "optional-dependencies", "version"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3.8",
