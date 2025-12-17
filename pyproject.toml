@@ -2,6 +2,8 @@
 name = "tools"
 description = "Converter for YOLO models into .ONNX format."
 readme = "README.md"
+license-files = ["LICENSE"]
+license = "AGPL-3.0"
 requires-python = ">=3.8"
 authors = [{ name = "Luxonis", email = "support@luxonis.com" }]
 maintainers = [{ name = "Luxonis", email = "support@luxonis.com" }]
