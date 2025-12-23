@@ -45,7 +45,8 @@ jobs:
       if: ${{ inputs.tools_ref == '' && inputs.ml_ref == '' }}
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.head_ref }}
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.sha }}
         submodules: recursive  # Ensures submodules are cloned
 
     - name: Set up Python
@@ -81,7 +82,8 @@ jobs:
         coverage erase
         coverage run -m pytest tests/test_unittests.py --download-weights --delete-weights-now -s -v --junit-xml pytest.xml
         coverage combine
-        coverage xml -o coverage.xml
+        coverage xml -o coverage.xml -i # Recent changes to coverage 7.13 make it stricter where it was previously passing https://coverage.readthedocs.io/en/7.13.0/messages.html#error-no-source
+
 
     - name: Run tests [Windows, macOS]
       if: matrix.os != 'ubuntu-latest' || matrix.version != '3.10'
@@ -90,7 +92,7 @@ jobs:
 
     - name: Generate coverage badge [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == ''
-      run: coverage-badge -o media/coverage_badge.svg -f
+      run: coverage-badge -f -o media/coverage_badge.svg
 
     - name: Generate coverage report [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == ''
@@ -99,8 +101,9 @@ jobs:
         coverageFile: coverage.xml
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    # Skip coverage badge for forks because we cannot push to another fork without their PAT
     - name: Commit coverage badge [Ubuntu]
-      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == ''
+      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == '' && github.event.pull_request.head.repo.full_name == github.repository
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
@@ -109,7 +112,7 @@ jobs:
           git commit -m "[Automated] Updated coverage badge"
         }
     - name: Push changes [Ubuntu]
-      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == ''
+      if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == '' && github.event.pull_request.head.repo.full_name == github.repository
       uses: ad-m/github-push-action@master
       with:
         branch: ${{ github.head_ref }}
@@ -136,7 +139,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
