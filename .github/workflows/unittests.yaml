@@ -76,11 +76,12 @@ jobs:
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
       env:
-        COVERAGE_PROCESS_START: .coveragerc
+        COVERAGE_PROCESS_START: ${{ github.workspace }}/${{ inputs.tools_ref != '' && 'tools/' || '' }}.coveragerc
+        PYTHONPATH: ${{ github.workspace }}/${{ inputs.tools_ref != '' && 'tools' || '' }}
       run: |
         coverage erase
         coverage run -m pytest tests/test_unittests.py --download-weights --delete-weights-now -s -v --junit-xml pytest.xml
-        coverage combine
+        coverage combine --keep
         coverage xml -o coverage.xml
 
     - name: Run tests [Windows, macOS]
