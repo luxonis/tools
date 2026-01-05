@@ -5,9 +5,11 @@ import json
 import logging
 import os
 import tarfile
+from pathlib import Path
 
 import requests
 from constants import MODEL_TYPE2URL
+from luxonis_ml.utils import LuxonisFileSystem
 
 logger = logging.getLogger()
 
@@ -24,6 +26,25 @@ def download_model(model_name: str, folder: str):
         f.write(response.content)
     logger.debug(f"Model downloaded and saved to {file_path}")
     return file_path
+
+
+def download_private_model(model_name: str, filename: str, folder: str) -> str:
+    """Download a private model from the GCP bucket using LuxonisFileSystem."""
+
+    logger.info(f"Downloading private model '{model_name}' from GCP bucket")
+    remote_path = f"gs://luxonis-test-bucket/tools-tests/{filename}"
+    dest_dir = Path(folder)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    downloaded_path = LuxonisFileSystem.download(remote_path, dest=dest_dir)
+    final_path = dest_dir / f"{model_name}.pt"
+
+    # Cases where name != filename in the PRIVATE_TEST_MODELS entry
+    if downloaded_path != final_path and downloaded_path.exists():
+        downloaded_path.rename(final_path)
+
+    logger.debug(f"Private model downloaded and saved to {final_path}")
+    return str(final_path)
 
 
 def nn_archive_checker(extra_keys_to_check: list = []):  # noqa: B006

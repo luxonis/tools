@@ -44,3 +44,15 @@ jobs:
 
     - name: Run tests
       run: pytest tests/test_end2end.py --download-weights --delete-weights-now -s -v
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        create_credentials_file: true
+        export_environment_variables: true
+
+    - name: Run private model tests
+      env:
+        LUXONISML_BUCKET: luxonis-test-bucket
+      run: pytest tests/test_end2end.py::test_private_model_conversion --test-private --delete-weights-now -s -v
