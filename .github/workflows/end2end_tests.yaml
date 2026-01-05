@@ -53,4 +53,5 @@ jobs:
         export_environment_variables: true
 
     - name: Run private model tests
+      if: github.event.pull_request.head.repo.full_name == github.repository
       run: pytest tests/test_end2end.py::test_private_model_conversion --test-private --delete-weights-now -s -v
