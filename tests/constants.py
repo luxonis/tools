@@ -168,3 +168,9 @@ MODEL_TYPE2URL: dict[str, str] = {
     "yoloe-v8m-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-v8m-seg-coco.pt",
     "yoloe-v8l-seg": "https://huggingface.co/jameslahm/yoloe/resolve/main/yoloe-v8l-seg-coco.pt",
 }
+
+PRIVATE_TEST_MODELS: list[dict[str, str]] = [
+    {"name": "YOLOv6nNORO", "version": "v6", "filename": "YOLOv6nNORO.pt"},
+    {"name": "yolov7t-custom", "version": "v7", "filename": "yolov7t-custom.pt"},
+    {"name": "yolov8-grayscale", "version": "v8", "filename": "yolov8-grayscale.pt"},
+]
