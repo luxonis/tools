@@ -366,11 +366,14 @@ class DetectV8(nn.Module):
 
         self.use_rvc2 = use_rvc2
 
-        self.proj_conv = nn.Conv2d(old_detect.dfl.c1, 1, 1, bias=False).requires_grad_(
-            False
-        )
-        x = torch.arange(old_detect.dfl.c1, dtype=torch.float)
-        self.proj_conv.weight.data[:] = nn.Parameter(x.view(1, old_detect.dfl.c1, 1, 1))
+        if isinstance(old_detect.dfl, nn.Identity):
+            self.proj_conv = None
+        else:
+            self.proj_conv = nn.Conv2d(old_detect.dfl.c1, 1, 1, bias=False).requires_grad_(
+                False
+            )
+            x = torch.arange(old_detect.dfl.c1, dtype=torch.float)
+            self.proj_conv.weight.data[:] = nn.Parameter(x.view(1, old_detect.dfl.c1, 1, 1))
 
     def forward(self, x):
         bs = x[0].shape[0]  # batch size
@@ -382,9 +385,10 @@ class DetectV8(nn.Module):
 
             # ------------------------------
             # DFL PART
-            box = box.view(bs, 4, self.reg_max, h * w).permute(0, 2, 1, 3)
-            box = self.proj_conv(F.softmax(box, dim=1))[:, 0]
-            box = box.reshape([bs, 4, h, w])
+            if self.proj_conv is not None:
+                box = box.view(bs, 4, self.reg_max, h * w).permute(0, 2, 1, 3)
+                box = self.proj_conv(F.softmax(box, dim=1))[:, 0]
+                box = box.reshape([bs, 4, h, w])
             # ------------------------------
 
             cls = self.cv3[i](x[i])
@@ -427,6 +431,27 @@ class OBBV8(DetectV8):
 
         return outputs
 
+class OBBV26(DetectV8):
+    """YOLOv8 OBB detection head for detection with rotation models."""
+
+    def __init__(self, old_obb, use_rvc2):
+        super().__init__(old_obb, use_rvc2)
+        self.ne = old_obb.ne  # number of extra parameters
+        self.cv4 = old_obb.cv4
+
+    def forward(self, x):
+        # Detection part
+        outputs = super().forward(x)
+
+        # OBB part
+        bs = x[0].shape[0]  # batch size
+        angle = torch.cat(
+            [self.cv4[i](x[i]).view(bs, self.ne, -1) for i in range(self.nl)], 2
+        )  # OBB theta logits
+        # Append the angle
+        outputs.append(angle)
+
+        return outputs
 
 class PoseV8(DetectV8):
     """YOLOv8 Pose head for keypoints models."""
@@ -467,6 +492,46 @@ class PoseV8(DetectV8):
             a = torch.cat((a, y[:, :, 2:3]), 2)
         return a.view(bs, self.nk, -1)
 
+class PoseV26(DetectV8):
+    """YOLOv8 Pose head for keypoints models."""
+
+    def __init__(self, old_kpts, use_rvc2):
+        super().__init__(old_kpts, use_rvc2)
+        self.kpt_shape = (
+            old_kpts.kpt_shape
+        )  # number of keypoints, number of dims (2 for x,y or 3 for x,y,visible)
+        self.nk = old_kpts.nk  # number of keypoints total
+        self.cv4 = old_kpts.cv4
+        self.cv4_kpts = old_kpts.cv4_kpts
+        self.use_rvc2 = use_rvc2
+
+    def forward(self, x):
+        """Perform forward pass through YOLO model and return predictions."""
+        bs = x[0].shape[0]  # batch size
+        if self.shape != bs:
+            self.anchors, self.strides = make_anchors(x, self.stride, 0.5)
+            self.shape = bs
+
+        # Detection part
+        outputs = super().forward(x)
+
+        # Pose part
+        for i in range(self.nl):
+            feature = self.cv4[i](x[i])
+            kpt = self.cv4_kpts[i](feature).view(bs, self.nk, -1)
+            outputs.append(self.kpts_decode(bs, kpt, i))
+
+        return outputs
+
+    def kpts_decode(self, bs, kpts, i):
+        """Decodes keypoints."""
+        ndim = self.kpt_shape[1]
+        y = kpts.view(bs, *self.kpt_shape, -1)
+        a = (y[:, :, :2] + self.anchors[i]) * self.strides[i]
+        if ndim == 3:
+            # a = torch.cat((a, y[:, :, 2:3].sigmoid()*10), 2)
+            a = torch.cat((a, y[:, :, 2:3]), 2)
+        return a.view(bs, self.nk, -1)
 
 class SegmentV8(DetectV8):
     """YOLOv8 Segment head for segmentation models."""
@@ -496,6 +561,33 @@ class SegmentV8(DetectV8):
 
         return outputs
 
+class SegmentV26(DetectV8):
+    """YOLOv26 Segment head for segmentation models."""
+
+    def __init__(self, old_segment, use_rvc2):
+        super().__init__(old_segment, use_rvc2)
+        self.nm = old_segment.nm  # number of masks
+        self.npr = old_segment.npr  # number of protos
+        self.proto = old_segment.proto  # protos
+        self.cv4 = old_segment.cv4
+
+    @staticmethod
+    def _mask_call(layer, t):
+        # Support both signatures: layer(t) and layer(t, t)
+        try:
+            return layer(t)
+        except TypeError:
+            return layer(t, t)
+
+    def forward(self, x):
+        # Detection part
+        outputs = super().forward(x)
+        # Masks
+        outputs.extend(self._mask_call(self.cv4[i], x[i]) for i in range(self.nl))
+        # Mask protos
+        outputs.append(self.proto(x))
+
+        return outputs
 
 class ClassifyV8(nn.Module):
     """YOLOv8 classification head, i.e. x(b,c1,20,20) to x(b,c2)."""

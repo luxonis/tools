@@ -17,6 +17,7 @@ YOLOV9_CONVERSION = "yolov9"
 YOLOV10_CONVERSION = "yolov10"
 YOLOV11_CONVERSION = "yolov11"
 YOLOV12_CONVERSION = "yolov12"
+YOLOV26_CONVERSION = "yolov26"
 GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
 
@@ -74,7 +75,9 @@ def detect_version(path: str, debug: bool = False) -> str:
             if debug:
                 print(data.decode(errors="replace"))
             content = data.decode("latin1")
-            if "yolov12" in content:
+            if "yolo26" in content:
+                return YOLOV26_CONVERSION
+            elif "yolov12" in content:
                 return YOLOV12_CONVERSION
             elif "yolo11" in content:
                 return YOLOV11_CONVERSION

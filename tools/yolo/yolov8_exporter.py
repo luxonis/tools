@@ -18,12 +18,15 @@ from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata impo
 
 from tools.modules import (
     OBBV8,
+    OBBV26,
     ClassifyV8,
     DetectV8,
     Exporter,
     Multiplier,
     PoseV8,
+    PoseV26,
     SegmentV8,
+    SegmentV26
 )
 from tools.utils import get_first_conv2d_in_channels
 from tools.utils.constants import Encoding
@@ -34,11 +37,15 @@ sys.path.append(yolo_path)
 
 from ultralytics.nn.modules import (  # noqa: E402
     OBB,
+    OBB26,
     Classify,
     Detect,
     Pose,
+    Pose26,
     Segment,
+    Segment26,
     YOLOESegment,
+    YOLOESegment26,
 )
 from ultralytics.nn.tasks import load_checkpoint  # noqa: E402
 
@@ -119,11 +126,22 @@ class YoloV8Exporter(Exporter):
     def load_model(self):
         # load the model
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=True
+            self.model_path, device="cpu", inplace=True, fuse=False
         )
 
         self.mode = -1
-        if isinstance(model.model[-1], (Segment)) or isinstance(
+        if isinstance(model.model[-1], (Segment26)) or isinstance(
+            model.model[-1], (YOLOESegment26)
+        ):
+            model.model[-1] = SegmentV26(model.model[-1], self.use_rvc2)
+            self.mode = SEGMENT_MODE
+        elif isinstance(model.model[-1], (OBB26)):
+            model.model[-1] = OBBV26(model.model[-1], self.use_rvc2)
+            self.mode = OBB_MODE
+        elif isinstance(model.model[-1], (Pose26)):
+            model.model[-1] = PoseV26(model.model[-1], self.use_rvc2)
+            self.mode = POSE_MODE
+        elif isinstance(model.model[-1], (Segment)) or isinstance(
             model.model[-1], (YOLOESegment)
         ):
             model.model[-1] = SegmentV8(model.model[-1], self.use_rvc2)
@@ -173,6 +191,7 @@ class YoloV8Exporter(Exporter):
         if len(self.imgsz) != 2:
             raise ValueError("Image size must be of length 1 or 2.")
 
+        model.fuse()
         model.eval()
         self.model = model
 
