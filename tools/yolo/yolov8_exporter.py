@@ -20,6 +20,7 @@ from tools.modules import (
     OBBV8,
     ClassifyV8,
     DetectV8,
+    DetectV26,
     Exporter,
     Multiplier,
     PoseV8,
@@ -106,12 +107,13 @@ class YoloV8Exporter(Exporter):
         model_path: str,
         imgsz: Tuple[int, int],
         use_rvc2: bool,
+        subtype: str = "yolov8"
     ):
         super().__init__(
             model_path,
             imgsz,
             use_rvc2,
-            subtype="yolov8",
+            subtype=subtype,
             output_names=["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"],
         )
         self.load_model()
@@ -119,9 +121,10 @@ class YoloV8Exporter(Exporter):
     def load_model(self):
         # load the model
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=True
+            self.model_path, device="cpu", inplace=True, fuse=False
         )
 
+        is_v26 = self.subtype == "yolov26"
         self.mode = -1
         if isinstance(model.model[-1], (Segment)) or isinstance(
             model.model[-1], (YOLOESegment)
@@ -141,6 +144,10 @@ class YoloV8Exporter(Exporter):
         elif isinstance(model.model[-1], (Detect)):
             model.model[-1] = DetectV8(model.model[-1], self.use_rvc2)
             self.mode = DETECT_MODE
+            if is_v26:
+                model.model[-1] = DetectV26(model.model[-1])
+            else:
+                model.model[-1] = DetectV8(model.model[-1], self.use_rvc2)
 
         if self.mode in [DETECT_MODE, SEGMENT_MODE, OBB_MODE, POSE_MODE]:
             self.names = (
@@ -160,6 +167,9 @@ class YoloV8Exporter(Exporter):
         # Get output names
         self.all_output_names = get_output_names(self.mode)
         self.output_names = get_yolo_output_names(self.mode)
+        if is_v26 and self.mode == DETECT_MODE:
+            self.all_output_names = ["output_yolo26"]
+            self.output_names = ["output_yolo26"]
 
         # check if image size is suitable
         gs = max(int(model.stride.max()), 32)  # model stride
@@ -173,6 +183,7 @@ class YoloV8Exporter(Exporter):
         if len(self.imgsz) != 2:
             raise ValueError("Image size must be of length 1 or 2.")
 
+        model.fuse()
         model.eval()
         self.model = model
 

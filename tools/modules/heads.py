@@ -428,6 +428,25 @@ class OBBV8(DetectV8):
         return outputs
 
 
+class DetectV26(nn.Module):
+
+    def __init__(self, old_detect):
+        super().__init__()
+        self.detect = old_detect
+        self.detect.export = True
+
+    def forward(self, x):
+        y = self.detect(x)
+        if not torch.is_tensor(y) or y.shape[-1] < 6:
+            return y
+        xywh = y[..., :4]
+        half = xywh[..., 2:4] * 0.5
+        xy1 = xywh[..., 0:2] - half
+        xy2 = xywh[..., 0:2] + half
+        return torch.cat((xy1, xy2, y[..., 4:]), dim=1)
+
+
+
 class PoseV8(DetectV8):
     """YOLOv8 Pose head for keypoints models."""
 

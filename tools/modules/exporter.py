@@ -108,7 +108,7 @@ class Exporter:
         iou_threshold: float = 0.5,
         conf_threshold: float = 0.5,
         max_det: int = 300,
-        parser: str = "YOLO",
+        parser: str = "YOLOExtendedParser",
         stage2_executable_path: Optional[str] = None,
         postprocessor_path: Optional[str] = None,
         n_prototypes: Optional[int] = None,
