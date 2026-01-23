@@ -434,6 +434,9 @@ class DetectV26(nn.Module):
         super().__init__()
         self.detect = old_detect
         self.detect.export = True
+        self.nc = getattr(old_detect, "nc", None)
+        self.nl = getattr(old_detect, "nl", None)
+        self.stride = getattr(old_detect, "stride", None)
 
     def forward(self, x):
         y = self.detect(x)
