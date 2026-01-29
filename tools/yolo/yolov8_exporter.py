@@ -122,9 +122,11 @@ class YoloV8Exporter(Exporter):
     def load_model(self):
         # load the model
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=True
+            self.model_path, device="cpu", inplace=True, fuse=False
         )
 
+        self.end2end = False
+        head = model.model[-1]
         self.mode = -1
         if isinstance(model.model[-1], (Segment)) or isinstance(
             model.model[-1], (YOLOESegment)
@@ -141,8 +143,16 @@ class YoloV8Exporter(Exporter):
         elif isinstance(model.model[-1], (Classify)):
             model.model[-1] = ClassifyV8(model.model[-1], self.use_rvc2)
             self.mode = CLASSIFY_MODE
-        elif isinstance(model.model[-1], (Detect)):
-            model.model[-1] = DetectV8(model.model[-1], self.use_rvc2)
+        elif isinstance(head, Detect):
+            # Check if end-to-end model (has one2one heads for NMS-free inference)
+            is_end2end = hasattr(head, "one2one_cv2") and head.one2one_cv2 is not None
+            logger.info(f"Detect head type: {type(head).__name__}, end2end: {is_end2end}")
+            if is_end2end:
+                model.model[-1] = DetectV26(head, self.use_rvc2)
+                self.end2end = True
+                self.subtype = "yolo26"
+            else:
+                model.model[-1] = DetectV8(head, self.use_rvc2)
             self.mode = DETECT_MODE
 
         if self.mode in [DETECT_MODE, SEGMENT_MODE, OBB_MODE, POSE_MODE]:
