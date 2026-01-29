@@ -526,3 +526,112 @@ class DetectV10(DetectV8):
         super().__init__(old_detect, use_rvc2)
         self.cv2 = old_detect.one2one_cv2
         self.cv3 = old_detect.one2one_cv3
+
+class DetectV26(nn.Module):
+    """YOLOv26 Detect head for end-to-end NMS-free detection models.
+
+    Uses one2one_cv2 and one2one_cv3 weights instead of cv2 and cv3 to enable
+    NMS-free inference. The one2one heads are trained with tal_topk=1 for
+    one-to-one label assignment.
+    """
+
+    dynamic = False  # force grid reconstruction
+    export = False  # export mode
+    shape = None
+    anchors = torch.empty(0)  # init
+    strides = torch.empty(0)  # init
+    max_det = 300  # max detections per image
+
+    def __init__(
+        self,
+        old_detect,
+        use_rvc2: bool,
+        conf_threshold: float = 0.0,
+    ):
+        super().__init__()
+        self.nc = old_detect.nc  # number of classes
+        self.nl = old_detect.nl  # number of detection layers
+        self.reg_max = old_detect.reg_max  # DFL channels
+        self.no = old_detect.no  # number of outputs per anchor
+        self.stride = old_detect.stride  # strides computed during build
+
+        # Use one2one heads for NMS-free inference
+        self.cv2 = old_detect.one2one_cv2
+        self.cv3 = old_detect.one2one_cv3
+        self.f = old_detect.f
+        self.i = old_detect.i
+
+        self.use_rvc2 = use_rvc2
+        self.conf_threshold = conf_threshold
+
+    def forward(self, x):
+        bs = x[0].shape[0]  # batch size
+
+        boxes = []
+        scores = []
+        for i in range(self.nl):
+            box = self.cv2[i](x[i])
+
+            cls_regress = self.cv3[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+            scores.append(cls_regress.view(bs, self.nc, -1))
+
+        preds = {
+            "boxes": torch.cat(boxes, dim=2),
+            "scores": torch.cat(scores, dim=2),
+            "feats": x,
+        }
+
+        dbox = self._get_decode_boxes(preds)
+        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+        return y
+
+    def _get_decode_boxes(self, preds):
+        # Emulate ultralytics.nn.modules.head.Detect._get_decode_boxes for end2end export.
+        # preds["boxes"]: (N, 4, A), preds["feats"]: list of feature maps (N, C, H_i, W_i)
+        shape = preds["feats"][0].shape  # BCHW
+        if self.dynamic or self.shape != shape:
+            anchor_points, stride_tensor = self._make_anchors(
+                preds["feats"], self.stride, 0.5
+            )
+            self.anchors = anchor_points.transpose(0, 1)
+            self.strides = stride_tensor.transpose(0, 1)
+            self.shape = shape
+
+        # anchors: (1, 2, A), strides: (1, 1, A)
+        # returns: decoded boxes (N, 4, A) in xyxy pixels
+        dbox = self.dist2bbox(
+            preds["boxes"], self.anchors.unsqueeze(0), xywh=False, dim=1
+        )
+        return dbox * self.strides
+
+    @staticmethod
+    def _make_anchors(feats, strides, grid_cell_offset=0.5):
+        # Emulate ultralytics.utils.tal.make_anchors.
+        # feats: list of (N, C, H_i, W_i) -> returns anchor_points (A, 2), stride_tensor (A, 1)
+        anchor_points, stride_tensor = [], []
+        dtype, device = feats[0].dtype, feats[0].device
+        for i, stride in enumerate(strides):
+            h, w = feats[i].shape[2:]
+            sx = torch.arange(end=w, device=device, dtype=dtype) + grid_cell_offset
+            sy = torch.arange(end=h, device=device, dtype=dtype) + grid_cell_offset
+            sy, sx = torch.meshgrid(sy, sx, indexing="ij")
+            anchor_points.append(torch.stack((sx, sy), -1).view(-1, 2))
+            stride_tensor.append(
+                torch.full((h * w, 1), stride, dtype=dtype, device=device)
+            )
+        return torch.cat(anchor_points), torch.cat(stride_tensor)
+
+    @staticmethod
+    def dist2bbox(distance, anchor_points, xywh=True, dim=-1):
+        # Emulate ultralytics.utils.tal.dist2bbox.
+        # distance: (N, 4, A) if dim=1, anchor_points: (1, 2, A) -> returns (N, 4, A)
+        lt, rb = distance.chunk(2, dim)
+        x1y1 = anchor_points - lt
+        x2y2 = anchor_points + rb
+        if xywh:
+            c_xy = (x1y1 + x2y2) / 2
+            wh = x2y2 - x1y1
+            return torch.cat([c_xy, wh], dim)
+        return torch.cat((x1y1, x2y2), dim)

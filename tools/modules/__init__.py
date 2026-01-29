@@ -13,6 +13,7 @@ from .heads import (
     DetectV7,
     DetectV8,
     DetectV10,
+    DetectV26,
     PoseV8,
     SegmentV8,
 )
@@ -34,4 +35,5 @@ __all__ = [
     "DetectV5",
     "DetectV7",
     "DetectV10",
+    "DetectV26",
 ]
