@@ -18,13 +18,16 @@ from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata impo
 
 from tools.modules import (
     OBBV8,
+    OBBV26,
     ClassifyV8,
     DetectV8,
     DetectV26,
     Exporter,
     Multiplier,
     PoseV8,
+    PoseV26,
     SegmentV8,
+    SegmentV26,
 )
 from tools.utils import get_first_conv2d_in_channels
 from tools.utils.constants import Encoding
@@ -35,9 +38,11 @@ sys.path.append(yolo_path)
 
 from ultralytics.nn.modules import (  # noqa: E402
     OBB,
+    OBB26,
     Classify,
     Detect,
     Pose,
+    Pose26,
     Segment,
     YOLOESegment,
 )
@@ -63,6 +68,8 @@ def get_output_names(mode: int, end2end: bool = False) -> List[str]:
     if mode == DETECT_MODE:
         return ["output"] if end2end else ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
     elif mode == SEGMENT_MODE:
+        if end2end:
+            return ["output", "mask_output", "protos_output"]
         return [
             "output1_yolov8",
             "output2_yolov8",
@@ -73,8 +80,12 @@ def get_output_names(mode: int, end2end: bool = False) -> List[str]:
             "protos_output",
         ]
     elif mode == OBB_MODE:
+        if end2end:
+            return ["output", "angle_output"]
         return ["output1_yolov8", "output2_yolov8", "output3_yolov8", "angle_output"]
     elif mode == POSE_MODE:
+        if end2end:
+            return ["output", "kpt_output"]
         return [
             "output1_yolov8",
             "output2_yolov8",
@@ -98,8 +109,15 @@ def get_yolo_output_names(mode: int, end2end: bool = False) -> List[str]:
     """
     if mode == DETECT_MODE:
         return ["output"] if end2end else ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
-    elif mode in {SEGMENT_MODE, OBB_MODE, POSE_MODE}:
-        return ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+    elif mode == SEGMENT_MODE:
+        # yolo_outputs should only contain detection outputs, mask/protos are passed separately
+        return ["output"] if end2end else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+    elif mode == OBB_MODE:
+        # yolo_outputs should only contain detection outputs, angles are passed separately
+        return ["output"] if end2end else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+    elif mode == POSE_MODE:
+        # yolo_outputs should only contain detection outputs, keypoints are passed separately
+        return ["output"] if end2end else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
     return ["output"]
 
 
@@ -131,14 +149,38 @@ class YoloV8Exporter(Exporter):
         if isinstance(model.model[-1], (Segment)) or isinstance(
             model.model[-1], (YOLOESegment)
         ):
-            model.model[-1] = SegmentV8(model.model[-1], self.use_rvc2)
+            # Check if E2E segmentation model (has one2one heads)
+            is_end2end = hasattr(head, "one2one_cv4") and head.one2one_cv4 is not None
+            logger.info(f"Segment head type: {type(head).__name__}, end2end: {is_end2end}")
+            if is_end2end:
+                model.model[-1] = SegmentV26(model.model[-1], self.use_rvc2)
+                self.end2end = True
+                self.subtype = "yolo26-seg"
+            else:
+                model.model[-1] = SegmentV8(model.model[-1], self.use_rvc2)
             self.mode = SEGMENT_MODE
             # self.export_stage2_multiplier()
-        elif isinstance(model.model[-1], (OBB)):
-            model.model[-1] = OBBV8(model.model[-1], self.use_rvc2)
+        elif isinstance(model.model[-1], (OBB, OBB26)):
+            # Check if E2E OBB model (has one2one heads)
+            is_end2end = hasattr(head, "one2one_cv4") and head.one2one_cv4 is not None
+            logger.info(f"OBB head type: {type(head).__name__}, end2end: {is_end2end}")
+            if is_end2end:
+                model.model[-1] = OBBV26(model.model[-1], self.use_rvc2)
+                self.end2end = True
+                self.subtype = "yolo26-obb"
+            else:
+                model.model[-1] = OBBV8(model.model[-1], self.use_rvc2)
             self.mode = OBB_MODE
-        elif isinstance(model.model[-1], (Pose)):
-            model.model[-1] = PoseV8(model.model[-1], self.use_rvc2)
+        elif isinstance(model.model[-1], (Pose, Pose26)):
+            # Check if E2E pose model (has one2one heads)
+            is_end2end = hasattr(head, "one2one_cv4") and head.one2one_cv4 is not None
+            logger.info(f"Pose head type: {type(head).__name__}, end2end: {is_end2end}")
+            if is_end2end:
+                model.model[-1] = PoseV26(model.model[-1], self.use_rvc2)
+                self.end2end = True
+                self.subtype = "yolo26-pose"
+            else:
+                model.model[-1] = PoseV8(model.model[-1], self.use_rvc2)
             self.mode = POSE_MODE
         elif isinstance(model.model[-1], (Classify)):
             model.model[-1] = ClassifyV8(model.model[-1], self.use_rvc2)
@@ -228,36 +270,75 @@ class YoloV8Exporter(Exporter):
                 class_list=names, n_classes=self.model.model[-1].nc, encoding=encoding
             )
         elif self.mode == SEGMENT_MODE:
-            self.make_nn_archive(
-                class_list=names,
-                n_classes=self.model.model[-1].nc,
-                parser="YOLOExtendedParser",
-                # stage2_executable_path=str(self.f_stage2_onnx),
-                # postprocessor_path=self.stage2_filename,
-                n_prototypes=self.model.model[-1].npr,
-                is_softmax=True,
-                output_kwargs={
-                    "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
-                    "protos_outputs": "protos_output",
-                },
-                encoding=encoding,
-            )
+            if self.end2end:
+                # E2E segmentation: detection output, mask coefficients output, and protos
+                self.make_nn_archive(
+                    class_list=names,
+                    n_classes=self.model.model[-1].nc,
+                    parser="YOLOExtendedParser",
+                    n_prototypes=self.model.model[-1].nm,
+                    is_softmax=False,  # E2E outputs are already sigmoided
+                    output_kwargs={
+                        "mask_outputs": ["mask_output"],
+                        "protos_outputs": "protos_output",
+                    },
+                    encoding=encoding,
+                )
+            else:
+                self.make_nn_archive(
+                    class_list=names,
+                    n_classes=self.model.model[-1].nc,
+                    parser="YOLOExtendedParser",
+                    # stage2_executable_path=str(self.f_stage2_onnx),
+                    # postprocessor_path=self.stage2_filename,
+                    n_prototypes=self.model.model[-1].npr,
+                    is_softmax=True,
+                    output_kwargs={
+                        "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
+                        "protos_outputs": "protos_output",
+                    },
+                    encoding=encoding,
+                )
         elif self.mode == OBB_MODE:
-            self.make_nn_archive(
-                class_list=names,
-                n_classes=self.model.model[-1].nc,
-                output_kwargs={"angles_outputs": ["angle_output"]},
-                encoding=encoding,
-            )
+            if self.end2end:
+                # E2E OBB: detection output and angles output (both decoded)
+                self.make_nn_archive(
+                    class_list=names,
+                    n_classes=self.model.model[-1].nc,
+                    parser="YOLOExtendedParser",
+                    output_kwargs={"angles_outputs": ["angle_output"]},
+                    encoding=encoding,
+                )
+            else:
+                self.make_nn_archive(
+                    class_list=names,
+                    n_classes=self.model.model[-1].nc,
+                    output_kwargs={"angles_outputs": ["angle_output"]},
+                    encoding=encoding,
+                )
         elif self.mode == POSE_MODE:
-            self.make_nn_archive(
-                class_list=names,
-                n_classes=self.model.model[-1].nc,
-                parser="YOLOExtendedParser",
-                n_keypoints=self.model.model[-1].kpt_shape[0],
-                output_kwargs={"keypoints_outputs": ["kpt_output"]},
-                encoding=encoding,
-            )
+            if self.end2end:
+                # E2E pose: detection output and keypoints output (both decoded)
+                # Note: is_softmax is not supported for keypoint_detection task
+                self.make_nn_archive(
+                    class_list=names,
+                    n_classes=self.model.model[-1].nc,
+                    parser="YOLOExtendedParser",
+                    n_keypoints=self.model.model[-1].kpt_shape[0],
+                    output_kwargs={"keypoints_outputs": ["kpt_output"]},
+                    encoding=encoding,
+                )
+            else:
+                self.make_nn_archive(
+                    class_list=names,
+                    n_classes=self.model.model[-1].nc,
+                    parser="YOLOExtendedParser",
+                    n_keypoints=self.model.model[-1].kpt_shape[0],
+                    output_kwargs={
+                        "keypoints_outputs": ["kpt_output1", "kpt_output2", "kpt_output3"]
+                    },
+                    encoding=encoding,
+                )
         elif self.mode == CLASSIFY_MODE:
             self.make_cls_nn_archive(
                 class_list=names, n_classes=len(self.model.names), encoding=encoding

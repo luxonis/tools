@@ -635,3 +635,350 @@ class DetectV26(nn.Module):
             wh = x2y2 - x1y1
             return torch.cat([c_xy, wh], dim)
         return torch.cat((x1y1, x2y2), dim)
+
+
+class SegmentV26(DetectV26):
+    """YOLOv26 Segment head for end-to-end NMS-free instance segmentation models.
+
+    Uses one2one_cv2, one2one_cv3, and one2one_cv4 weights for NMS-free inference.
+    Outputs decoded boxes, class scores, mask coefficients (separate), and prototype masks.
+
+    Output format:
+        - detections: (batch, num_anchors, 4 + nc)
+            - 4: decoded bbox coordinates (x1, y1, x2, y2) in pixel space
+            - nc: class scores (sigmoided)
+        - mask_coeffs: (batch, num_anchors, nm)
+            - nm: mask coefficients (raw, to be used with protos)
+        - protos: (batch, nm, proto_h, proto_w)
+            - Prototype masks, typically 4x smaller than input (e.g., 160x160 for 640x640 input)
+
+    To get final instance masks:
+        mask = sigmoid(mask_coefficients @ protos.flatten(2))  # (N, H*W)
+        mask = mask.view(N, proto_h, proto_w)  # (N, H, W)
+        mask = crop_to_bbox(mask, bbox)  # crop to detection bbox
+    """
+
+    def __init__(
+        self,
+        old_segment,
+        use_rvc2: bool,
+        conf_threshold: float = 0.0,
+    ):
+        super().__init__(old_segment, use_rvc2, conf_threshold)
+        self.nm = old_segment.nm  # number of masks (default 32)
+        self.npr = old_segment.npr  # number of protos (default 256)
+        self.proto = old_segment.proto  # Proto or Proto26 module
+
+        # Use one2one mask coefficient heads for NMS-free inference
+        self.cv4 = old_segment.one2one_cv4
+
+    def forward(self, x):
+        """Forward pass returning detections, mask coefficients, and prototype masks.
+
+        Args:
+            x: List of feature maps from backbone [P3, P4, P5]
+
+        Returns:
+            Tuple of:
+                - detections: (batch, num_anchors, 4 + nc)
+                - mask_coeffs: (batch, num_anchors, nm)
+                - protos: (batch, nm, proto_h, proto_w)
+        """
+        bs = x[0].shape[0]  # batch size
+
+        boxes = []
+        scores = []
+        mask_coeffs = []
+        for i in range(self.nl):
+            # Box regression
+            box = self.cv2[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            scores.append(cls_regress.view(bs, self.nc, -1))
+
+            # Mask coefficients
+            mask = self.cv4[i](x[i])
+            mask_coeffs.append(mask.view(bs, self.nm, -1))
+
+        preds = {
+            "boxes": torch.cat(boxes, dim=2),
+            "scores": torch.cat(scores, dim=2),
+            "feats": x,
+        }
+
+        # Decode boxes to pixel coordinates
+        dbox = self._get_decode_boxes(preds)
+
+        # Detection output: boxes (4) + class scores (nc)
+        y = torch.cat(
+            (dbox, preds["scores"].sigmoid()), 1
+        )  # (bs, 4+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+
+        # Mask coefficients output (separate)
+        mask_coeffs_cat = torch.cat(mask_coeffs, dim=2)  # (bs, nm, num_anchors)
+        mask_coeffs_cat = mask_coeffs_cat.permute(0, 2, 1)  # (bs, num_anchors, nm)
+
+        # Get prototype masks
+        proto = self._get_proto(x)
+
+        return y, mask_coeffs_cat, proto
+
+    def _get_proto(self, x):
+        """Get prototype masks from the proto module.
+
+        Handles both Proto (takes single feature map) and Proto26 (takes all feature maps).
+        Proto26 may return a tuple (proto, semseg) during training, but we only need proto.
+        """
+        # Check if it's Proto26 (takes list of features) or Proto (takes single feature)
+        # Proto26 has feat_refine attribute, Proto doesn't
+        if hasattr(self.proto, "feat_refine"):
+            # Proto26: pass all feature maps, disable semseg output
+            proto = self.proto(x, return_semseg=False)
+        else:
+            # Proto: pass only the first (highest resolution) feature map
+            proto = self.proto(x[0])
+
+        # Handle case where proto returns a tuple (shouldn't happen with return_semseg=False)
+        if isinstance(proto, tuple):
+            proto = proto[0]
+
+        return proto
+
+
+class PoseV26(DetectV26):
+    """YOLOv26 Pose head for end-to-end NMS-free pose estimation models.
+
+    Uses one2one_cv2, one2one_cv3, and one2one_cv4 (or one2one_cv4_kpts for Pose26)
+    weights for NMS-free inference.
+    Outputs decoded boxes, class scores, and decoded keypoints (separate).
+
+    Output format:
+        - detections: (batch, num_anchors, 4 + nc)
+            - 4: decoded bbox coordinates (x1, y1, x2, y2) in pixel space
+            - nc: class scores (sigmoided)
+        - keypoints: (batch, num_anchors, nk)
+            - nk: keypoint values (x, y, [visibility]) for each keypoint
+            - x, y are in pixel coordinates
+            - visibility is sigmoided (if ndim == 3)
+
+    Supports both regular Pose models with end2end flag and Pose26 models.
+    """
+
+    def __init__(
+        self,
+        old_pose,
+        use_rvc2: bool,
+        conf_threshold: float = 0.0,
+    ):
+        super().__init__(old_pose, use_rvc2, conf_threshold)
+        self.kpt_shape = old_pose.kpt_shape  # (num_keypoints, ndim) e.g., (17, 3)
+        self.nk = old_pose.nk  # total keypoint values = num_keypoints * ndim
+
+        # Check if this is Pose26 (has separate cv4_kpts) or regular Pose (cv4 is keypoints)
+        self.is_pose26 = (
+            hasattr(old_pose, "one2one_cv4_kpts")
+            and old_pose.one2one_cv4_kpts is not None
+        )
+
+        if self.is_pose26:
+            # Pose26: cv4 is feature extractor, cv4_kpts produces keypoints
+            self.cv4 = old_pose.one2one_cv4
+            self.cv4_kpts = old_pose.one2one_cv4_kpts
+        else:
+            # Regular Pose with end2end: cv4 directly produces keypoints
+            self.cv4 = old_pose.one2one_cv4
+            self.cv4_kpts = None
+
+    def forward(self, x):
+        """Forward pass returning detections and decoded keypoints.
+
+        Args:
+            x: List of feature maps from backbone [P3, P4, P5]
+
+        Returns:
+            Tuple of:
+                - detections: (batch, num_anchors, 4 + nc)
+                - keypoints: (batch, num_anchors, nk)
+        """
+        bs = x[0].shape[0]  # batch size
+
+        boxes = []
+        scores = []
+        kpts_raw = []
+        for i in range(self.nl):
+            # Box regression
+            box = self.cv2[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            scores.append(cls_regress.view(bs, self.nc, -1))
+
+            # Keypoints
+            if self.is_pose26:
+                # Pose26: cv4 extracts features, cv4_kpts predicts keypoints
+                feat = self.cv4[i](x[i])
+                kpt = self.cv4_kpts[i](feat)
+            else:
+                # Regular Pose: cv4 directly predicts keypoints
+                kpt = self.cv4[i](x[i])
+            kpts_raw.append(kpt.view(bs, self.nk, -1))
+
+        preds = {
+            "boxes": torch.cat(boxes, dim=2),
+            "scores": torch.cat(scores, dim=2),
+            "feats": x,
+        }
+
+        # Decode boxes to pixel coordinates (this also sets self.anchors and self.strides)
+        dbox = self._get_decode_boxes(preds)
+
+        # Detection output: boxes (4) + class scores (nc)
+        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+
+        # Decode and concatenate keypoints
+        # Note: After _get_decode_boxes, self.anchors is (2, A) and self.strides is (1, A)
+        kpts_cat = torch.cat(kpts_raw, dim=2)  # (bs, nk, num_anchors)
+        kpts_decoded = self._kpts_decode(bs, kpts_cat)  # (bs, nk, num_anchors)
+        kpts_decoded = kpts_decoded.permute(0, 2, 1)  # (bs, num_anchors, nk)
+
+        return y, kpts_decoded
+
+    def _kpts_decode(self, bs, kpts):
+        """Decode keypoints from raw predictions to pixel coordinates.
+
+        Args:
+            bs: Batch size
+            kpts: Raw keypoint predictions (bs, nk, num_anchors)
+
+        Returns:
+            Decoded keypoints (bs, nk, num_anchors) with x, y in pixel coords
+        """
+        ndim = self.kpt_shape[1]
+        num_kpts = self.kpt_shape[0]
+        num_anchors = kpts.shape[2]
+
+        # Reshape to (bs, num_keypoints, ndim, num_anchors)
+        y = kpts.view(bs, num_kpts, ndim, num_anchors)
+
+        # After _get_decode_boxes, anchors and strides are already in the right format:
+        # self.anchors: (2, num_anchors), self.strides: (1, num_anchors)
+        # Reshape for broadcasting with y[:, :, :2, :] which is (bs, num_kpts, 2, num_anchors)
+        anchors_reshaped = self.anchors.view(1, 1, 2, num_anchors)  # (1, 1, 2, A)
+        strides_reshaped = self.strides.view(1, 1, 1, num_anchors)  # (1, 1, 1, A)
+
+        # Decode xy: (raw + anchor) * stride
+        xy = (y[:, :, :2, :] + anchors_reshaped) * strides_reshaped
+
+        if ndim == 3:
+            # Visibility score (sigmoid)
+            vis = y[:, :, 2:3, :].sigmoid()
+            decoded = torch.cat((xy, vis), dim=2)
+        else:
+            decoded = xy
+
+        # Reshape back to (bs, nk, num_anchors)
+        return decoded.view(bs, self.nk, num_anchors)
+
+
+class OBBV26(DetectV26):
+    """YOLOv26 OBB head for end-to-end NMS-free oriented bounding box detection.
+
+    Uses one2one_cv2, one2one_cv3, and one2one_cv4 weights for NMS-free inference.
+    Outputs decoded boxes (xywh format), class scores, and rotation angles (separate).
+
+    Output format:
+        - detections: (batch, num_anchors, 4 + nc)
+            - 4: decoded bbox coordinates (x, y, w, h) in pixel space (center format)
+            - nc: class scores (sigmoided)
+        - angles: (batch, num_anchors, 1)
+            - Rotation angle in radians, range [-pi/4, 3pi/4]
+
+    Note: OBB uses xywh (center) format instead of xyxy for bounding boxes,
+    and the angle represents rotation around the center.
+    """
+
+    def __init__(
+        self,
+        old_obb,
+        use_rvc2: bool,
+        conf_threshold: float = 0.0,
+    ):
+        super().__init__(old_obb, use_rvc2, conf_threshold)
+        self.ne = old_obb.ne  # number of extra parameters (typically 1 for angle)
+
+        # Use one2one angle prediction head for NMS-free inference
+        self.cv4 = old_obb.one2one_cv4
+
+    def forward(self, x):
+        """Forward pass returning detections and rotation angles.
+
+        Args:
+            x: List of feature maps from backbone [P3, P4, P5]
+
+        Returns:
+            Tuple of:
+                - detections: (batch, num_anchors, 4 + nc) with boxes in xywh format
+                - angles: (batch, num_anchors, 1) rotation angles in radians
+        """
+        bs = x[0].shape[0]  # batch size
+
+        boxes = []
+        scores = []
+        angles = []
+        for i in range(self.nl):
+            # Box regression
+            box = self.cv2[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            scores.append(cls_regress.view(bs, self.nc, -1))
+
+            # Angle prediction
+            angle = self.cv4[i](x[i])
+            angles.append(angle.view(bs, self.ne, -1))
+
+        preds = {
+            "boxes": torch.cat(boxes, dim=2),
+            "scores": torch.cat(scores, dim=2),
+            "feats": x,
+        }
+
+        # Decode boxes to pixel coordinates (xywh format for OBB)
+        dbox = self._get_decode_boxes_xywh(preds)
+
+        # Detection output: boxes (4) + class scores (nc)
+        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+
+        # Angle output: apply sigmoid and scale to [-pi/4, 3pi/4]
+        angles_cat = torch.cat(angles, dim=2)  # (bs, ne, num_anchors)
+        angles_decoded = (angles_cat.sigmoid() - 0.25) * math.pi  # [-pi/4, 3pi/4]
+        angles_decoded = angles_decoded.permute(0, 2, 1)  # (bs, num_anchors, ne)
+
+        return y, angles_decoded
+
+    def _get_decode_boxes_xywh(self, preds):
+        """Decode boxes to xywh format (center x, center y, width, height) in pixel coordinates.
+
+        OBB uses xywh format because the angle rotation is around the center point.
+        """
+        shape = preds["feats"][0].shape  # BCHW
+        if self.dynamic or self.shape != shape:
+            anchor_points, stride_tensor = self._make_anchors(
+                preds["feats"], self.stride, 0.5
+            )
+            self.anchors = anchor_points.transpose(0, 1)
+            self.strides = stride_tensor.transpose(0, 1)
+            self.shape = shape
+
+        # dist2bbox with xywh=True for OBB
+        dbox = self.dist2bbox(
+            preds["boxes"], self.anchors.unsqueeze(0), xywh=True, dim=1
+        )
+        return dbox * self.strides

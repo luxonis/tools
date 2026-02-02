@@ -4,6 +4,7 @@ from .backbones import YoloV6BackBone
 from .exporter import Exporter
 from .heads import (
     OBBV8,
+    OBBV26,
     ClassifyV8,
     DetectV5,
     DetectV6R1,
@@ -15,7 +16,9 @@ from .heads import (
     DetectV10,
     DetectV26,
     PoseV8,
+    PoseV26,
     SegmentV8,
+    SegmentV26,
 )
 from .stage2 import Multiplier
 
@@ -28,8 +31,11 @@ __all__ = [
     "DetectV8",
     "Exporter",
     "PoseV8",
+    "PoseV26",
     "OBBV8",
+    "OBBV26",
     "SegmentV8",
+    "SegmentV26",
     "ClassifyV8",
     "Multiplier",
     "DetectV5",
