@@ -641,7 +641,6 @@ class DetectV26(nn.Module):
 class SegmentV26(DetectV26):
     """YOLOv26 Segment head for end-to-end NMS-free instance segmentation models.
 
-    Uses one2one_cv2, one2one_cv3, and one2one_cv4 weights for NMS-free inference.
     Outputs decoded boxes, class scores, mask coefficients (separate), and prototype masks.
 
     Output format:
@@ -740,8 +739,6 @@ class SegmentV26(DetectV26):
 class PoseV26(DetectV26):
     """YOLOv26 Pose head for end-to-end NMS-free pose estimation models.
 
-    Uses one2one_cv2, one2one_cv3, one2one_cv4, and one2one_cv4_kpts weights
-    for NMS-free inference.
     Outputs decoded boxes, class scores, and decoded keypoints (separate).
 
     Output format:
@@ -859,101 +856,3 @@ class PoseV26(DetectV26):
 
         # Reshape back to (bs, nk, num_anchors)
         return decoded.view(bs, self.nk, num_anchors)
-
-
-class OBBV26(DetectV26):
-    """YOLOv26 OBB head for end-to-end NMS-free oriented bounding box detection.
-
-    Uses one2one_cv2, one2one_cv3, and one2one_cv4 weights for NMS-free inference.
-    Outputs decoded boxes (xywh format), class scores, and rotation angles (separate).
-
-    Output format:
-        - detections: (batch, num_anchors, 4 + nc)
-            - 4: decoded bbox coordinates (x, y, w, h) in pixel space (center format)
-            - nc: class scores (sigmoided)
-        - angles: (batch, num_anchors, 1)
-            - Rotation angle in radians, range [-pi/4, 3pi/4]
-
-    Note: OBB uses xywh (center) format instead of xyxy for bounding boxes
-    """
-
-    def __init__(
-        self,
-        old_obb,
-        use_rvc2: bool,
-        conf_threshold: float = 0.0,
-    ):
-        super().__init__(old_obb, use_rvc2, conf_threshold)
-        self.ne = old_obb.ne  # number of extra parameters (typically 1 for angle)
-
-        # Use one2one angle prediction head for NMS-free inference
-        self.cv4 = old_obb.one2one_cv4
-
-    def forward(self, x):
-        """Forward pass returning detections and rotation angles.
-
-        Args:
-            x: List of feature maps from backbone [P3, P4, P5]
-
-        Returns:
-            Tuple of:
-                - detections: (batch, num_anchors, 4 + nc) with boxes in xywh format
-                - angles: (batch, num_anchors, 1) rotation angles in radians
-        """
-        bs = x[0].shape[0]  # batch size
-
-        boxes = []
-        scores = []
-        angles = []
-        for i in range(self.nl):
-            # Box regression
-            box = self.cv2[i](x[i])
-            boxes.append(box.view(bs, 4, -1))
-
-            # Class scores
-            cls_regress = self.cv3[i](x[i])
-            scores.append(cls_regress.view(bs, self.nc, -1))
-
-            # Angle prediction
-            angle = self.cv4[i](x[i])
-            angles.append(angle.view(bs, self.ne, -1))
-
-        preds = {
-            "boxes": torch.cat(boxes, dim=2),
-            "scores": torch.cat(scores, dim=2),
-            "feats": x,
-        }
-
-        # Decode boxes to pixel coordinates (xywh format for OBB)
-        dbox = self._get_decode_boxes_xywh(preds)
-
-        # Detection output: boxes (4) + class scores (nc)
-        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
-        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
-
-        # Angle output: apply sigmoid and scale to [-pi/4, 3pi/4]
-        angles_cat = torch.cat(angles, dim=2)  # (bs, ne, num_anchors)
-        angles_decoded = (angles_cat.sigmoid() - 0.25) * math.pi  # [-pi/4, 3pi/4]
-        angles_decoded = angles_decoded.permute(0, 2, 1)  # (bs, num_anchors, ne)
-
-        return y, angles_decoded
-
-    def _get_decode_boxes_xywh(self, preds):
-        """Decode boxes to xywh format (center x, center y, width, height) in pixel coordinates.
-
-        OBB uses xywh format because the angle rotation is around the center point.
-        """
-        shape = preds["feats"][0].shape  # BCHW
-        if self.dynamic or self.shape != shape:
-            anchor_points, stride_tensor = self._make_anchors(
-                preds["feats"], self.stride, 0.5
-            )
-            self.anchors = anchor_points.transpose(0, 1)
-            self.strides = stride_tensor.transpose(0, 1)
-            self.shape = shape
-
-        # dist2bbox with xywh=True for OBB
-        dbox = self.dist2bbox(
-            preds["boxes"], self.anchors.unsqueeze(0), xywh=True, dim=1
-        )
-        return dbox * self.strides
