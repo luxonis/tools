@@ -627,6 +627,7 @@ class DetectV26(nn.Module):
     def dist2bbox(distance, anchor_points, xywh=True, dim=-1):
         # Emulate ultralytics.utils.tal.dist2bbox.
         # distance: (N, 4, A) if dim=1, anchor_points: (1, 2, A) -> returns (N, 4, A)
+        # xywh is for OBB
         lt, rb = distance.chunk(2, dim)
         x1y1 = anchor_points - lt
         x2y2 = anchor_points + rb
@@ -650,7 +651,7 @@ class SegmentV26(DetectV26):
         - mask_coeffs: (batch, num_anchors, nm)
             - nm: mask coefficients (raw, to be used with protos)
         - protos: (batch, nm, proto_h, proto_w)
-            - Prototype masks, typically 4x smaller than input (e.g., 160x160 for 640x640 input)
+            - Prototype masks
 
     To get final instance masks:
         mask = sigmoid(mask_coefficients @ protos.flatten(2))  # (N, H*W)
@@ -667,7 +668,7 @@ class SegmentV26(DetectV26):
         super().__init__(old_segment, use_rvc2, conf_threshold)
         self.nm = old_segment.nm  # number of masks (default 32)
         self.npr = old_segment.npr  # number of protos (default 256)
-        self.proto = old_segment.proto  # Proto or Proto26 module
+        self.proto = old_segment.proto  # Proto26 module
 
         # Use one2one mask coefficient heads for NMS-free inference
         self.cv4 = old_segment.one2one_cv4
@@ -727,32 +728,20 @@ class SegmentV26(DetectV26):
         return y, mask_coeffs_cat, proto
 
     def _get_proto(self, x):
-        """Get prototype masks from the proto module.
+        """Get prototype masks from Proto26 module.
 
-        Handles both Proto (takes single feature map) and Proto26 (takes all feature maps).
-        Proto26 may return a tuple (proto, semseg) during training, but we only need proto.
+        Emulate ultralytics.nn.modules.head.Segment26.forward for proto generation.
+
+        Proto26 takes all feature maps and returns prototype masks.
         """
-        # Check if it's Proto26 (takes list of features) or Proto (takes single feature)
-        # Proto26 has feat_refine attribute, Proto doesn't
-        if hasattr(self.proto, "feat_refine"):
-            # Proto26: pass all feature maps, disable semseg output
-            proto = self.proto(x, return_semseg=False)
-        else:
-            # Proto: pass only the first (highest resolution) feature map
-            proto = self.proto(x[0])
-
-        # Handle case where proto returns a tuple (shouldn't happen with return_semseg=False)
-        if isinstance(proto, tuple):
-            proto = proto[0]
-
-        return proto
+        return self.proto(x, return_semseg=False)
 
 
 class PoseV26(DetectV26):
     """YOLOv26 Pose head for end-to-end NMS-free pose estimation models.
 
-    Uses one2one_cv2, one2one_cv3, and one2one_cv4 (or one2one_cv4_kpts for Pose26)
-    weights for NMS-free inference.
+    Uses one2one_cv2, one2one_cv3, one2one_cv4, and one2one_cv4_kpts weights
+    for NMS-free inference.
     Outputs decoded boxes, class scores, and decoded keypoints (separate).
 
     Output format:
@@ -763,8 +752,6 @@ class PoseV26(DetectV26):
             - nk: keypoint values (x, y, [visibility]) for each keypoint
             - x, y are in pixel coordinates
             - visibility is sigmoided (if ndim == 3)
-
-    Supports both regular Pose models with end2end flag and Pose26 models.
     """
 
     def __init__(
@@ -777,23 +764,14 @@ class PoseV26(DetectV26):
         self.kpt_shape = old_pose.kpt_shape  # (num_keypoints, ndim) e.g., (17, 3)
         self.nk = old_pose.nk  # total keypoint values = num_keypoints * ndim
 
-        # Check if this is Pose26 (has separate cv4_kpts) or regular Pose (cv4 is keypoints)
-        self.is_pose26 = (
-            hasattr(old_pose, "one2one_cv4_kpts")
-            and old_pose.one2one_cv4_kpts is not None
-        )
-
-        if self.is_pose26:
-            # Pose26: cv4 is feature extractor, cv4_kpts produces keypoints
-            self.cv4 = old_pose.one2one_cv4
-            self.cv4_kpts = old_pose.one2one_cv4_kpts
-        else:
-            # Regular Pose with end2end: cv4 directly produces keypoints
-            self.cv4 = old_pose.one2one_cv4
-            self.cv4_kpts = None
+        # Pose26: cv4 is feature extractor, cv4_kpts produces keypoints
+        self.cv4 = old_pose.one2one_cv4
+        self.cv4_kpts = old_pose.one2one_cv4_kpts
 
     def forward(self, x):
         """Forward pass returning detections and decoded keypoints.
+
+        Emulate ultralytics.nn.modules.head.Pose26.forward_head.
 
         Args:
             x: List of feature maps from backbone [P3, P4, P5]
@@ -817,14 +795,9 @@ class PoseV26(DetectV26):
             cls_regress = self.cv3[i](x[i])
             scores.append(cls_regress.view(bs, self.nc, -1))
 
-            # Keypoints
-            if self.is_pose26:
-                # Pose26: cv4 extracts features, cv4_kpts predicts keypoints
-                feat = self.cv4[i](x[i])
-                kpt = self.cv4_kpts[i](feat)
-            else:
-                # Regular Pose: cv4 directly predicts keypoints
-                kpt = self.cv4[i](x[i])
+            # Keypoints: cv4 extracts features, cv4_kpts predicts keypoints
+            feat = self.cv4[i](x[i])
+            kpt = self.cv4_kpts[i](feat)
             kpts_raw.append(kpt.view(bs, self.nk, -1))
 
         preds = {
@@ -834,6 +807,7 @@ class PoseV26(DetectV26):
         }
 
         # Decode boxes to pixel coordinates (this also sets self.anchors and self.strides)
+        # from the parent DetectV26
         dbox = self._get_decode_boxes(preds)
 
         # Detection output: boxes (4) + class scores (nc)
@@ -850,6 +824,8 @@ class PoseV26(DetectV26):
 
     def _kpts_decode(self, bs, kpts):
         """Decode keypoints from raw predictions to pixel coordinates.
+
+        Emulate ultralytics.nn.modules.head.Pose26.kpts_decode.
 
         Args:
             bs: Batch size
@@ -898,8 +874,7 @@ class OBBV26(DetectV26):
         - angles: (batch, num_anchors, 1)
             - Rotation angle in radians, range [-pi/4, 3pi/4]
 
-    Note: OBB uses xywh (center) format instead of xyxy for bounding boxes,
-    and the angle represents rotation around the center.
+    Note: OBB uses xywh (center) format instead of xyxy for bounding boxes
     """
 
     def __init__(
