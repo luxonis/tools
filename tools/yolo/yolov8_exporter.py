@@ -66,7 +66,11 @@ def get_output_names(mode: int, end2end: bool = False) -> List[str]:
         List[str]: List of output names
     """
     if mode == DETECT_MODE:
-        return ["output"] if end2end else ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
+        return (
+            ["output"]
+            if end2end
+            else ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
+        )
     elif mode == SEGMENT_MODE:
         if end2end:
             return ["output", "mask_output", "protos_output"]
@@ -108,16 +112,32 @@ def get_yolo_output_names(mode: int, end2end: bool = False) -> List[str]:
         List[str]: List of output names
     """
     if mode == DETECT_MODE:
-        return ["output"] if end2end else ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
+        return (
+            ["output"]
+            if end2end
+            else ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
+        )
     elif mode == SEGMENT_MODE:
         # yolo_outputs should only contain detection outputs, mask/protos are passed separately
-        return ["output"] if end2end else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+        return (
+            ["output"]
+            if end2end
+            else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+        )
     elif mode == OBB_MODE:
         # yolo_outputs should only contain detection outputs, angles are passed separately
-        return ["output"] if end2end else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+        return (
+            ["output"]
+            if end2end
+            else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+        )
     elif mode == POSE_MODE:
         # yolo_outputs should only contain detection outputs, keypoints are passed separately
-        return ["output"] if end2end else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+        return (
+            ["output"]
+            if end2end
+            else ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
+        )
     return ["output"]
 
 
@@ -151,7 +171,9 @@ class YoloV8Exporter(Exporter):
         ):
             # Check if E2E segmentation model (has one2one heads)
             is_end2end = hasattr(head, "one2one_cv4") and head.one2one_cv4 is not None
-            logger.info(f"Segment head type: {type(head).__name__}, end2end: {is_end2end}")
+            logger.info(
+                f"Segment head type: {type(head).__name__}, end2end: {is_end2end}"
+            )
             if is_end2end:
                 model.model[-1] = SegmentV26(model.model[-1], self.use_rvc2)
                 self.end2end = True
@@ -188,7 +210,9 @@ class YoloV8Exporter(Exporter):
         elif isinstance(head, Detect):
             # Check if end-to-end model (has one2one heads for NMS-free inference)
             is_end2end = hasattr(head, "one2one_cv2") and head.one2one_cv2 is not None
-            logger.info(f"Detect head type: {type(head).__name__}, end2end: {is_end2end}")
+            logger.info(
+                f"Detect head type: {type(head).__name__}, end2end: {is_end2end}"
+            )
             if is_end2end:
                 model.model[-1] = DetectV26(head, self.use_rvc2)
                 self.end2end = True
@@ -294,7 +318,11 @@ class YoloV8Exporter(Exporter):
                     n_prototypes=self.model.model[-1].npr,
                     is_softmax=True,
                     output_kwargs={
-                        "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
+                        "mask_outputs": [
+                            "output1_masks",
+                            "output2_masks",
+                            "output3_masks",
+                        ],
                         "protos_outputs": "protos_output",
                     },
                     encoding=encoding,
@@ -335,7 +363,11 @@ class YoloV8Exporter(Exporter):
                     parser="YOLOExtendedParser",
                     n_keypoints=self.model.model[-1].kpt_shape[0],
                     output_kwargs={
-                        "keypoints_outputs": ["kpt_output1", "kpt_output2", "kpt_output3"]
+                        "keypoints_outputs": [
+                            "kpt_output1",
+                            "kpt_output2",
+                            "kpt_output3",
+                        ]
                     },
                     encoding=encoding,
                 )

@@ -527,12 +527,13 @@ class DetectV10(DetectV8):
         self.cv2 = old_detect.one2one_cv2
         self.cv3 = old_detect.one2one_cv3
 
+
 class DetectV26(nn.Module):
     """YOLOv26 Detect head for end-to-end NMS-free detection models.
 
-    Uses one2one_cv2 and one2one_cv3 weights instead of cv2 and cv3 to enable
-    NMS-free inference. The one2one heads are trained with tal_topk=1 for
-    one-to-one label assignment.
+    Uses one2one_cv2 and one2one_cv3 weights instead of cv2 and cv3 to enable NMS-free
+    inference. The one2one heads are trained with tal_topk=1 for one-to-one label
+    assignment.
     """
 
     dynamic = False  # force grid reconstruction
@@ -712,9 +713,7 @@ class SegmentV26(DetectV26):
         dbox = self._get_decode_boxes(preds)
 
         # Detection output: boxes (4) + class scores (nc)
-        y = torch.cat(
-            (dbox, preds["scores"].sigmoid()), 1
-        )  # (bs, 4+nc, num_anchors)
+        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
         y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
 
         # Mask coefficients output (separate)
