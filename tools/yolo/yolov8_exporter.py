@@ -18,7 +18,6 @@ from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata impo
 
 from tools.modules import (
     OBBV8,
-    OBBV26,
     ClassifyV8,
     DetectV8,
     DetectV26,
@@ -182,16 +181,8 @@ class YoloV8Exporter(Exporter):
                 model.model[-1] = SegmentV8(model.model[-1], self.use_rvc2)
             self.mode = SEGMENT_MODE
             # self.export_stage2_multiplier()
-        elif isinstance(model.model[-1], (OBB, OBB26)):
-            # Check if E2E OBB model (has one2one heads)
-            is_end2end = hasattr(head, "one2one_cv4") and head.one2one_cv4 is not None
-            logger.info(f"OBB head type: {type(head).__name__}, end2end: {is_end2end}")
-            if is_end2end:
-                model.model[-1] = OBBV26(model.model[-1], self.use_rvc2)
-                self.end2end = True
-                self.subtype = "yolo26-obb"
-            else:
-                model.model[-1] = OBBV8(model.model[-1], self.use_rvc2)
+        elif isinstance(model.model[-1], (OBB)):
+            model.model[-1] = OBBV8(model.model[-1], self.use_rvc2)
             self.mode = OBB_MODE
         elif isinstance(model.model[-1], (Pose, Pose26)):
             # Check if E2E pose model (has one2one heads)

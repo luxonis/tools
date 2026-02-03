@@ -4,7 +4,6 @@ from .backbones import YoloV6BackBone
 from .exporter import Exporter
 from .heads import (
     OBBV8,
-    OBBV26,
     ClassifyV8,
     DetectV5,
     DetectV6R1,
@@ -33,7 +32,6 @@ __all__ = [
     "PoseV8",
     "PoseV26",
     "OBBV8",
-    "OBBV26",
     "SegmentV8",
     "SegmentV26",
     "ClassifyV8",
