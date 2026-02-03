@@ -37,7 +37,6 @@ sys.path.append(yolo_path)
 
 from ultralytics.nn.modules import (  # noqa: E402
     OBB,
-    OBB26,
     Classify,
     Detect,
     Pose,
