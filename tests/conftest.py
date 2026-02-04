@@ -20,7 +20,19 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--yolo-version",
-        choices=["v5", "v6", "v6r2", "v6r4", "v7", "v8", "v9", "v10", "v11", "v12", "v26"],
+        choices=[
+            "v5",
+            "v6",
+            "v6r2",
+            "v6r4",
+            "v7",
+            "v8",
+            "v9",
+            "v10",
+            "v11",
+            "v12",
+            "v26",
+        ],
         default=None,
         help="If set then test only that specific yolo version",
     )
