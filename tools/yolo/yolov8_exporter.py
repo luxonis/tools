@@ -85,7 +85,7 @@ def get_output_names(mode: int) -> List[str]:
 
 
 def get_yolo_output_names(mode: int) -> List[str]:
-    """Get the YOLO-specific output names based on the mode.
+    """Get the output names based on the mode.
 
     Args:
         mode (int): Mode of the model
@@ -95,11 +95,7 @@ def get_yolo_output_names(mode: int) -> List[str]:
     """
     if mode == DETECT_MODE:
         return ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
-    elif mode == SEGMENT_MODE:
-        return ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
-    elif mode == OBB_MODE:
-        return ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
-    elif mode == POSE_MODE:
+    elif mode in {SEGMENT_MODE, OBB_MODE, POSE_MODE}:
         return ["output1_yolov8", "output2_yolov8", "output3_yolov8"]
     return ["output"]
 
@@ -126,7 +122,6 @@ class YoloV8Exporter(Exporter):
             self.model_path, device="cpu", inplace=True, fuse=True
         )
 
-        head = model.model[-1]
         self.mode = -1
         if isinstance(model.model[-1], (Segment)) or isinstance(
             model.model[-1], (YOLOESegment)
@@ -142,8 +137,8 @@ class YoloV8Exporter(Exporter):
         elif isinstance(model.model[-1], (Classify)):
             model.model[-1] = ClassifyV8(model.model[-1], self.use_rvc2)
             self.mode = CLASSIFY_MODE
-        elif isinstance(head, Detect):
-            model.model[-1] = DetectV8(head, self.use_rvc2)
+        elif isinstance(model.model[-1], Detect):
+            model.model[-1] = DetectV8(model.model[-1], self.use_rvc2)
             self.mode = DETECT_MODE
 
         if self.mode in [DETECT_MODE, SEGMENT_MODE, OBB_MODE, POSE_MODE]:
@@ -227,11 +222,7 @@ class YoloV8Exporter(Exporter):
                 n_prototypes=self.model.model[-1].npr,
                 is_softmax=True,
                 output_kwargs={
-                    "mask_outputs": [
-                        "output1_masks",
-                        "output2_masks",
-                        "output3_masks",
-                    ],
+                    "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
                     "protos_outputs": "protos_output",
                 },
                 encoding=encoding,
@@ -251,9 +242,7 @@ class YoloV8Exporter(Exporter):
                 n_keypoints=self.model.model[-1].kpt_shape[0],
                 output_kwargs={
                     "keypoints_outputs": [
-                        "kpt_output1",
-                        "kpt_output2",
-                        "kpt_output3",
+                        "kpt_output",
                     ]
                 },
                 encoding=encoding,

@@ -6,6 +6,10 @@ from typing import List, Optional, Tuple
 
 from loguru import logger
 
+from tools.modules import DetectV26, Exporter, PoseV26, SegmentV26
+from tools.utils import get_first_conv2d_in_channels
+from tools.utils.constants import Encoding
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 yolo_path = os.path.join(current_dir, "ultralytics")
 sys.path.append(yolo_path)
@@ -16,10 +20,6 @@ from ultralytics.nn.modules import (  # noqa: E402
     Segment26,
 )
 from ultralytics.nn.tasks import load_checkpoint  # noqa: E402
-
-from tools.modules import DetectV26, Exporter, PoseV26, SegmentV26
-from tools.utils import get_first_conv2d_in_channels
-from tools.utils.constants import Encoding
 
 DETECT_MODE = 0
 SEGMENT_MODE = 1
