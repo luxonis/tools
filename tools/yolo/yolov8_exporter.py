@@ -119,7 +119,7 @@ class YoloV8Exporter(Exporter):
     def load_model(self):
         # load the model
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=True
+            self.model_path, device="cpu", inplace=True, fuse=False
         )
 
         self.mode = -1
@@ -134,10 +134,11 @@ class YoloV8Exporter(Exporter):
             self.mode = OBB_MODE
         elif isinstance(model.model[-1], (Pose)):
             model.model[-1] = PoseV8(model.model[-1], self.use_rvc2)
+            self.mode = POSE_MODE
         elif isinstance(model.model[-1], (Classify)):
             model.model[-1] = ClassifyV8(model.model[-1], self.use_rvc2)
             self.mode = CLASSIFY_MODE
-        elif isinstance(model.model[-1], Detect):
+        elif isinstance(model.model[-1], (Detect)):
             model.model[-1] = DetectV8(model.model[-1], self.use_rvc2)
             self.mode = DETECT_MODE
 
@@ -172,6 +173,7 @@ class YoloV8Exporter(Exporter):
         if len(self.imgsz) != 2:
             raise ValueError("Image size must be of length 1 or 2.")
 
+        model.fuse()
         model.eval()
         self.model = model
 
@@ -240,11 +242,7 @@ class YoloV8Exporter(Exporter):
                 n_classes=self.model.model[-1].nc,
                 parser="YOLOExtendedParser",
                 n_keypoints=self.model.model[-1].kpt_shape[0],
-                output_kwargs={
-                    "keypoints_outputs": [
-                        "kpt_output",
-                    ]
-                },
+                output_kwargs={"keypoints_outputs": ["kpt_output"]},
                 encoding=encoding,
             )
         elif self.mode == CLASSIFY_MODE:
