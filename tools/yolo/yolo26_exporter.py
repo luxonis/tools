@@ -58,7 +58,7 @@ class Yolo26Exporter(Exporter):
 
     def load_model(self):
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=False
+            self.model_path, device="cpu", inplace=True, fuse=True
         )
 
         head = model.model[-1]
@@ -101,7 +101,6 @@ class Yolo26Exporter(Exporter):
         if len(self.imgsz) != 2:
             raise ValueError("Image size must be of length 1 or 2.")
 
-        model.fuse()
         model.eval()
         self.model = model
 
@@ -120,7 +119,10 @@ class Yolo26Exporter(Exporter):
 
         if self.mode == DETECT_MODE:
             self.make_nn_archive(
-                class_list=names, n_classes=self.model.model[-1].nc, encoding=encoding
+                class_list=names,
+                n_classes=self.model.model[-1].nc,
+                parser="YOLOExtendedParser",
+                encoding=encoding,
             )
         elif self.mode == SEGMENT_MODE:
             self.make_nn_archive(

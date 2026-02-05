@@ -119,7 +119,7 @@ class YoloV8Exporter(Exporter):
     def load_model(self):
         # load the model
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=False
+            self.model_path, device="cpu", inplace=True, fuse=True
         )
 
         self.mode = -1
@@ -173,7 +173,6 @@ class YoloV8Exporter(Exporter):
         if len(self.imgsz) != 2:
             raise ValueError("Image size must be of length 1 or 2.")
 
-        model.fuse()
         model.eval()
         self.model = model
 
