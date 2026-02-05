@@ -628,7 +628,7 @@ class DetectV26(nn.Module):
     def dist2bbox(distance, anchor_points, xywh=True, dim=-1):
         # Emulate ultralytics.utils.tal.dist2bbox.
         # distance: (N, 4, A) if dim=1, anchor_points: (1, 2, A) -> returns (N, 4, A)
-        # xywh is for OBB
+        # xywh=True outputs (cx, cy, w, h); xywh=False outputs (x1, y1, x2, y2)
         lt, rb = distance.chunk(2, dim)
         x1y1 = anchor_points - lt
         x2y2 = anchor_points + rb
@@ -653,9 +653,9 @@ class SegmentV26(DetectV26):
         - protos: (batch, nm, proto_h, proto_w)
             - Prototype masks
 
-    To get final instance masks:
-        mask = sigmoid(mask_coefficients @ protos.flatten(2))  # (N, H*W)
-        mask = mask.view(N, proto_h, proto_w)  # (N, H, W)
+    To get final instance masks (K = number of kept detections):
+        mask = sigmoid(mask_coefficients @ protos.flatten(2))  # (K, H*W)
+        mask = mask.view(K, proto_h, proto_w)  # (K, proto_h, proto_w)
         mask = crop_to_bbox(mask, bbox)  # crop to detection bbox
     """
 
