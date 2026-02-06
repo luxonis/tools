@@ -526,3 +526,332 @@ class DetectV10(DetectV8):
         super().__init__(old_detect, use_rvc2)
         self.cv2 = old_detect.one2one_cv2
         self.cv3 = old_detect.one2one_cv3
+
+
+class DetectV26(nn.Module):
+    """YOLOv26 Detect head for end-to-end NMS-free detection models.
+
+    Uses one2one_cv2 and one2one_cv3 weights instead of cv2 and cv3 to enable NMS-free
+    inference. The one2one heads are trained with tal_topk=1 for one-to-one label
+    assignment.
+    """
+
+    dynamic = False  # force grid reconstruction
+    export = False  # export mode
+    shape = None
+    anchors = torch.empty(0)  # init
+    strides = torch.empty(0)  # init
+    max_det = 300  # max detections per image
+
+    def __init__(
+        self,
+        old_detect,
+        use_rvc2: bool,
+        conf_threshold: float = 0.0,
+    ):
+        super().__init__()
+        self.nc = old_detect.nc  # number of classes
+        self.nl = old_detect.nl  # number of detection layers
+        self.reg_max = old_detect.reg_max  # DFL channels
+        self.no = old_detect.no  # number of outputs per anchor
+        self.stride = old_detect.stride  # strides computed during build
+
+        # Use one2one heads for NMS-free inference
+        self.cv2 = old_detect.one2one_cv2
+        self.cv3 = old_detect.one2one_cv3
+        self.f = old_detect.f
+        self.i = old_detect.i
+
+        self.use_rvc2 = use_rvc2
+        self.conf_threshold = conf_threshold
+
+    def forward(self, x):
+        bs = x[0].shape[0]  # batch size
+
+        boxes = []
+        scores = []
+        for i in range(self.nl):
+            box = self.cv2[i](x[i])
+
+            cls_regress = self.cv3[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+            scores.append(cls_regress.view(bs, self.nc, -1))
+
+        preds = {
+            "boxes": torch.cat(boxes, dim=2),
+            "scores": torch.cat(scores, dim=2),
+            "feats": x,
+        }
+
+        dbox = self._get_decode_boxes(preds)
+        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+        return y
+
+    def _get_decode_boxes(self, preds):
+        # Emulate ultralytics.nn.modules.head.Detect._get_decode_boxes for end2end export.
+        # preds["boxes"]: (N, 4, A), preds["feats"]: list of feature maps (N, C, H_i, W_i)
+        shape = preds["feats"][0].shape  # BCHW
+        if self.dynamic or self.shape != shape:
+            anchor_points, stride_tensor = self._make_anchors(
+                preds["feats"], self.stride, 0.5
+            )
+            self.anchors = anchor_points.transpose(0, 1)
+            self.strides = stride_tensor.transpose(0, 1)
+            self.shape = shape
+
+        # anchors: (1, 2, A), strides: (1, 1, A)
+        # returns: decoded boxes (N, 4, A) in xyxy pixels
+        dbox = self.dist2bbox(
+            preds["boxes"], self.anchors.unsqueeze(0), xywh=False, dim=1
+        )
+        return dbox * self.strides
+
+    @staticmethod
+    def _make_anchors(feats, strides, grid_cell_offset=0.5):
+        # Emulate ultralytics.utils.tal.make_anchors.
+        # feats: list of (N, C, H_i, W_i) -> returns anchor_points (A, 2), stride_tensor (A, 1)
+        anchor_points, stride_tensor = [], []
+        dtype, device = feats[0].dtype, feats[0].device
+        for i, stride in enumerate(strides):
+            h, w = feats[i].shape[2:]
+            sx = torch.arange(end=w, device=device, dtype=dtype) + grid_cell_offset
+            sy = torch.arange(end=h, device=device, dtype=dtype) + grid_cell_offset
+            sy, sx = torch.meshgrid(sy, sx, indexing="ij")
+            anchor_points.append(torch.stack((sx, sy), -1).view(-1, 2))
+            stride_tensor.append(
+                torch.full((h * w, 1), stride, dtype=dtype, device=device)
+            )
+        return torch.cat(anchor_points), torch.cat(stride_tensor)
+
+    @staticmethod
+    def dist2bbox(distance, anchor_points, xywh=True, dim=-1):
+        # Emulate ultralytics.utils.tal.dist2bbox.
+        # distance: (N, 4, A) if dim=1, anchor_points: (1, 2, A) -> returns (N, 4, A)
+        # xywh=True outputs (cx, cy, w, h); xywh=False outputs (x1, y1, x2, y2)
+        lt, rb = distance.chunk(2, dim)
+        x1y1 = anchor_points - lt
+        x2y2 = anchor_points + rb
+        if xywh:
+            c_xy = (x1y1 + x2y2) / 2
+            wh = x2y2 - x1y1
+            return torch.cat([c_xy, wh], dim)
+        return torch.cat((x1y1, x2y2), dim)
+
+
+class SegmentV26(DetectV26):
+    """YOLOv26 Segment head for end-to-end NMS-free instance segmentation models.
+
+    Outputs decoded boxes, class scores, mask coefficients (separate), and prototype masks.
+
+    Output format:
+        - detections: (batch, num_anchors, 4 + nc)
+            - 4: decoded bbox coordinates (x1, y1, x2, y2) in pixel space
+            - nc: class scores (sigmoided)
+        - mask_coeffs: (batch, num_anchors, nm)
+            - nm: mask coefficients (raw, to be used with protos)
+        - protos: (batch, nm, proto_h, proto_w)
+            - Prototype masks
+
+    To get final instance masks (K = number of kept detections):
+        mask = sigmoid(mask_coefficients @ protos.flatten(2))  # (K, H*W)
+        mask = mask.view(K, proto_h, proto_w)  # (K, proto_h, proto_w)
+        mask = crop_to_bbox(mask, bbox)  # crop to detection bbox
+    """
+
+    def __init__(
+        self,
+        old_segment,
+        use_rvc2: bool,
+        conf_threshold: float = 0.0,
+    ):
+        super().__init__(old_segment, use_rvc2, conf_threshold)
+        self.nm = old_segment.nm  # number of masks (default 32)
+        self.npr = old_segment.npr  # number of protos (default 256)
+        self.proto = old_segment.proto  # Proto26 module
+
+        # Use one2one mask coefficient heads for NMS-free inference
+        self.cv4 = old_segment.one2one_cv4
+
+    def forward(self, x):
+        """Forward pass returning detections, mask coefficients, and prototype masks.
+
+        Args:
+            x: List of feature maps from backbone [P3, P4, P5]
+
+        Returns:
+            Tuple of:
+                - detections: (batch, num_anchors, 4 + nc)
+                - mask_coeffs: (batch, num_anchors, nm)
+                - protos: (batch, nm, proto_h, proto_w)
+        """
+        bs = x[0].shape[0]  # batch size
+
+        boxes = []
+        scores = []
+        mask_coeffs = []
+        for i in range(self.nl):
+            # Box regression
+            box = self.cv2[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            scores.append(cls_regress.view(bs, self.nc, -1))
+
+            # Mask coefficients
+            mask = self.cv4[i](x[i])
+            mask_coeffs.append(mask.view(bs, self.nm, -1))
+
+        preds = {
+            "boxes": torch.cat(boxes, dim=2),
+            "scores": torch.cat(scores, dim=2),
+            "feats": x,
+        }
+
+        # Decode boxes to pixel coordinates
+        dbox = self._get_decode_boxes(preds)
+
+        # Detection output: boxes (4) + class scores (nc)
+        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+
+        # Mask coefficients output (separate)
+        mask_coeffs_cat = torch.cat(mask_coeffs, dim=2)  # (bs, nm, num_anchors)
+        mask_coeffs_cat = mask_coeffs_cat.permute(0, 2, 1)  # (bs, num_anchors, nm)
+
+        # Get prototype masks
+        proto = self._get_proto(x)
+
+        return y, mask_coeffs_cat, proto
+
+    def _get_proto(self, x):
+        """Get prototype masks from Proto26 module.
+
+        Emulate ultralytics.nn.modules.head.Segment26.forward for proto generation.
+
+        Proto26 takes all feature maps and returns prototype masks.
+        """
+        return self.proto(x, return_semseg=False)
+
+
+class PoseV26(DetectV26):
+    """YOLOv26 Pose head for end-to-end NMS-free pose estimation models.
+
+    Outputs decoded boxes, class scores, and decoded keypoints (separate).
+
+    Output format:
+        - detections: (batch, num_anchors, 4 + nc)
+            - 4: decoded bbox coordinates (x1, y1, x2, y2) in pixel space
+            - nc: class scores (sigmoided)
+        - keypoints: (batch, num_anchors, nk)
+            - nk: keypoint values (x, y, [visibility]) for each keypoint
+            - x, y are in pixel coordinates
+            - visibility is sigmoided (if ndim == 3)
+    """
+
+    def __init__(
+        self,
+        old_pose,
+        use_rvc2: bool,
+        conf_threshold: float = 0.0,
+    ):
+        super().__init__(old_pose, use_rvc2, conf_threshold)
+        self.kpt_shape = old_pose.kpt_shape  # (num_keypoints, ndim) e.g., (17, 3)
+        self.nk = old_pose.nk  # total keypoint values = num_keypoints * ndim
+
+        # Pose26: cv4 is feature extractor, cv4_kpts produces keypoints
+        self.cv4 = old_pose.one2one_cv4
+        self.cv4_kpts = old_pose.one2one_cv4_kpts
+
+    def forward(self, x):
+        """Forward pass returning detections and decoded keypoints.
+
+        Emulate ultralytics.nn.modules.head.Pose26.forward_head.
+
+        Args:
+            x: List of feature maps from backbone [P3, P4, P5]
+
+        Returns:
+            Tuple of:
+                - detections: (batch, num_anchors, 4 + nc)
+                - keypoints: (batch, num_anchors, nk)
+        """
+        bs = x[0].shape[0]  # batch size
+
+        boxes = []
+        scores = []
+        kpts_raw = []
+        for i in range(self.nl):
+            # Box regression
+            box = self.cv2[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            scores.append(cls_regress.view(bs, self.nc, -1))
+
+            # Keypoints: cv4 extracts features, cv4_kpts predicts keypoints
+            feat = self.cv4[i](x[i])
+            kpt = self.cv4_kpts[i](feat)
+            kpts_raw.append(kpt.view(bs, self.nk, -1))
+
+        preds = {
+            "boxes": torch.cat(boxes, dim=2),
+            "scores": torch.cat(scores, dim=2),
+            "feats": x,
+        }
+
+        # Decode boxes to pixel coordinates (this also sets self.anchors and self.strides)
+        # from the parent DetectV26
+        dbox = self._get_decode_boxes(preds)
+
+        # Detection output: boxes (4) + class scores (nc)
+        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+
+        # Decode and concatenate keypoints
+        # Note: After _get_decode_boxes, self.anchors is (2, A) and self.strides is (1, A)
+        kpts_cat = torch.cat(kpts_raw, dim=2)  # (bs, nk, num_anchors)
+        kpts_decoded = self._kpts_decode(bs, kpts_cat)  # (bs, nk, num_anchors)
+        kpts_decoded = kpts_decoded.permute(0, 2, 1)  # (bs, num_anchors, nk)
+
+        return y, kpts_decoded
+
+    def _kpts_decode(self, bs, kpts):
+        """Decode keypoints from raw predictions to pixel coordinates.
+
+        Emulate ultralytics.nn.modules.head.Pose26.kpts_decode.
+
+        Args:
+            bs: Batch size
+            kpts: Raw keypoint predictions (bs, nk, num_anchors)
+
+        Returns:
+            Decoded keypoints (bs, nk, num_anchors) with x, y in pixel coords
+        """
+        ndim = self.kpt_shape[1]
+        num_kpts = self.kpt_shape[0]
+        num_anchors = kpts.shape[2]
+
+        # Reshape to (bs, num_keypoints, ndim, num_anchors)
+        y = kpts.view(bs, num_kpts, ndim, num_anchors)
+
+        # After _get_decode_boxes, anchors and strides are already in the right format:
+        # self.anchors: (2, num_anchors), self.strides: (1, num_anchors)
+        # Reshape for broadcasting with y[:, :, :2, :] which is (bs, num_kpts, 2, num_anchors)
+        anchors_reshaped = self.anchors.view(1, 1, 2, num_anchors)  # (1, 1, 2, A)
+        strides_reshaped = self.strides.view(1, 1, 1, num_anchors)  # (1, 1, 1, A)
+
+        # Decode xy: (raw + anchor) * stride
+        xy = (y[:, :, :2, :] + anchors_reshaped) * strides_reshaped
+
+        if ndim == 3:
+            # Visibility score (sigmoid)
+            vis = y[:, :, 2:3, :].sigmoid()
+            decoded = torch.cat((xy, vis), dim=2)
+        else:
+            decoded = xy
+
+        # Reshape back to (bs, nk, num_anchors)
+        return decoded.view(bs, self.nk, num_anchors)

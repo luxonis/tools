@@ -13,8 +13,11 @@ from .heads import (
     DetectV7,
     DetectV8,
     DetectV10,
+    DetectV26,
     PoseV8,
+    PoseV26,
     SegmentV8,
+    SegmentV26,
 )
 from .stage2 import Multiplier
 
@@ -27,11 +30,14 @@ __all__ = [
     "DetectV8",
     "Exporter",
     "PoseV8",
+    "PoseV26",
     "OBBV8",
     "SegmentV8",
+    "SegmentV26",
     "ClassifyV8",
     "Multiplier",
     "DetectV5",
     "DetectV7",
     "DetectV10",
+    "DetectV26",
 ]

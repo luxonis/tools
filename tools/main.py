@@ -27,6 +27,7 @@ from tools.version_detection import (
     YOLOV10_CONVERSION,
     YOLOV11_CONVERSION,
     YOLOV12_CONVERSION,
+    YOLOV26_CONVERSION,
     detect_version,
 )
 
@@ -48,6 +49,7 @@ YOLO_VERSIONS = [
     YOLOV10_CONVERSION,
     YOLOV11_CONVERSION,
     YOLOV12_CONVERSION,
+    YOLOV26_CONVERSION,
 ]
 
 
@@ -178,6 +180,10 @@ def convert(
             from tools.yolo.yolov8_exporter import YoloV8Exporter
 
             exporter = YoloV8Exporter(str(model_path), config.imgsz, config.use_rvc2)
+        elif version == YOLOV26_CONVERSION:
+            from tools.yolo.yolo26_exporter import Yolo26Exporter
+
+            exporter = Yolo26Exporter(str(model_path), config.imgsz, config.use_rvc2)
         elif version == YOLOV10_CONVERSION:
             from tools.yolo.yolov10_exporter import YoloV10Exporter
 
