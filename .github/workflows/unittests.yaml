@@ -56,8 +56,12 @@ jobs:
         cache: pip
 
     - name: Install dependencies
+      shell: bash
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
       run: |
+        CONSTRAINTS_FILE="$GITHUB_WORKSPACE/constraints.txt"
+        echo "setuptools<81" > "$CONSTRAINTS_FILE"
+        export PIP_CONSTRAINT="$CONSTRAINTS_FILE"
         pip install -e .[dev]
         pip install coverage-badge>=1.1.0 pytest-cov>=4.1.0
 
