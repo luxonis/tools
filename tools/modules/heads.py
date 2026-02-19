@@ -366,11 +366,17 @@ class DetectV8(nn.Module):
 
         self.use_rvc2 = use_rvc2
 
-        self.proj_conv = nn.Conv2d(old_detect.dfl.c1, 1, 1, bias=False).requires_grad_(
-            False
-        )
-        x = torch.arange(old_detect.dfl.c1, dtype=torch.float)
-        self.proj_conv.weight.data[:] = nn.Parameter(x.view(1, old_detect.dfl.c1, 1, 1))
+        # yolo26: dfl will be nn.Identity(), we set proj_conv = None and skip the DFL block in forward
+        if hasattr(old_detect.dfl, "c1"):
+            self.proj_conv = nn.Conv2d(
+                old_detect.dfl.c1, 1, 1, bias=False
+            ).requires_grad_(False)
+            x = torch.arange(old_detect.dfl.c1, dtype=torch.float)
+            self.proj_conv.weight.data[:] = nn.Parameter(
+                x.view(1, old_detect.dfl.c1, 1, 1)
+            )
+        else:
+            self.proj_conv = None
 
     def forward(self, x):
         bs = x[0].shape[0]  # batch size
@@ -382,9 +388,10 @@ class DetectV8(nn.Module):
 
             # ------------------------------
             # DFL PART
-            box = box.view(bs, 4, self.reg_max, h * w).permute(0, 2, 1, 3)
-            box = self.proj_conv(F.softmax(box, dim=1))[:, 0]
-            box = box.reshape([bs, 4, h, w])
+            if self.proj_conv is not None:
+                box = box.view(bs, 4, self.reg_max, h * w).permute(0, 2, 1, 3)
+                box = self.proj_conv(F.softmax(box, dim=1))[:, 0]
+                box = box.reshape([bs, 4, h, w])
             # ------------------------------
 
             cls = self.cv3[i](x[i])
