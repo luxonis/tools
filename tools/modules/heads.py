@@ -584,8 +584,10 @@ class DetectV26(nn.Module):
         }
 
         dbox = self._get_decode_boxes(preds)
-        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
-        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+        cls_scores = preds["scores"].sigmoid()  # (bs, nc, num_anchors)
+        conf, _ = cls_scores.max(1, keepdim=True)  # ReduceMax: (bs, 1, num_anchors)
+        y = torch.cat((dbox, conf, cls_scores), 1)  # (bs, 4+1+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 5+nc)
         return y
 
     def _get_decode_boxes(self, preds):
@@ -642,11 +644,12 @@ class DetectV26(nn.Module):
 class SegmentV26(DetectV26):
     """YOLOv26 Segment head for end-to-end NMS-free instance segmentation models.
 
-    Outputs decoded boxes, class scores, mask coefficients (separate), and prototype masks.
+    Outputs decoded boxes, confidence, class scores, mask coefficients (separate), and prototype masks.
 
     Output format:
-        - detections: (batch, num_anchors, 4 + nc)
+        - detections: (batch, num_anchors, 5 + nc)
             - 4: decoded bbox coordinates (x1, y1, x2, y2) in pixel space
+            - 1: confidence score (ReduceMax over class scores)
             - nc: class scores (sigmoided)
         - mask_coeffs: (batch, num_anchors, nm)
             - nm: mask coefficients (raw, to be used with protos)
@@ -681,7 +684,7 @@ class SegmentV26(DetectV26):
 
         Returns:
             Tuple of:
-                - detections: (batch, num_anchors, 4 + nc)
+                - detections: (batch, num_anchors, 5 + nc)
                 - mask_coeffs: (batch, num_anchors, nm)
                 - protos: (batch, nm, proto_h, proto_w)
         """
@@ -712,9 +715,11 @@ class SegmentV26(DetectV26):
         # Decode boxes to pixel coordinates
         dbox = self._get_decode_boxes(preds)
 
-        # Detection output: boxes (4) + class scores (nc)
-        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
-        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+        # Detection output: boxes (4) + confidence (1) + class scores (nc)
+        cls_scores = preds["scores"].sigmoid()  # (bs, nc, num_anchors)
+        conf, _ = cls_scores.max(1, keepdim=True)  # ReduceMax: (bs, 1, num_anchors)
+        y = torch.cat((dbox, conf, cls_scores), 1)  # (bs, 4+1+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 5+nc)
 
         # Mask coefficients output (separate)
         mask_coeffs_cat = torch.cat(mask_coeffs, dim=2)  # (bs, nm, num_anchors)
@@ -738,11 +743,12 @@ class SegmentV26(DetectV26):
 class PoseV26(DetectV26):
     """YOLOv26 Pose head for end-to-end NMS-free pose estimation models.
 
-    Outputs decoded boxes, class scores, and decoded keypoints (separate).
+    Outputs decoded boxes, confidence, class scores, and decoded keypoints (separate).
 
     Output format:
-        - detections: (batch, num_anchors, 4 + nc)
+        - detections: (batch, num_anchors, 5 + nc)
             - 4: decoded bbox coordinates (x1, y1, x2, y2) in pixel space
+            - 1: confidence score (ReduceMax over class scores)
             - nc: class scores (sigmoided)
         - keypoints: (batch, num_anchors, nk)
             - nk: keypoint values (x, y, [visibility]) for each keypoint
@@ -774,7 +780,7 @@ class PoseV26(DetectV26):
 
         Returns:
             Tuple of:
-                - detections: (batch, num_anchors, 4 + nc)
+                - detections: (batch, num_anchors, 5 + nc)
                 - keypoints: (batch, num_anchors, nk)
         """
         bs = x[0].shape[0]  # batch size
@@ -806,9 +812,11 @@ class PoseV26(DetectV26):
         # from the parent DetectV26
         dbox = self._get_decode_boxes(preds)
 
-        # Detection output: boxes (4) + class scores (nc)
-        y = torch.cat((dbox, preds["scores"].sigmoid()), 1)  # (bs, 4+nc, num_anchors)
-        y = y.permute(0, 2, 1)  # (bs, num_anchors, 4+nc)
+        # Detection output: boxes (4) + confidence (1) + class scores (nc)
+        cls_scores = preds["scores"].sigmoid()  # (bs, nc, num_anchors)
+        conf, _ = cls_scores.max(1, keepdim=True)  # ReduceMax: (bs, 1, num_anchors)
+        y = torch.cat((dbox, conf, cls_scores), 1)  # (bs, 4+1+nc, num_anchors)
+        y = y.permute(0, 2, 1)  # (bs, num_anchors, 5+nc)
 
         # Decode and concatenate keypoints
         # Note: After _get_decode_boxes, self.anchors is (2, A) and self.strides is (1, A)
