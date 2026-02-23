@@ -259,6 +259,8 @@ class YoloV8Exporter(Exporter):
             n_classes (int): Number of classes
             encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
+        output_specs = self.get_output_specs()
+
         archive = ArchiveGenerator(
             archive_name=self.model_name,
             save_path=str(self.output_folder),
@@ -286,6 +288,8 @@ class YoloV8Exporter(Exporter):
                         {
                             "name": output,
                             "dtype": DataType.FLOAT32,
+                            "shape": output_specs.get(output, {}).get("shape"),
+                            "layout": output_specs.get(output, {}).get("layout"),
                         }
                         for output in self.all_output_names
                     ],
