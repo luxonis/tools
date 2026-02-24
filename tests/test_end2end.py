@@ -20,17 +20,17 @@ N_VARIANT_OUTPUT_NAME_CHECKS = [
     {
         "name": "yolov8n",
         "version": "v8",
-        "model_outputs_present": [
+        "model_outputs": [
             "output1_yolov6r2",
             "output2_yolov6r2",
             "output3_yolov6r2",
         ],
-        "head_outputs_present": [
+        "head_outputs": [
             "output1_yolov6r2",
             "output2_yolov6r2",
             "output3_yolov6r2",
         ],
-        "yolo_outputs_present": [
+        "yolo_outputs": [
             "output1_yolov6r2",
             "output2_yolov6r2",
             "output3_yolov6r2",
@@ -39,7 +39,7 @@ N_VARIANT_OUTPUT_NAME_CHECKS = [
     {
         "name": "yolov8n-seg",
         "version": "v8",
-        "model_outputs_present": [
+        "model_outputs": [
             "output1_yolov8",
             "output2_yolov8",
             "output3_yolov8",
@@ -48,7 +48,7 @@ N_VARIANT_OUTPUT_NAME_CHECKS = [
             "output3_masks",
             "protos_output",
         ],
-        "head_outputs_present": [
+        "head_outputs": [
             "output1_yolov8",
             "output2_yolov8",
             "output3_yolov8",
@@ -57,13 +57,13 @@ N_VARIANT_OUTPUT_NAME_CHECKS = [
             "output3_masks",
             "protos_output",
         ],
-        "yolo_outputs_present": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
-        "mask_outputs_present": ["output1_masks", "output2_masks", "output3_masks"],
+        "yolo_outputs": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
+        "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
     },
     {
         "name": "yolov8n-pose",
         "version": "v8",
-        "model_outputs_present": [
+        "model_outputs": [
             "output1_yolov8",
             "output2_yolov8",
             "output3_yolov8",
@@ -71,7 +71,7 @@ N_VARIANT_OUTPUT_NAME_CHECKS = [
             "kpt_output2",
             "kpt_output3",
         ],
-        "head_outputs_present": [
+        "head_outputs": [
             "output1_yolov8",
             "output2_yolov8",
             "output3_yolov8",
@@ -79,32 +79,31 @@ N_VARIANT_OUTPUT_NAME_CHECKS = [
             "kpt_output2",
             "kpt_output3",
         ],
-        "yolo_outputs_present": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
-        "keypoints_outputs_present": ["kpt_output1", "kpt_output2", "kpt_output3"],
-        "keypoints_outputs_absent": ["kpt_output"],
+        "yolo_outputs": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
+        "keypoints_outputs": ["kpt_output1", "kpt_output2", "kpt_output3"],
     },
     {
         "name": "yolo26n",
         "version": "v26",
-        "model_outputs_present": ["output_yolo26"],
-        "head_outputs_present": ["output_yolo26"],
-        "yolo_outputs_present": ["output_yolo26"],
+        "model_outputs": ["output_yolo26"],
+        "head_outputs": ["output_yolo26"],
+        "yolo_outputs": ["output_yolo26"],
     },
     {
         "name": "yolo26n-seg",
         "version": "v26",
-        "model_outputs_present": ["output_yolo26", "output_masks", "protos_output"],
-        "head_outputs_present": ["output_yolo26", "output_masks", "protos_output"],
-        "yolo_outputs_present": ["output_yolo26"],
-        "mask_outputs_present": ["output_masks"],
+        "model_outputs": ["output_yolo26", "output_masks", "protos_output"],
+        "head_outputs": ["output_yolo26", "output_masks", "protos_output"],
+        "yolo_outputs": ["output_yolo26"],
+        "mask_outputs": ["output_masks"],
     },
     {
         "name": "yolo26n-pose",
         "version": "v26",
-        "model_outputs_present": ["output_yolo26", "kpt_output"],
-        "head_outputs_present": ["output_yolo26", "kpt_output"],
-        "yolo_outputs_present": ["output_yolo26"],
-        "keypoints_outputs_present": ["kpt_output"],
+        "model_outputs": ["output_yolo26", "kpt_output"],
+        "head_outputs": ["output_yolo26", "kpt_output"],
+        "yolo_outputs": ["output_yolo26"],
+        "keypoints_outputs": ["kpt_output"],
     },
 ]
 
@@ -149,7 +148,7 @@ def test_cli_conversion(model: dict, test_config: dict, subtests):
                 SAVE_FOLDER,
             )
         else:
-            pytest.skip("Weights not present and `download_weights` not set")
+            pytest.skip("Weights missing and `download_weights` not set")
 
     command = ["tools", model_path]
     if model.get("cli_version"):
@@ -211,7 +210,7 @@ def test_n_variant_nnarchive_outputs(model_case: dict, test_config: dict):
         if test_config["download_weights"]:
             model_path = download_model(model_case["name"], SAVE_FOLDER)
         else:
-            pytest.skip("Weights not present and `download_weights` not set")
+            pytest.skip("Weights missing and `download_weights` not set")
 
     command = ["tools", model_path]
     result = subprocess.run(
@@ -236,10 +235,9 @@ def test_n_variant_nnarchive_outputs(model_case: dict, test_config: dict):
         ("mask_outputs", mask_output_names),
         ("keypoints_outputs", keypoint_output_names),
     ]:
-        present_key = f"{key}_present"
-        for expected_name in model_case.get(present_key, []):
+        for expected_name in model_case.get(key, []):
             assert expected_name in actual, (
-                f"{key}: expected `{expected_name}` to be present for {model_case['name']}, got {actual}"
+                f"{key}: expected `{expected_name}` for {model_case['name']}, got {actual}"
             )
 
 
