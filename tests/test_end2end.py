@@ -15,7 +15,12 @@ logger.setLevel(logging.INFO)
 @pytest.mark.parametrize(
     "model",
     TEST_MODELS,
-    ids=[model["name"] for model in TEST_MODELS],
+    ids=[
+        model.get("cli_version", model["name"])
+        if model.get("cli_version")
+        else model["name"]
+        for model in TEST_MODELS
+    ],
 )
 def test_cli_conversion(model: dict, test_config: dict, subtests):
     """Tests the whole CLI conversion flow with no extra params specified."""
@@ -50,6 +55,8 @@ def test_cli_conversion(model: dict, test_config: dict, subtests):
             pytest.skip("Weights not present and `download_weights` not set")
 
     command = ["tools", model_path]
+    if model.get("cli_version"):
+        command += ["--version", model.get("cli_version")]
     if model.get("size"):  # edge case when stride=64 is needed
         command += ["--imgsz", model.get("size")]
 

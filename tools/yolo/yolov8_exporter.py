@@ -119,8 +119,15 @@ class YoloV8Exporter(Exporter):
     def load_model(self):
         # load the model
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=True
+            self.model_path, device="cpu", inplace=True, fuse=False
         )
+
+        # for yolo26 end2end has to be disabled before fusing
+        # otherwise cv2/cv3 are removed in the fuse process
+        head = model.model[-1]
+        if getattr(head, "end2end", False):
+            head.end2end = False
+        model.fuse()
 
         self.mode = -1
         if isinstance(model.model[-1], (Segment)) or isinstance(
