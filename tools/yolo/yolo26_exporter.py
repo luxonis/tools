@@ -30,11 +30,11 @@ POSE_MODE = 4
 
 def get_output_names(mode: int):
     if mode == DETECT_MODE:
-        return ["output"]
+        return ["output_yolo26"]
     elif mode == SEGMENT_MODE:
-        return ["output", "mask_output", "protos_output"]
+        return ["output_yolo26", "output_masks", "protos_output"]
     elif mode == POSE_MODE:
-        return ["output", "kpt_output"]
+        return ["output_yolo26", "kpt_output"]
     else:
         logger.warning("Unsupported task type for YOLO26, conversion may fail")
         return ["output"]
@@ -42,7 +42,7 @@ def get_output_names(mode: int):
 
 def get_yolo_output_names(mode: int = 0):
     # For now, yolo output names doesn't differ based on mode because we no longer extract 3 outputs from FPN
-    return ["output"]
+    return ["output_yolo26"]
 
 
 class Yolo26Exporter(Exporter):
@@ -52,7 +52,7 @@ class Yolo26Exporter(Exporter):
             imgsz,
             use_rvc2,
             subtype="yolo26",
-            output_names=["output"],
+            output_names=["output_yolo26"],
         )
         self.load_model()
 
@@ -132,7 +132,7 @@ class Yolo26Exporter(Exporter):
                 n_prototypes=self.model.model[-1].nm,
                 is_softmax=False,  # E2E outputs are already sigmoided
                 output_kwargs={
-                    "mask_outputs": ["mask_output"],
+                    "mask_outputs": ["output_masks"],
                     "protos_outputs": "protos_output",
                 },
                 encoding=encoding,

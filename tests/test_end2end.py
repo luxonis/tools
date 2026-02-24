@@ -6,10 +6,107 @@ import subprocess
 
 import pytest
 from constants import PRIVATE_TEST_MODELS, SAVE_FOLDER, TEST_MODELS
-from helper_functions import download_model, download_private_model, nn_archive_checker
+from helper_functions import (
+    download_model,
+    download_private_model,
+    load_latest_nn_archive_config,
+    nn_archive_checker,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+N_VARIANT_OUTPUT_NAME_CHECKS = [
+    {
+        "name": "yolov8n",
+        "version": "v8",
+        "model_outputs_present": [
+            "output1_yolov6r2",
+            "output2_yolov6r2",
+            "output3_yolov6r2",
+        ],
+        "head_outputs_present": [
+            "output1_yolov6r2",
+            "output2_yolov6r2",
+            "output3_yolov6r2",
+        ],
+        "yolo_outputs_present": [
+            "output1_yolov6r2",
+            "output2_yolov6r2",
+            "output3_yolov6r2",
+        ],
+    },
+    {
+        "name": "yolov8n-seg",
+        "version": "v8",
+        "model_outputs_present": [
+            "output1_yolov8",
+            "output2_yolov8",
+            "output3_yolov8",
+            "output1_masks",
+            "output2_masks",
+            "output3_masks",
+            "protos_output",
+        ],
+        "head_outputs_present": [
+            "output1_yolov8",
+            "output2_yolov8",
+            "output3_yolov8",
+            "output1_masks",
+            "output2_masks",
+            "output3_masks",
+            "protos_output",
+        ],
+        "yolo_outputs_present": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
+        "mask_outputs_present": ["output1_masks", "output2_masks", "output3_masks"],
+    },
+    {
+        "name": "yolov8n-pose",
+        "version": "v8",
+        "model_outputs_present": [
+            "output1_yolov8",
+            "output2_yolov8",
+            "output3_yolov8",
+            "kpt_output1",
+            "kpt_output2",
+            "kpt_output3",
+        ],
+        "head_outputs_present": [
+            "output1_yolov8",
+            "output2_yolov8",
+            "output3_yolov8",
+            "kpt_output1",
+            "kpt_output2",
+            "kpt_output3",
+        ],
+        "yolo_outputs_present": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
+        "keypoints_outputs_present": ["kpt_output1", "kpt_output2", "kpt_output3"],
+        "keypoints_outputs_absent": ["kpt_output"],
+    },
+    {
+        "name": "yolo26n",
+        "version": "v26",
+        "model_outputs_present": ["output_yolo26"],
+        "head_outputs_present": ["output_yolo26"],
+        "yolo_outputs_present": ["output_yolo26"],
+    },
+    {
+        "name": "yolo26n-seg",
+        "version": "v26",
+        "model_outputs_present": ["output_yolo26", "output_masks", "protos_output"],
+        "head_outputs_present": ["output_yolo26", "output_masks", "protos_output"],
+        "yolo_outputs_present": ["output_yolo26"],
+        "mask_outputs_present": ["output_masks"],
+    },
+    {
+        "name": "yolo26n-pose",
+        "version": "v26",
+        "model_outputs_present": ["output_yolo26", "kpt_output"],
+        "head_outputs_present": ["output_yolo26", "kpt_output"],
+        "yolo_outputs_present": ["output_yolo26"],
+        "keypoints_outputs_present": ["kpt_output"],
+    },
+]
 
 
 @pytest.mark.parametrize(
@@ -84,6 +181,66 @@ def test_cli_conversion(model: dict, test_config: dict, subtests):
                 else []
             )
             nn_archive_checker(extra_keys_to_check=extra_keys_to_check)
+
+
+@pytest.mark.parametrize(
+    "model_case",
+    N_VARIANT_OUTPUT_NAME_CHECKS,
+    ids=[model_case["name"] for model_case in N_VARIANT_OUTPUT_NAME_CHECKS],
+)
+def test_n_variant_nnarchive_outputs(model_case: dict, test_config: dict):
+    """Checks NNArchive output-related fields for YOLOv8n and YOLO26n model variants."""
+    if (
+        test_config["test_case"] is not None
+        and model_case["name"] != test_config["test_case"]
+    ):
+        pytest.skip(
+            f"Test case ({model_case['name']}) doesn't match selected test case ({test_config['test_case']})"
+        )
+
+    if (
+        test_config["yolo_version"] is not None
+        and model_case["version"] != test_config["yolo_version"]
+    ):
+        pytest.skip(
+            f"Model version ({model_case['version']}) doesn't match selected version ({test_config['yolo_version']})."
+        )
+
+    model_path = os.path.join(SAVE_FOLDER, f"{model_case['name']}.pt")
+    if not os.path.exists(model_path):
+        if test_config["download_weights"]:
+            model_path = download_model(model_case["name"], SAVE_FOLDER)
+        else:
+            pytest.skip("Weights not present and `download_weights` not set")
+
+    command = ["tools", model_path]
+    result = subprocess.run(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    if result.returncode != 0:
+        pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
+
+    cfg = load_latest_nn_archive_config()
+    output_names = [output["name"] for output in cfg["model"]["outputs"]]
+    head = cfg["model"]["heads"][0]
+    metadata = head["metadata"]
+    head_output_names = head["outputs"]
+    yolo_output_names = metadata["yolo_outputs"] or []
+    mask_output_names = metadata["mask_outputs"] or []
+    keypoint_output_names = metadata["keypoints_outputs"] or []
+
+    for key, actual in [
+        ("model_outputs", output_names),
+        ("head_outputs", head_output_names),
+        ("yolo_outputs", yolo_output_names),
+        ("mask_outputs", mask_output_names),
+        ("keypoints_outputs", keypoint_output_names),
+    ]:
+        present_key = f"{key}_present"
+        for expected_name in model_case.get(present_key, []):
+            assert expected_name in actual, (
+                f"{key}: expected `{expected_name}` to be present for {model_case['name']}, got {actual}"
+            )
 
 
 @pytest.mark.parametrize(

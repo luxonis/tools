@@ -248,7 +248,13 @@ class YoloV8Exporter(Exporter):
                 n_classes=self.model.model[-1].nc,
                 parser="YOLOExtendedParser",
                 n_keypoints=self.model.model[-1].kpt_shape[0],
-                output_kwargs={"keypoints_outputs": ["kpt_output"]},
+                output_kwargs={
+                    "keypoints_outputs": [
+                        "kpt_output1",
+                        "kpt_output2",
+                        "kpt_output3",
+                    ]
+                },
                 encoding=encoding,
             )
         elif self.mode == CLASSIFY_MODE:

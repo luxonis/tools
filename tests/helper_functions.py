@@ -127,3 +127,33 @@ def nn_archive_checker(extra_keys_to_check: list = []):  # noqa: B006
                 assert temp_cfg[keys[-1]] == target, (
                     f"Value `{temp_cfg[keys[-1]]}` at key `{keys}` doesn't match expected value `{target}`"
                 )
+
+
+def load_latest_nn_archive_config() -> dict:
+    """Load config.json from the most recently exported NNArchive."""
+    output_dir = "shared_with_container/outputs"
+    subdirs = [
+        d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))
+    ]
+    assert subdirs, f"No folders found in `{output_dir}`"
+
+    subdirs.sort(key=lambda d: os.path.getmtime(os.path.join(output_dir, d)))
+    latest_subdir = subdirs[-1]
+    model_output_path = os.path.join(output_dir, latest_subdir)
+
+    archive_files = [f for f in os.listdir(model_output_path) if f.endswith(".tar.xz")]
+    assert len(archive_files) == 1, (
+        f"Expected 1 .tar.xz file, found {len(archive_files)}: {archive_files}"
+    )
+    archive_path = os.path.join(model_output_path, archive_files[0])
+
+    with tarfile.open(archive_path, "r:xz") as tar:
+        file_names = [m.name for m in tar.getmembers() if m.isfile()]
+        config_files = [name for name in file_names if name.endswith("config.json")]
+        assert len(config_files) == 1, (
+            f"Expected 1 config.json file, found {len(config_files)}: {config_files}"
+        )
+        config_member = tar.getmember(config_files[0])
+        config_file = tar.extractfile(config_member)
+        assert config_file is not None, "Failed to extract config.json"
+        return json.load(config_file)
