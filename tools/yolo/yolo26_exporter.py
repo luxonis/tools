@@ -12,7 +12,8 @@ from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 yolo_path = os.path.join(current_dir, "ultralytics")
-sys.path.append(yolo_path)
+if yolo_path not in sys.path:
+    sys.path.insert(0, yolo_path)
 
 from ultralytics.nn.modules import (  # noqa: E402
     Detect,
