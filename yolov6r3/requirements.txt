@@ -1,3 +1,5 @@
+setuptools<81.0.0
+
 sanic>=21.12.2
 torch>=2.2.0,<2.6.0
 
