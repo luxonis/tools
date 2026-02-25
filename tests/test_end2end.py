@@ -12,100 +12,10 @@ from helper_functions import (
     load_latest_nn_archive_config,
     nn_archive_checker,
 )
+from nnarchive_output_checks import N_VARIANT_OUTPUT_NAME_CHECKS
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-N_VARIANT_OUTPUT_NAME_CHECKS = [
-    {
-        "name": "yolov8n",
-        "version": "v8",
-        "model_outputs": [
-            "output1_yolov6r2",
-            "output2_yolov6r2",
-            "output3_yolov6r2",
-        ],
-        "head_outputs": [
-            "output1_yolov6r2",
-            "output2_yolov6r2",
-            "output3_yolov6r2",
-        ],
-        "yolo_outputs": [
-            "output1_yolov6r2",
-            "output2_yolov6r2",
-            "output3_yolov6r2",
-        ],
-    },
-    {
-        "name": "yolov8n-seg",
-        "version": "v8",
-        "model_outputs": [
-            "output1_yolov8",
-            "output2_yolov8",
-            "output3_yolov8",
-            "output1_masks",
-            "output2_masks",
-            "output3_masks",
-            "protos_output",
-        ],
-        "head_outputs": [
-            "output1_yolov8",
-            "output2_yolov8",
-            "output3_yolov8",
-            "output1_masks",
-            "output2_masks",
-            "output3_masks",
-            "protos_output",
-        ],
-        "yolo_outputs": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
-        "mask_outputs": ["output1_masks", "output2_masks", "output3_masks"],
-    },
-    {
-        "name": "yolov8n-pose",
-        "version": "v8",
-        "model_outputs": [
-            "output1_yolov8",
-            "output2_yolov8",
-            "output3_yolov8",
-            "kpt_output1",
-            "kpt_output2",
-            "kpt_output3",
-        ],
-        "head_outputs": [
-            "output1_yolov8",
-            "output2_yolov8",
-            "output3_yolov8",
-            "kpt_output1",
-            "kpt_output2",
-            "kpt_output3",
-        ],
-        "yolo_outputs": ["output1_yolov8", "output2_yolov8", "output3_yolov8"],
-        "keypoints_outputs": ["kpt_output1", "kpt_output2", "kpt_output3"],
-    },
-    {
-        "name": "yolo26n",
-        "version": "v26",
-        "model_outputs": ["output_yolo26"],
-        "head_outputs": ["output_yolo26"],
-        "yolo_outputs": ["output_yolo26"],
-    },
-    {
-        "name": "yolo26n-seg",
-        "version": "v26",
-        "model_outputs": ["output_yolo26", "output_masks", "protos_output"],
-        "head_outputs": ["output_yolo26", "output_masks", "protos_output"],
-        "yolo_outputs": ["output_yolo26"],
-        "mask_outputs": ["output_masks"],
-    },
-    {
-        "name": "yolo26n-pose",
-        "version": "v26",
-        "model_outputs": ["output_yolo26", "kpt_output"],
-        "head_outputs": ["output_yolo26", "kpt_output"],
-        "yolo_outputs": ["output_yolo26"],
-        "keypoints_outputs": ["kpt_output"],
-    },
-]
 
 
 @pytest.mark.parametrize(
@@ -148,7 +58,7 @@ def test_cli_conversion(model: dict, test_config: dict, subtests):
                 SAVE_FOLDER,
             )
         else:
-            pytest.skip("Weights missing and `download_weights` not set")
+            pytest.skip("Weights not present and `download_weights` not set")
 
     command = ["tools", model_path]
     if model.get("cli_version"):
@@ -188,7 +98,7 @@ def test_cli_conversion(model: dict, test_config: dict, subtests):
     ids=[model_case["name"] for model_case in N_VARIANT_OUTPUT_NAME_CHECKS],
 )
 def test_n_variant_nnarchive_outputs(model_case: dict, test_config: dict):
-    """Checks NNArchive output-related fields for YOLOv8n and YOLO26n model variants."""
+    """Checks NNArchive output-related fields for selected variants."""
     if (
         test_config["test_case"] is not None
         and model_case["name"] != test_config["test_case"]
