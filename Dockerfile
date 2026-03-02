@@ -1,7 +1,9 @@
 FROM python:3.10-slim
 
 # Upgrade pip
-RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pip "setuptools<81.0.0"
+RUN printf "setuptools<81.0.0\n" > /tmp/pip-constraints.txt
+ENV PIP_CONSTRAINT=/tmp/pip-constraints.txt
 
 # System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
