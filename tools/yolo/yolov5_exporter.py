@@ -13,12 +13,6 @@ from tools.utils import get_first_conv2d_in_channels, patch_pathlib_for_cross_pl
 from tools.utils.constants import Encoding
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# Add ultralytics submodule to sys.path so that yolov5's internal
-# `import ultralytics` resolves to the local submodule instead of
-# triggering an auto-install via pip.
-ultralytics_path = os.path.join(current_dir, "ultralytics")
-if ultralytics_path not in sys.path:
-    sys.path.insert(0, ultralytics_path)
 yolov5_path = os.path.join(current_dir, "yolov5")
 # Ensure it's first in sys.path
 if yolov5_path not in sys.path:
