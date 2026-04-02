@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import onnx
 import onnxsim
@@ -101,6 +101,44 @@ class Exporter:
 
         return self.f_onnx
 
+    @staticmethod
+    def _infer_layout_from_shape(shape: List[Any]) -> Optional[str]:
+        rank = len(shape)
+        if rank == 4:
+            return "NCHW"
+        if rank == 3:
+            return "NCD"
+        if rank == 2:
+            return "NC"
+        if rank == 1:
+            return "C"
+        return None
+
+    def get_output_specs(self) -> Dict[str, Dict[str, Any]]:
+        """Collect output shape and layout for all ONNX outputs by name."""
+        if self.f_onnx is None:
+            raise RuntimeError("ONNX must be exported before reading output specs.")
+
+        model_onnx = onnx.load(self.f_onnx)
+        specs: Dict[str, Dict[str, Any]] = {}
+
+        for output in model_onnx.graph.output:
+            shape: List[Any] = []
+            for dim in output.type.tensor_type.shape.dim:
+                if dim.HasField("dim_value"):
+                    shape.append(int(dim.dim_value))
+                elif dim.HasField("dim_param") and dim.dim_param:
+                    shape.append(dim.dim_param)
+                else:
+                    shape.append(None)
+
+            specs[output.name] = {
+                "shape": shape,
+                "layout": self._infer_layout_from_shape(shape),
+            }
+
+        return specs
+
     def make_nn_archive(
         self,
         class_list: List[str],
@@ -144,6 +182,7 @@ class Exporter:
 
         if output_kwargs is None:
             output_kwargs = {}
+        output_specs = self.get_output_specs()
 
         archive = ArchiveGenerator(
             archive_name=self.model_name,
@@ -172,6 +211,8 @@ class Exporter:
                         {
                             "name": output,
                             "dtype": DataType.FLOAT32,
+                            "shape": output_specs.get(output, {}).get("shape"),
+                            "layout": output_specs.get(output, {}).get("layout"),
                         }
                         for output in self.all_output_names
                     ],
