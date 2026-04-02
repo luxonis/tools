@@ -122,6 +122,7 @@ class Yolo26Exporter(Exporter):
             self.make_nn_archive(
                 class_list=names,
                 n_classes=self.model.model[-1].nc,
+                parser="YOLOExtendedParser",
                 encoding=encoding,
             )
         elif self.mode == SEGMENT_MODE:
@@ -129,6 +130,7 @@ class Yolo26Exporter(Exporter):
                 class_list=names,
                 n_classes=self.model.model[-1].nc,
                 n_prototypes=self.model.model[-1].nm,
+                parser="YOLOExtendedParser",
                 is_softmax=False,  # E2E outputs are already sigmoided
                 output_kwargs={
                     "mask_outputs": ["output_masks"],
@@ -140,6 +142,7 @@ class Yolo26Exporter(Exporter):
             self.make_nn_archive(
                 class_list=names,
                 n_classes=self.model.model[-1].nc,
+                parser="YOLOExtendedParser",
                 n_keypoints=self.model.model[-1].kpt_shape[0],
                 output_kwargs={"keypoints_outputs": ["kpt_output"]},
                 encoding=encoding,
