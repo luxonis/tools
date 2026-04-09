@@ -36,7 +36,7 @@ cd tools
 
 ```bash
 # Install the package
-pip install .
+PIP_CONSTRAINT=constraints.txt pip install .
 # Running the package
 tools yolov6nr4.pt --imgsz "416"
 ```
