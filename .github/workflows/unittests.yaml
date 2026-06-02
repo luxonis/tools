@@ -74,7 +74,7 @@ jobs:
       run: |
         pip uninstall luxonis-ml -y
         pip install \
-          "luxonis-ml[data,nn_archive,utils] @ git+https://github.com/luxonis/luxonis-ml.git@${ML_REF}" \
+          "luxonis-ml[data,nn-archive,utils] @ git+https://github.com/luxonis/luxonis-ml.git@${ML_REF}" \
           --upgrade --force-reinstall
 
     - name: Run tests with coverage [Ubuntu]
