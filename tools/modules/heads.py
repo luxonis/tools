@@ -578,8 +578,9 @@ class DetectV26(nn.Module):
         boxes = []
         scores = []
         for i in range(self.nl):
+            # Box regression
             box = self.cv2[i](x[i])
-
+            # Class scores
             cls_regress = self.cv3[i](x[i])
             boxes.append(box.view(bs, 4, -1))
             scores.append(cls_regress.view(bs, self.nc, -1))
@@ -590,6 +591,7 @@ class DetectV26(nn.Module):
             "feats": x,
         }
 
+        # Detection output: boxes (4) + confidence (1) + class scores (nc)
         dbox = self._get_decode_boxes(preds)
         cls_scores = preds["scores"].sigmoid()  # (bs, nc, num_anchors)
         conf, _ = cls_scores.max(1, keepdim=True)  # ReduceMax: (bs, 1, num_anchors)
@@ -599,7 +601,6 @@ class DetectV26(nn.Module):
 
     def _get_decode_boxes(self, preds):
         # Emulate ultralytics.nn.modules.head.Detect._get_decode_boxes for end2end export.
-        # preds["boxes"]: (N, 4, A), preds["feats"]: list of feature maps (N, C, H_i, W_i)
         shape = preds["feats"][0].shape  # BCHW
         if self.dynamic or self.shape != shape:
             anchor_points, stride_tensor = self._make_anchors(
@@ -609,8 +610,6 @@ class DetectV26(nn.Module):
             self.strides = stride_tensor.transpose(0, 1)
             self.shape = shape
 
-        # anchors: (1, 2, A), strides: (1, 1, A)
-        # returns: decoded boxes (N, 4, A) in xyxy pixels
         dbox = self.dist2bbox(
             preds["boxes"], self.anchors.unsqueeze(0), xywh=False, dim=1
         )
@@ -703,14 +702,12 @@ class SegmentV26(DetectV26):
         for i in range(self.nl):
             # Box regression
             box = self.cv2[i](x[i])
-            boxes.append(box.view(bs, 4, -1))
-
             # Class scores
             cls_regress = self.cv3[i](x[i])
-            scores.append(cls_regress.view(bs, self.nc, -1))
-
             # Mask coefficients
             mask = self.cv4[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+            scores.append(cls_regress.view(bs, self.nc, -1))
             mask_coeffs.append(mask.view(bs, self.nm, -1))
 
         preds = {
@@ -744,7 +741,7 @@ class SegmentV26(DetectV26):
 
         Proto26 takes all feature maps and returns prototype masks.
         """
-        return self.proto(x, return_semseg=False)
+        return self.proto(x, return_semantic=False)
 
 
 class PoseV26(DetectV26):
@@ -798,15 +795,13 @@ class PoseV26(DetectV26):
         for i in range(self.nl):
             # Box regression
             box = self.cv2[i](x[i])
-            boxes.append(box.view(bs, 4, -1))
-
             # Class scores
             cls_regress = self.cv3[i](x[i])
-            scores.append(cls_regress.view(bs, self.nc, -1))
-
             # Keypoints: cv4 extracts features, cv4_kpts predicts keypoints
             feat = self.cv4[i](x[i])
             kpt = self.cv4_kpts[i](feat)
+            boxes.append(box.view(bs, 4, -1))
+            scores.append(cls_regress.view(bs, self.nc, -1))
             kpts_raw.append(kpt.view(bs, self.nk, -1))
 
         preds = {
@@ -826,7 +821,6 @@ class PoseV26(DetectV26):
         y = y.permute(0, 2, 1)  # (bs, num_anchors, 5+nc)
 
         # Decode and concatenate keypoints
-        # Note: After _get_decode_boxes, self.anchors is (2, A) and self.strides is (1, A)
         kpts_cat = torch.cat(kpts_raw, dim=2)  # (bs, nk, num_anchors)
         kpts_decoded = self._kpts_decode(bs, kpts_cat)  # (bs, nk, num_anchors)
         kpts_decoded = kpts_decoded.permute(0, 2, 1)  # (bs, num_anchors, nk)
@@ -839,7 +833,6 @@ class PoseV26(DetectV26):
         Emulate ultralytics.nn.modules.head.Pose26.kpts_decode.
 
         Args:
-            bs: Batch size
             kpts: Raw keypoint predictions (bs, nk, num_anchors)
 
         Returns:
@@ -855,9 +848,8 @@ class PoseV26(DetectV26):
         # After _get_decode_boxes, anchors and strides are already in the right format:
         # self.anchors: (2, num_anchors), self.strides: (1, num_anchors)
         # Reshape for broadcasting with y[:, :, :2, :] which is (bs, num_kpts, 2, num_anchors)
-        anchors_reshaped = self.anchors.view(1, 1, 2, num_anchors)  # (1, 1, 2, A)
-        strides_reshaped = self.strides.view(1, 1, 1, num_anchors)  # (1, 1, 1, A)
-
+        anchors_reshaped = self.anchors.view(1, 1, 2, num_anchors)
+        strides_reshaped = self.strides.view(1, 1, 1, num_anchors)
         # Decode xy: (raw + anchor) * stride
         xy = (y[:, :, :2, :] + anchors_reshaped) * strides_reshaped
 
