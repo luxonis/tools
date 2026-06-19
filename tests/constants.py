@@ -76,6 +76,7 @@ TEST_MODELS = [
     {"name": "yolo26x", "version": "v26"},
     {"name": "yolo26n-seg", "version": "v26"},
     {"name": "yolo26n-pose", "version": "v26"},
+    {"name": "yolo26n", "version": "v26_nms", "cli_version": "yolov26_nms"},
     {"name": "yolov8n-cls", "version": "v8"},
     {"name": "yolov8n-seg", "version": "v8"},
     {"name": "yolov8n-pose", "version": "v8"},

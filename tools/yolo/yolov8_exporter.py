@@ -119,8 +119,15 @@ class YoloV8Exporter(Exporter):
     def load_model(self):
         # load the model
         model, _ = load_checkpoint(
-            self.model_path, device="cpu", inplace=True, fuse=True
+            self.model_path, device="cpu", inplace=True, fuse=False
         )
+
+        # for yolo26 end2end has to be disabled before fusing
+        # otherwise cv2/cv3 are removed in the fuse process
+        head = model.model[-1]
+        if getattr(head, "end2end", False):
+            head.end2end = False
+        model.fuse()
 
         self.mode = -1
         if isinstance(model.model[-1], (Segment)) or isinstance(
@@ -241,7 +248,13 @@ class YoloV8Exporter(Exporter):
                 n_classes=self.model.model[-1].nc,
                 parser="YOLOExtendedParser",
                 n_keypoints=self.model.model[-1].kpt_shape[0],
-                output_kwargs={"keypoints_outputs": ["kpt_output"]},
+                output_kwargs={
+                    "keypoints_outputs": [
+                        "kpt_output1",
+                        "kpt_output2",
+                        "kpt_output3",
+                    ]
+                },
                 encoding=encoding,
             )
         elif self.mode == CLASSIFY_MODE:
@@ -259,6 +272,8 @@ class YoloV8Exporter(Exporter):
             n_classes (int): Number of classes
             encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
         """
+        output_specs = self.get_output_specs()
+
         archive = ArchiveGenerator(
             archive_name=self.model_name,
             save_path=str(self.output_folder),
@@ -286,6 +301,8 @@ class YoloV8Exporter(Exporter):
                         {
                             "name": output,
                             "dtype": DataType.FLOAT32,
+                            "shape": output_specs.get(output, {}).get("shape"),
+                            "layout": output_specs.get(output, {}).get("layout"),
                         }
                         for output in self.all_output_names
                     ],
