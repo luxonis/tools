@@ -562,7 +562,6 @@ class DetectV26(nn.Module):
         self.reg_max = old_detect.reg_max  # DFL channels
         self.no = old_detect.no  # number of outputs per anchor
         self.stride = old_detect.stride  # strides computed during build
-        self.dfl = old_detect.dfl
 
         # Use one2one heads for NMS-free inference
         self.cv2 = old_detect.one2one_cv2
@@ -579,8 +578,12 @@ class DetectV26(nn.Module):
         boxes = []
         scores = []
         for i in range(self.nl):
-            boxes.append(self.cv2[i](x[i]).view(bs, 4 * self.reg_max, -1))
-            scores.append(self.cv3[i](x[i]).view(bs, self.nc, -1))
+            # Box regression
+            box = self.cv2[i](x[i])
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+            scores.append(cls_regress.view(bs, self.nc, -1))
 
         preds = {
             "boxes": torch.cat(boxes, dim=2),
@@ -588,6 +591,7 @@ class DetectV26(nn.Module):
             "feats": x,
         }
 
+        # Detection output: boxes (4) + confidence (1) + class scores (nc)
         dbox = self._get_decode_boxes(preds)
         cls_scores = preds["scores"].sigmoid()  # (bs, nc, num_anchors)
         conf, _ = cls_scores.max(1, keepdim=True)  # ReduceMax: (bs, 1, num_anchors)
@@ -607,7 +611,7 @@ class DetectV26(nn.Module):
             self.shape = shape
 
         dbox = self.dist2bbox(
-            self.dfl(preds["boxes"]), self.anchors.unsqueeze(0), xywh=False, dim=1
+            preds["boxes"], self.anchors.unsqueeze(0), xywh=False, dim=1
         )
         return dbox * self.strides
 
@@ -696,9 +700,15 @@ class SegmentV26(DetectV26):
         scores = []
         mask_coeffs = []
         for i in range(self.nl):
-            boxes.append(self.cv2[i](x[i]).view(bs, 4 * self.reg_max, -1))
-            scores.append(self.cv3[i](x[i]).view(bs, self.nc, -1))
-            mask_coeffs.append(self.cv4[i](x[i]).view(bs, self.nm, -1))
+            # Box regression
+            box = self.cv2[i](x[i])
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            # Mask coefficients
+            mask = self.cv4[i](x[i])
+            boxes.append(box.view(bs, 4, -1))
+            scores.append(cls_regress.view(bs, self.nc, -1))
+            mask_coeffs.append(mask.view(bs, self.nm, -1))
 
         preds = {
             "boxes": torch.cat(boxes, dim=2),
@@ -731,7 +741,7 @@ class SegmentV26(DetectV26):
 
         Proto26 takes all feature maps and returns prototype masks.
         """
-        return self.proto(x)
+        return self.proto(x, return_semantic=False)
 
 
 class PoseV26(DetectV26):
@@ -783,10 +793,16 @@ class PoseV26(DetectV26):
         scores = []
         kpts_raw = []
         for i in range(self.nl):
-            boxes.append(self.cv2[i](x[i]).view(bs, 4 * self.reg_max, -1))
-            scores.append(self.cv3[i](x[i]).view(bs, self.nc, -1))
+            # Box regression
+            box = self.cv2[i](x[i])
+            # Class scores
+            cls_regress = self.cv3[i](x[i])
+            # Keypoints: cv4 extracts features, cv4_kpts predicts keypoints
             feat = self.cv4[i](x[i])
-            kpts_raw.append(self.cv4_kpts[i](feat).view(bs, self.nk, -1))
+            kpt = self.cv4_kpts[i](feat)
+            boxes.append(box.view(bs, 4, -1))
+            scores.append(cls_regress.view(bs, self.nc, -1))
+            kpts_raw.append(kpt.view(bs, self.nk, -1))
 
         preds = {
             "boxes": torch.cat(boxes, dim=2),
@@ -794,6 +810,8 @@ class PoseV26(DetectV26):
             "feats": x,
         }
 
+        # Decode boxes to pixel coordinates (this also sets self.anchors and self.strides)
+        # from the parent DetectV26
         dbox = self._get_decode_boxes(preds)
 
         # Detection output: boxes (4) + confidence (1) + class scores (nc)
@@ -802,13 +820,14 @@ class PoseV26(DetectV26):
         y = torch.cat((dbox, conf, cls_scores), 1)  # (bs, 4+1+nc, num_anchors)
         y = y.permute(0, 2, 1)  # (bs, num_anchors, 5+nc)
 
+        # Decode and concatenate keypoints
         kpts_cat = torch.cat(kpts_raw, dim=2)  # (bs, nk, num_anchors)
-        kpts_decoded = self._kpts_decode(kpts_cat)  # (bs, nk, num_anchors)
+        kpts_decoded = self._kpts_decode(bs, kpts_cat)  # (bs, nk, num_anchors)
         kpts_decoded = kpts_decoded.permute(0, 2, 1)  # (bs, num_anchors, nk)
 
         return y, kpts_decoded
 
-    def _kpts_decode(self, kpts):
+    def _kpts_decode(self, bs, kpts):
         """Decode keypoints from raw predictions to pixel coordinates.
 
         Emulate ultralytics.nn.modules.head.Pose26.kpts_decode.
@@ -820,9 +839,26 @@ class PoseV26(DetectV26):
             Decoded keypoints (bs, nk, num_anchors) with x, y in pixel coords
         """
         ndim = self.kpt_shape[1]
-        y = kpts.clone()
+        num_kpts = self.kpt_shape[0]
+        num_anchors = kpts.shape[2]
+
+        # Reshape to (bs, num_keypoints, ndim, num_anchors)
+        y = kpts.view(bs, num_kpts, ndim, num_anchors)
+
+        # After _get_decode_boxes, anchors and strides are already in the right format:
+        # self.anchors: (2, num_anchors), self.strides: (1, num_anchors)
+        # Reshape for broadcasting with y[:, :, :2, :] which is (bs, num_kpts, 2, num_anchors)
+        anchors_reshaped = self.anchors.view(1, 1, 2, num_anchors)
+        strides_reshaped = self.strides.view(1, 1, 1, num_anchors)
+        # Decode xy: (raw + anchor) * stride
+        xy = (y[:, :, :2, :] + anchors_reshaped) * strides_reshaped
+
         if ndim == 3:
-            y[:, 2::ndim] = y[:, 2::ndim].sigmoid()
-        y[:, 0::ndim] = (y[:, 0::ndim] + self.anchors[0]) * self.strides
-        y[:, 1::ndim] = (y[:, 1::ndim] + self.anchors[1]) * self.strides
-        return y
+            # Visibility score (sigmoid)
+            vis = y[:, :, 2:3, :].sigmoid()
+            decoded = torch.cat((xy, vis), dim=2)
+        else:
+            decoded = xy
+
+        # Reshape back to (bs, nk, num_anchors)
+        return decoded.view(bs, self.nk, num_anchors)
