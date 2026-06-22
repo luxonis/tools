@@ -19,6 +19,7 @@ YOLOV11_CONVERSION = "yolov11"
 YOLOV12_CONVERSION = "yolov12"
 YOLOV26_CONVERSION = "yolov26"
 YOLOV26_NMS_CONVERSION = "yolov26_nms"
+YOLOV26_SEM_CONVERSION = "yolov26-sem"
 GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
 
@@ -76,7 +77,9 @@ def detect_version(path: str, debug: bool = False) -> str:
             if debug:
                 print(data.decode(errors="replace"))
             content = data.decode("latin1")
-            if "yolo26" in content:
+            if "yolo26" in content and "SemanticSegment" in content:
+                return YOLOV26_SEM_CONVERSION
+            elif "yolo26" in content:
                 return YOLOV26_CONVERSION
             elif "yolov12" in content:
                 return YOLOV12_CONVERSION
