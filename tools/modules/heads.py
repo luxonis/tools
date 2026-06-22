@@ -601,6 +601,8 @@ class DetectV26(nn.Module):
 
     def _get_decode_boxes(self, preds):
         # Emulate ultralytics.nn.modules.head.Detect._get_decode_boxes for end2end export.
+        # preds["boxes"]: (N, 4, A)
+        # preds["feats"]: list of feature maps [(N, C, H_i, W_i), ...]
         shape = preds["feats"][0].shape  # BCHW
         if self.dynamic or self.shape != shape:
             anchor_points, stride_tensor = self._make_anchors(
@@ -610,6 +612,8 @@ class DetectV26(nn.Module):
             self.strides = stride_tensor.transpose(0, 1)
             self.shape = shape
 
+        # anchors: (1, 2, A), strides: (1, A)
+        # returns: decoded boxes (N, 4, A) in xyxy pixel coordinates
         dbox = self.dist2bbox(
             preds["boxes"], self.anchors.unsqueeze(0), xywh=False, dim=1
         )
@@ -820,6 +824,7 @@ class PoseV26(DetectV26):
         y = torch.cat((dbox, conf, cls_scores), 1)  # (bs, 4+1+nc, num_anchors)
         y = y.permute(0, 2, 1)  # (bs, num_anchors, 5+nc)
 
+        # After _get_decode_boxes, self.anchors is (2, A) and self.strides is (1, A).
         # Decode and concatenate keypoints
         kpts_cat = torch.cat(kpts_raw, dim=2)  # (bs, nk, num_anchors)
         kpts_decoded = self._kpts_decode(bs, kpts_cat)  # (bs, nk, num_anchors)
@@ -833,6 +838,7 @@ class PoseV26(DetectV26):
         Emulate ultralytics.nn.modules.head.Pose26.kpts_decode.
 
         Args:
+            bs: Batch size.
             kpts: Raw keypoint predictions (bs, nk, num_anchors)
 
         Returns:
