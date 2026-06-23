@@ -155,10 +155,7 @@ def test_yolo26_semseg_nnarchive_head(test_config: dict):
     """Checks YOLO26 semantic segmentation NNArchive head configuration."""
     model_name = "yolo26n-sem"
 
-    if (
-        test_config["test_case"] is not None
-        and model_name != test_config["test_case"]
-    ):
+    if test_config["test_case"] is not None and model_name != test_config["test_case"]:
         pytest.skip(
             f"Test case ({model_name}) doesn't match selected test case ({test_config['test_case']})"
         )
@@ -194,6 +191,7 @@ def test_yolo26_semseg_nnarchive_head(test_config: dict):
     assert head["outputs"] == ["output_yolo26"]
     assert metadata["n_classes"] == 19
     assert metadata["is_softmax"] is False
+
 
 @pytest.mark.parametrize(
     "model",
