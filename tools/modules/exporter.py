@@ -244,7 +244,7 @@ class Exporter:
         )
         archive.make_archive()
 
-    def make_segmentation_nn_archive(
+    def make_semantic_seg_nn_archive(
         self,
         class_list: List[str],
         n_classes: int,

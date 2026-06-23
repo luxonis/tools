@@ -155,7 +155,7 @@ class Yolo26Exporter(Exporter):
                 encoding=encoding,
             )
         elif self.mode == SEMSEG_MODE:
-            self.make_segmentation_nn_archive(
+            self.make_semantic_seg_nn_archive(
                 class_list=names,
                 n_classes=self.model.model[-1].nc,
                 is_softmax=False,
