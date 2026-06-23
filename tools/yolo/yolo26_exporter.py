@@ -19,6 +19,7 @@ from ultralytics.nn.modules import (  # noqa: E402
     Detect,
     Pose26,
     Segment26,
+    SemanticSegment,
 )
 from ultralytics.nn.tasks import load_checkpoint  # noqa: E402
 
@@ -27,6 +28,7 @@ SEGMENT_MODE = 1
 OBB_MODE = 2
 CLASSIFY_MODE = 3
 POSE_MODE = 4
+SEMSEG_MODE = 5
 
 
 def get_output_names(mode: int):
@@ -36,6 +38,8 @@ def get_output_names(mode: int):
         return ["output_yolo26", "output_masks", "protos_output"]
     elif mode == POSE_MODE:
         return ["output_yolo26", "kpt_output"]
+    elif mode == SEMSEG_MODE:
+        return ["output_yolo26"]
     else:
         logger.warning("Unsupported task type for YOLO26, conversion may fail")
         return ["output"]
@@ -70,11 +74,14 @@ class Yolo26Exporter(Exporter):
         elif isinstance(head, Pose26):
             model.model[-1] = PoseV26(model.model[-1], self.use_rvc2)
             self.mode = POSE_MODE
+        elif isinstance(head, SemanticSegment):
+            head.export = True
+            self.mode = SEMSEG_MODE
         elif isinstance(head, Detect):
             model.model[-1] = DetectV26(head, self.use_rvc2)
             self.mode = DETECT_MODE
 
-        if self.mode in [DETECT_MODE, SEGMENT_MODE, POSE_MODE]:
+        if self.mode in [DETECT_MODE, SEGMENT_MODE, POSE_MODE, SEMSEG_MODE]:
             self.names = (
                 model.module.names if hasattr(model, "module") else model.names
             )  # get class names
@@ -145,5 +152,12 @@ class Yolo26Exporter(Exporter):
                 parser="YOLOExtendedParser",
                 n_keypoints=self.model.model[-1].kpt_shape[0],
                 output_kwargs={"keypoints_outputs": ["kpt_output"]},
+                encoding=encoding,
+            )
+        elif self.mode == SEMSEG_MODE:
+            self.make_semantic_seg_nn_archive(
+                class_list=names,
+                n_classes=self.model.model[-1].nc,
+                is_softmax=False,
                 encoding=encoding,
             )

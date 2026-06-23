@@ -10,6 +10,7 @@ import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
 from luxonis_ml.nn_archive.config_building_blocks import DataType, Head, InputType
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
+    HeadSegmentationMetadata,
     HeadYOLOMetadata,
 )
 from packaging import version
@@ -240,6 +241,73 @@ class Exporter:
                 },
             },
             executables_paths=executables_paths,
+        )
+        archive.make_archive()
+
+    def make_semantic_seg_nn_archive(
+        self,
+        class_list: List[str],
+        n_classes: int,
+        is_softmax: bool = False,
+        encoding: Encoding = Encoding.RGB,
+    ):
+        """Export the semantic segmentation model to NN archive format.
+
+        Args:
+            class_list (List[str]): List of class names
+            n_classes (int): Number of classes
+            is_softmax (bool): Whether the model output is softmaxed. Defaults to False.
+            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
+        """
+        self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
+        output_specs = self.get_output_specs()
+
+        archive = ArchiveGenerator(
+            archive_name=self.model_name,
+            save_path=str(self.output_folder),
+            cfg_dict={
+                "config_version": "1.0",
+                "model": {
+                    "metadata": {
+                        "name": self.model_name,
+                        "path": f"{self.model_name}.onnx",
+                    },
+                    "inputs": [
+                        {
+                            "name": "images",
+                            "dtype": DataType.FLOAT32,
+                            "input_type": InputType.IMAGE,
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
+                            "preprocessing": {
+                                "mean": [0, 0, 0],
+                                "scale": [255, 255, 255],
+                                "dai_type": encoding.get_dai_type(),
+                            },
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "name": output,
+                            "dtype": DataType.FLOAT32,
+                            "shape": output_specs.get(output, {}).get("shape"),
+                            "layout": output_specs.get(output, {}).get("layout"),
+                        }
+                        for output in self.all_output_names
+                    ],
+                    "heads": [
+                        Head(
+                            parser="SegmentationParser",
+                            metadata=HeadSegmentationMetadata(
+                                classes=class_list,
+                                n_classes=n_classes,
+                                is_softmax=is_softmax,
+                            ),
+                            outputs=self.all_output_names,
+                        )
+                    ],
+                },
+            },
+            executables_paths=[str(self.f_onnx)],
         )
         archive.make_archive()
 
