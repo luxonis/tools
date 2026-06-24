@@ -80,19 +80,14 @@ jobs:
     - name: Run tests with coverage [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10'
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
-      env:
-        COVERAGE_PROCESS_START: .coveragerc
       run: |
-        coverage erase
-        coverage run -m pytest tests/test_unittests.py --download-weights --delete-weights-now -s -v --junit-xml pytest.xml
-        coverage combine
-        coverage xml -o coverage.xml -i # Recent changes to coverage 7.13 make it stricter where it was previously passing https://coverage.readthedocs.io/en/7.13.0/messages.html#error-no-source
+        pytest -n 2 tests/test_unittests.py --download-weights -s -v --junit-xml pytest.xml --cov=tools --cov-report=xml:coverage.xml
 
 
     - name: Run tests [Windows, macOS]
       if: matrix.os != 'ubuntu-latest' || matrix.version != '3.10'
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
-      run: pytest tests/test_unittests.py --download-weights --delete-weights-now -s -v --junit-xml pytest.xml
+      run: pytest -n 2 tests/test_unittests.py --download-weights -s -v --junit-xml pytest.xml
 
     - name: Generate coverage badge [Ubuntu]
       if: matrix.os == 'ubuntu-latest' && matrix.version == '3.10' && inputs.tools_ref == '' && inputs.ml_ref == ''

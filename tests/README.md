@@ -23,3 +23,11 @@ pytest --download-weights --log-cli-level=INFO --log-file=out.log --log-file-lev
 ```
 
 This will run the full test suite on all the supported models and store the DEBUG logs into the out.log file.
+
+To run the suite in parallel with `pytest-xdist`, use for example:
+
+```
+pytest -n auto --download-weights --log-cli-level=INFO --log-file=out.log --log-file-level=DEBUG .
+```
+
+The tests isolate generated `shared_with_container` artifacts per test process while reusing a shared `weights/` cache. Avoid combining `-n ...` with `--delete-weights-now`, since that option defeats the shared cache and is skipped under xdist to avoid cross-worker races.
