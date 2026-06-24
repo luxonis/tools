@@ -17,3 +17,4 @@ seaborn
 mmcv>=1.5.0,<2.0.0
 dill==0.4.0
 requests>=2.33.0
+stringzilla<4.6.2
