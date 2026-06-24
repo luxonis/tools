@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -32,6 +33,7 @@ def pytest_addoption(parser):
             "v11",
             "v12",
             "v26",
+            "v26_nms",
         ],
         default=None,
         help="If set then test only that specific yolo version",
@@ -63,24 +65,36 @@ def test_config(pytestconfig):
         "test_case": pytestconfig.getoption("test_case"),
         "delete_weights_now": pytestconfig.getoption("delete_weights_now"),
         "test_private": pytestconfig.getoption("test_private"),
+        "weights_dir": Path(__file__).resolve().parents[1] / "weights",
     }
 
 
 @pytest.fixture(scope="function", autouse=True)
-def cleanup_output_after_tests(test_config):
+def isolate_test_workspace(monkeypatch, tmp_path):
+    shared_dir = tmp_path / "shared_with_container"
+    monkeypatch.setenv("TOOLS_SHARED_DIR", str(shared_dir))
+    return shared_dir
+
+
+@pytest.fixture(scope="function", autouse=True)
+def cleanup_output_after_tests(test_config, isolate_test_workspace):
     yield  # Tests run here
     if test_config["delete_output"]:
-        folder_to_delete = "shared_with_container"
-        if os.path.exists(folder_to_delete):
-            shutil.rmtree(folder_to_delete)
-            logger.info(f"Removed test artifacts from {folder_to_delete}")
+        if isolate_test_workspace.exists():
+            shutil.rmtree(isolate_test_workspace)
+            logger.info(f"Removed test artifacts from {isolate_test_workspace}")
 
 
 @pytest.fixture(scope="function", autouse=True)
 def cleanup_weights_after_tests(test_config):
     yield  # Tests run here
     if test_config["delete_weights_now"]:
-        folder_to_delete = "weights"
-        if os.path.exists(folder_to_delete):
+        if os.environ.get("PYTEST_XDIST_WORKER"):
+            logger.warning(
+                "Skipping `--delete-weights-now` cleanup under pytest-xdist to avoid cross-worker races."
+            )
+            return
+        folder_to_delete = test_config["weights_dir"]
+        if folder_to_delete.exists():
             shutil.rmtree(folder_to_delete)
             logger.info(f"Removed test artifacts from {folder_to_delete}")

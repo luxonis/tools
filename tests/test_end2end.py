@@ -9,6 +9,7 @@ from constants import PRIVATE_TEST_MODELS, SAVE_FOLDER, TEST_MODELS
 from helper_functions import (
     download_model,
     download_private_model,
+    get_tools_command,
     load_latest_nn_archive_config,
     nn_archive_checker,
 )
@@ -60,7 +61,7 @@ def test_cli_conversion(model: dict, test_config: dict, subtests):
         else:
             pytest.skip("Weights not present and `download_weights` not set")
 
-    command = ["tools", model_path]
+    command = get_tools_command(model_path)
     if model.get("cli_version"):
         command += ["--version", model.get("cli_version")]
     if model.get("size"):  # edge case when stride=64 is needed
@@ -122,7 +123,7 @@ def test_n_variant_nnarchive_outputs(model_case: dict, test_config: dict):
         else:
             pytest.skip("Weights missing and `download_weights` not set")
 
-    command = ["tools", model_path]
+    command = get_tools_command(model_path)
     result = subprocess.run(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
@@ -172,7 +173,7 @@ def test_yolo26_semseg_nnarchive_head(test_config: dict):
         else:
             pytest.skip("Weights missing and `download_weights` not set")
 
-    command = ["tools", model_path]
+    command = get_tools_command(model_path)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -233,7 +234,7 @@ def test_private_model_conversion(model: dict, test_config: dict, subtests):
             SAVE_FOLDER,
         )
 
-    command = ["tools", model_path]
+    command = get_tools_command(model_path)
     if model.get("size"):
         command += ["--imgsz", model.get("size")]
 

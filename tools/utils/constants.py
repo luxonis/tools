@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
 from enum import Enum
 from pathlib import Path
 from typing import Final
 
-SHARED_DIR: Final[Path] = Path("shared_with_container")
+SHARED_DIR: Final[Path] = Path(
+    os.environ.get("TOOLS_SHARED_DIR", "shared_with_container")
+)
 OUTPUTS_DIR: Final[Path] = SHARED_DIR / "outputs"
 MISC_DIR: Final[Path] = SHARED_DIR / "misc"
 

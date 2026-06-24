@@ -4,7 +4,9 @@ import copy
 import json
 import logging
 import os
+import sys
 import tarfile
+import tempfile
 from pathlib import Path
 
 import requests
@@ -14,6 +16,18 @@ from luxonis_ml.utils import LuxonisFileSystem
 logger = logging.getLogger()
 
 
+def get_shared_dir() -> Path:
+    return Path(os.environ.get("TOOLS_SHARED_DIR", "shared_with_container"))
+
+
+def get_outputs_dir() -> Path:
+    return get_shared_dir() / "outputs"
+
+
+def get_tools_command(*args: str) -> list[str]:
+    return [sys.executable, "-m", "tools.main", *args]
+
+
 def download_model(model_name: str, folder: str):
     logger.info(f"Downloading model '{model_name}' into folder '{folder}'")
     url = MODEL_TYPE2URL.get(model_name)
@@ -21,11 +35,15 @@ def download_model(model_name: str, folder: str):
         raise ValueError(f"No URL defined for model {model_name}")
     response = requests.get(url)
     os.makedirs(folder, exist_ok=True)
-    file_path = os.path.join(folder, f"{model_name}.pt")
-    with open(file_path, "wb") as f:
+    file_path = Path(folder) / f"{model_name}.pt"
+    with tempfile.NamedTemporaryFile(
+        dir=folder, prefix=f"{model_name}.", suffix=".tmp", delete=False
+    ) as f:
         f.write(response.content)
+        temp_path = Path(f.name)
+    os.replace(temp_path, file_path)
     logger.debug(f"Model downloaded and saved to {file_path}")
-    return file_path
+    return str(file_path)
 
 
 def download_private_model(model_name: str, filename: str, folder: str) -> str:
@@ -36,12 +54,17 @@ def download_private_model(model_name: str, filename: str, folder: str) -> str:
     dest_dir = Path(folder)
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    downloaded_path = LuxonisFileSystem.download(remote_path, dest=dest_dir)
+    temp_dir = dest_dir / f".tmp-{model_name}-{os.getpid()}"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    downloaded_path = LuxonisFileSystem.download(remote_path, dest=temp_dir)
     final_path = dest_dir / f"{model_name}.pt"
 
     # Cases where name != filename in the PRIVATE_TEST_MODELS entry
     if downloaded_path != final_path and downloaded_path.exists():
-        downloaded_path.rename(final_path)
+        os.replace(downloaded_path, final_path)
+
+    if temp_dir.exists():
+        temp_dir.rmdir()
 
     logger.debug(f"Private model downloaded and saved to {final_path}")
     return str(final_path)
@@ -49,24 +72,25 @@ def download_private_model(model_name: str, filename: str, folder: str) -> str:
 
 def nn_archive_checker(extra_keys_to_check: list = []):  # noqa: B006
     """Tests the content of the exported NNArchive."""
-    output_dir = "shared_with_container/outputs"
-    subdirs = [
-        d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))
-    ]
+    output_dir = get_outputs_dir()
+    assert output_dir.exists(), f"Output directory `{output_dir}` does not exist"
+    subdirs = [d for d in output_dir.iterdir() if d.is_dir()]
     assert subdirs, f"No folders found in `{output_dir}`"
 
     # Sort by modification time (most recent last)
-    subdirs.sort(key=lambda d: os.path.getmtime(os.path.join(output_dir, d)))
+    subdirs.sort(key=lambda d: d.stat().st_mtime)
     latest_subdir = subdirs[-1]
-    model_output_path = os.path.join(output_dir, latest_subdir)
+    model_output_path = latest_subdir
     logger.debug(f"Model output path: {model_output_path}")
 
     # Find .tar.xz archive
-    archive_files = [f for f in os.listdir(model_output_path) if f.endswith(".tar.xz")]
+    archive_files = [
+        f.name for f in model_output_path.iterdir() if f.name.endswith(".tar.xz")
+    ]
     assert len(archive_files) == 1, (
         f"Expected 1 .tar.xz file, found {len(archive_files)}: {archive_files}"
     )
-    archive_path = os.path.join(model_output_path, archive_files[0])
+    archive_path = model_output_path / archive_files[0]
 
     # Open and inspect the archive
     with tarfile.open(archive_path, "r:xz") as tar:
@@ -131,21 +155,22 @@ def nn_archive_checker(extra_keys_to_check: list = []):  # noqa: B006
 
 def load_latest_nn_archive_config() -> dict:
     """Load config.json from the most recently exported NNArchive."""
-    output_dir = "shared_with_container/outputs"
-    subdirs = [
-        d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))
-    ]
+    output_dir = get_outputs_dir()
+    assert output_dir.exists(), f"Output directory `{output_dir}` does not exist"
+    subdirs = [d for d in output_dir.iterdir() if d.is_dir()]
     assert subdirs, f"No folders found in `{output_dir}`"
 
-    subdirs.sort(key=lambda d: os.path.getmtime(os.path.join(output_dir, d)))
+    subdirs.sort(key=lambda d: d.stat().st_mtime)
     latest_subdir = subdirs[-1]
-    model_output_path = os.path.join(output_dir, latest_subdir)
+    model_output_path = latest_subdir
 
-    archive_files = [f for f in os.listdir(model_output_path) if f.endswith(".tar.xz")]
+    archive_files = [
+        f.name for f in model_output_path.iterdir() if f.name.endswith(".tar.xz")
+    ]
     assert len(archive_files) == 1, (
         f"Expected 1 .tar.xz file, found {len(archive_files)}: {archive_files}"
     )
-    archive_path = os.path.join(model_output_path, archive_files[0])
+    archive_path = model_output_path / archive_files[0]
 
     with tarfile.open(archive_path, "r:xz") as tar:
         file_names = [m.name for m in tar.getmembers() if m.isfile()]

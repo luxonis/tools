@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-SAVE_FOLDER = "./weights"
+from pathlib import Path
+
+SAVE_FOLDER = str(Path(__file__).resolve().parents[1] / "weights")
 
 TEST_MODELS = [
     {"name": "yolov6nr4", "version": "v6r4"},

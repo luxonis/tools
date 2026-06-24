@@ -6,7 +6,7 @@ import subprocess
 
 import pytest
 from constants import SAVE_FOLDER
-from helper_functions import download_model, nn_archive_checker
+from helper_functions import download_model, get_tools_command, nn_archive_checker
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -38,7 +38,7 @@ def test_explicit_version(model_info: tuple[str, str]):
     if not os.path.exists(model_path):
         download_model(model_name, SAVE_FOLDER)
 
-    command = ["tools", model_path, "--version", version]
+    command = get_tools_command(model_path, "--version", version)
     if version == "yolov5":  # edge case when stride=64 is needed
         command += ["--imgsz", "320"]
     logger.debug(f"CLI command: {command}")
@@ -64,7 +64,7 @@ def test_wrong_explicit_version(version: str, expected_exit_code: int):
     if not os.path.exists(model_path):
         download_model(model_name, SAVE_FOLDER)
 
-    command = ["tools", model_path, "--version", version]
+    command = get_tools_command(model_path, "--version", version)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -83,7 +83,7 @@ def test_explicit_input_size(input_size: str):
     if not os.path.exists(model_path):
         download_model(model_name, SAVE_FOLDER)
 
-    command = ["tools", model_path, "--imgsz", input_size]
+    command = get_tools_command(model_path, "--imgsz", input_size)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -112,7 +112,7 @@ def test_wrong_explicit_input_size(input_size: str):
     if not os.path.exists(model_path):
         download_model(model_name, SAVE_FOLDER)
 
-    command = ["tools", model_path, "--imgsz", input_size]
+    command = get_tools_command(model_path, "--imgsz", input_size)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -131,7 +131,7 @@ def test_explicit_encoding(encoding: str):
     if not os.path.exists(model_path):
         download_model(model_name, SAVE_FOLDER)
 
-    command = ["tools", model_path, "--encoding", encoding]
+    command = get_tools_command(model_path, "--encoding", encoding)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -157,7 +157,7 @@ def test_wrong_explicit_encoding(encoding: str):
     if not os.path.exists(model_path):
         download_model(model_name, SAVE_FOLDER)
 
-    command = ["tools", model_path, "--encoding", encoding]
+    command = get_tools_command(model_path, "--encoding", encoding)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -177,7 +177,7 @@ def test_explicit_class_names():
 
     class_names = ["a"] * 80
     class_names_str = ", ".join(class_names)
-    command = ["tools", model_path, "--class-names", class_names_str]
+    command = get_tools_command(model_path, "--class-names", class_names_str)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -204,7 +204,7 @@ def test_wrong_explicit_class_names():
         download_model(model_name, SAVE_FOLDER)
 
     class_names_str = "a"
-    command = ["tools", model_path, "--class-names", class_names_str]
+    command = get_tools_command(model_path, "--class-names", class_names_str)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(
@@ -222,7 +222,7 @@ def test_explicit_version_detection():
     if not os.path.exists(model_path):
         download_model(model_name, SAVE_FOLDER)
 
-    command = ["tools", model_path]
+    command = get_tools_command(model_path)
     logger.debug(f"CLI command: {command}")
 
     result = subprocess.run(

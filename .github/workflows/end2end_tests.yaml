@@ -48,7 +48,7 @@ jobs:
         pip install -e .[dev]
 
     - name: Run tests
-      run: pytest tests/test_end2end.py --download-weights --delete-weights-now -s -v
+      run: pytest -n 2 tests/test_end2end.py --download-weights -s -v
 
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
@@ -59,4 +59,4 @@ jobs:
 
     - name: Run private model tests
       if: github.event.pull_request.head.repo.full_name == github.repository
-      run: pytest tests/test_end2end.py::test_private_model_conversion --test-private --delete-weights-now -s -v
+      run: pytest -n 2 tests/test_end2end.py::test_private_model_conversion --test-private -s -v
