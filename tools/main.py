@@ -170,24 +170,36 @@ def convert(
         else:
             class_names_list = class_names
 
-        config = Config.get_config(
-            {
-                "model": model,
-                "imgsz": imgsz_list,
-                "encoding": encoding,
-                "use_rvc2": use_rvc2,
-                "class_names": class_names_list,
-                "output_remote_url": output_remote_url,
-                "put_file_plugin": put_file_plugin,
-            }
-        )
+        try:
+            config = Config.get_config(
+                {
+                    "model": model,
+                    "imgsz": imgsz_list,
+                    "encoding": encoding,
+                    "use_rvc2": use_rvc2,
+                    "class_names": class_names_list,
+                    "output_remote_url": output_remote_url,
+                    "put_file_plugin": put_file_plugin,
+                }
+            )
+        except Exception as e:
+            logger.error(f"Invalid configuration: {e}")
+            raise SystemExit(1) from e
         exporter_imgsz = cast(tuple[int, int], tuple(config.imgsz))
 
         phase = "path_resolution"
-        model_path = resolve_path(config.model, MISC_DIR)
+        try:
+            model_path = resolve_path(config.model, MISC_DIR)
+        except Exception as e:
+            logger.error(f"Error resolving model path: {e}")
+            raise SystemExit(1) from e
         if version is None:
             phase = "version_detection"
-            version = detect_version(str(model_path))
+            try:
+                version = detect_version(str(model_path))
+            except Exception as e:
+                logger.error(f"Error detecting model version: {e}")
+                raise SystemExit(3) from e
             if version not in YOLO_VERSIONS:
                 logger.error("Unrecognized model version.")
                 raise SystemExit(3) from None
