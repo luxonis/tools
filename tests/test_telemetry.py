@@ -7,6 +7,7 @@ from types import ModuleType
 import pytest
 
 import tools.main as main_module
+import tools.utils.telemetry as telemetry_module
 from tools.utils.config import Config
 from tools.utils.constants import Encoding
 from tools.utils.telemetry import (
@@ -15,6 +16,7 @@ from tools.utils.telemetry import (
     RESULT_EVENT,
     build_conversion_summary,
     command_failure_reason_from_state,
+    get_tools_version,
     result_failure_reason_from_state,
 )
 from tools.version_detection import (
@@ -98,6 +100,25 @@ def test_build_conversion_summary_matches_spec_shape() -> None:
         "remote_upload_requested": True,
         "upload_plugin_override_provided": True,
     }
+
+
+def test_get_tools_version_prefers_installed_distribution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(telemetry_module, "version", lambda _name: "9.9.9")
+
+    assert get_tools_version() == "9.9.9"
+
+
+def test_get_tools_version_returns_none_when_metadata_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _raise_package_not_found(_name: str) -> str:
+        raise telemetry_module.PackageNotFoundError
+
+    monkeypatch.setattr(telemetry_module, "version", _raise_package_not_found)
+
+    assert get_tools_version() is None
 
 
 def test_convert_emits_only_command_event_when_validation_fails(

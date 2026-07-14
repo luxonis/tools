@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextvars
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Optional
 from uuid import uuid4
 
@@ -12,7 +13,6 @@ from luxonis_ml.telemetry import (
     system_context_provider,
 )
 
-from tools import __version__
 from tools.utils.config import Config
 from tools.version_detection import (
     GOLD_YOLO_CONVERSION,
@@ -92,10 +92,20 @@ def get_component_telemetry() -> Telemetry:
     return get_or_init(
         "tools",
         source_component="tools-cli",
-        library_version=__version__,
+        library_version=get_tools_version(),
         config=TelemetryConfig.from_environ(defaults=TOOLS_TELEMETRY_DEFAULTS),
         system_context_providers=[system_context_provider],
     )
+
+
+def get_tools_version() -> str | None:
+    """Return the installed package version if available."""
+    try:
+        return version("tools")
+    except PackageNotFoundError:
+        return None
+    except Exception:
+        return None
 
 
 def get_exporter_family(version: str) -> str:
