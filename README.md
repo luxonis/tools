@@ -1,7 +1,5 @@
 # Tools-CLI
 
-t
-
 > \[!NOTE\]\
 > This is the latest version of tools CLI. If you are looking for the tools web application, please refer to the [web-app](https://github.com/luxonis/tools/tree/web-app) branch.
 
