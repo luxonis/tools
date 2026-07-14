@@ -6,6 +6,8 @@ import pytest
 
 logger = logging.getLogger()
 
+os.environ.setdefault("LUXONIS_TELEMETRY_ENABLED", "false")
+
 
 def pytest_addoption(parser):
     parser.addoption(
