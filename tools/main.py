@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import Optional, cast
+import time
+from typing import Any, Optional, cast
 
 from cyclopts import App, Parameter
 from loguru import logger
@@ -14,6 +15,22 @@ from tools.utils import (
     upload_file_to_remote,
 )
 from tools.utils.constants import MISC_DIR, Encoding
+from tools.utils.telemetry import (
+    COMMAND_EVENT,
+    CONFIGURED_EVENT,
+    RESULT_EVENT,
+    build_command_properties,
+    build_conversion_result_properties,
+    build_conversion_summary,
+    build_flow_properties,
+    command_failure_reason_from_state,
+    command_result_from_exception,
+    get_component_telemetry,
+    get_exporter_family,
+    reset_conversion_run,
+    result_failure_reason_from_state,
+    start_conversion_run,
+)
 from tools.version_detection import (
     GOLD_YOLO_CONVERSION,
     YOLOV5_CONVERSION,
@@ -116,138 +133,244 @@ def convert(
         SystemExit: Exits with a non-zero status when validation, exporter
             creation, export, or archive generation fails.
     """
-    if version is not None and version not in YOLO_VERSIONS:
-        logger.error("Wrong YOLO version selected!")
-        raise SystemExit(1) from None
+    command_start = time.monotonic()
+    telemetry = get_component_telemetry()
+    conversion_run_id, conversion_run_token = start_conversion_run()
+    version_source = "user_provided" if version is not None else "auto_detected"
+    conversion_summary: dict[str, Any] | None = None
+    onnx_export_succeeded = False
+    nn_archive_export_succeeded = False
+    remote_upload_attempted = False
+    remote_upload_succeeded: bool | None = None
+    phase = "validation"
+    caught_exc: BaseException | None = None
 
     try:
-        imgsz_list = (
-            list(map(int, imgsz.split(" "))) if " " in imgsz else [int(imgsz)] * 2
-        )
-    except ValueError as e:
-        logger.error('Invalid image size format. Must be "width height" or "size".')
-        raise SystemExit(2) from e
+        if version is not None and version not in YOLO_VERSIONS:
+            logger.error("Wrong YOLO version selected!")
+            raise SystemExit(1) from None
 
-    if class_names:
-        class_names_list = [class_name.strip() for class_name in class_names.split(",")]
-        logger.info(f"Class names: {class_names_list}")
-    else:
-        class_names_list = class_names
-
-    config = Config.get_config(
-        {
-            "model": model,
-            "imgsz": imgsz_list,
-            "encoding": encoding,
-            "use_rvc2": use_rvc2,
-            "class_names": class_names_list,
-            "output_remote_url": output_remote_url,
-            "put_file_plugin": put_file_plugin,
-        }
-    )
-    exporter_imgsz = cast(tuple[int, int], tuple(config.imgsz))
-
-    # Resolve model path
-    model_path = resolve_path(config.model, MISC_DIR)
-    if version is None:
-        version = detect_version(str(model_path))
-        version_note = (
-            "(This is an anchor-free version of the YOLOv5 model obtained by a more recent version of Ultralytics. Therefore, YOLOv8 conversion will be used instead of the standard YOLOv5 conversion)"
-            if version == YOLOV5U_CONVERSION
-            else ""
-        )
-        logger.info(f"Detected version: {version} {version_note}")
-
-    try:
-        # Create exporter
-        logger.info("Loading model...")
-        if version == YOLOV5_CONVERSION:
-            from tools.yolo.yolov5_exporter import YoloV5Exporter
-
-            exporter = YoloV5Exporter(str(model_path), exporter_imgsz, config.use_rvc2)
-        elif version == YOLOV6R1_CONVERSION:
-            from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
-
-            exporter = YoloV6R1Exporter(
-                str(model_path), exporter_imgsz, config.use_rvc2
+        try:
+            imgsz_list = (
+                list(map(int, imgsz.split(" "))) if " " in imgsz else [int(imgsz)] * 2
             )
-        elif version == YOLOV6R3_CONVERSION:
-            from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
+        except ValueError as e:
+            logger.error('Invalid image size format. Must be "width height" or "size".')
+            raise SystemExit(2) from e
 
-            exporter = YoloV6R3Exporter(
-                str(model_path), exporter_imgsz, config.use_rvc2
-            )
-        elif version == GOLD_YOLO_CONVERSION:
-            from tools.yolov6r3.gold_yolo_exporter import GoldYoloExporter
-
-            exporter = GoldYoloExporter(
-                str(model_path), exporter_imgsz, config.use_rvc2
-            )
-        elif version == YOLOV6R4_CONVERSION:
-            from tools.yolo.yolov6_exporter import YoloV6R4Exporter
-
-            exporter = YoloV6R4Exporter(
-                str(model_path), exporter_imgsz, config.use_rvc2
-            )
-        elif version == YOLOV7_CONVERSION:
-            from tools.yolov7.yolov7_exporter import YoloV7Exporter
-
-            exporter = YoloV7Exporter(str(model_path), exporter_imgsz, config.use_rvc2)
-        elif version in [
-            YOLOV5U_CONVERSION,
-            YOLOV8_CONVERSION,
-            YOLOV9_CONVERSION,
-            YOLOV11_CONVERSION,
-            YOLOV12_CONVERSION,
-            YOLOV26_NMS_CONVERSION,
-        ]:
-            from tools.yolo.yolov8_exporter import YoloV8Exporter
-
-            exporter = YoloV8Exporter(str(model_path), exporter_imgsz, config.use_rvc2)
-        elif version in [YOLOV26_CONVERSION, YOLOV26_SEM_CONVERSION]:
-            from tools.yolo.yolo26_exporter import Yolo26Exporter
-
-            exporter = Yolo26Exporter(str(model_path), exporter_imgsz, config.use_rvc2)
-        elif version == YOLOV10_CONVERSION:
-            from tools.yolo.yolov10_exporter import YoloV10Exporter
-
-            exporter = YoloV10Exporter(str(model_path), exporter_imgsz, config.use_rvc2)
+        if class_names:
+            class_names_list = [
+                class_name.strip() for class_name in class_names.split(",")
+            ]
+            logger.info(f"Class names: {class_names_list}")
         else:
-            logger.error("Unrecognized model version.")
-            raise SystemExit(3) from None
-        logger.info("Model loaded.")
-    except Exception as e:
-        logger.error(f"Error creating exporter: {e}")
-        raise SystemExit(4) from e
+            class_names_list = class_names
 
-    # Export model
-    try:
-        logger.info("Exporting model...")
-        exporter.export_onnx()
-        logger.info("Model exported.")
-    except Exception as e:
-        logger.error(f"Error exporting model: {e}")
-        raise SystemExit(5) from e
-    # Create NN archive
-    try:
-        logger.info("Creating NN archive...")
-        exporter.export_nn_archive(
-            class_names=config.class_names, encoding=config.encoding
+        config = Config.get_config(
+            {
+                "model": model,
+                "imgsz": imgsz_list,
+                "encoding": encoding,
+                "use_rvc2": use_rvc2,
+                "class_names": class_names_list,
+                "output_remote_url": output_remote_url,
+                "put_file_plugin": put_file_plugin,
+            }
         )
-        logger.info(f"NN archive created in {exporter.output_folder}.")
-    except Exception as e:
-        logger.error(f"Error creating NN archive: {e}")
-        raise SystemExit(6) from e
+        exporter_imgsz = cast(tuple[int, int], tuple(config.imgsz))
 
-    # Upload to remote
-    if config.output_remote_url:
-        archive_path = exporter.f_nn_archive
-        if archive_path is None:
-            raise RuntimeError("NN archive path is missing after archive generation.")
-        upload_file_to_remote(
-            archive_path, config.output_remote_url, config.put_file_plugin
+        phase = "path_resolution"
+        model_path = resolve_path(config.model, MISC_DIR)
+        if version is None:
+            phase = "version_detection"
+            version = detect_version(str(model_path))
+            if version not in YOLO_VERSIONS:
+                logger.error("Unrecognized model version.")
+                raise SystemExit(3) from None
+            version_note = (
+                "(This is an anchor-free version of the YOLOv5 model obtained by a more recent version of Ultralytics. Therefore, YOLOv8 conversion will be used instead of the standard YOLOv5 conversion)"
+                if version == YOLOV5U_CONVERSION
+                else ""
+            )
+            logger.info(f"Detected version: {version} {version_note}")
+
+        conversion_summary = build_conversion_summary(
+            config=config,
+            effective_version=version,
+            exporter_family=get_exporter_family(version),
+            version_source=version_source,
         )
-        logger.info(f"Uploaded NN archive to {config.output_remote_url}")
+        telemetry.capture(
+            CONFIGURED_EVENT,
+            build_flow_properties(
+                conversion_run_id,
+                "configuration_resolved",
+                conversion_summary,
+            ),
+            include_system_metadata=True,
+            distinct_id=conversion_run_id,
+        )
+        phase = "configuration_resolved"
+
+        phase = "exporter_creation"
+        try:
+            logger.info("Loading model...")
+            if version == YOLOV5_CONVERSION:
+                from tools.yolo.yolov5_exporter import YoloV5Exporter
+
+                exporter = YoloV5Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version == YOLOV6R1_CONVERSION:
+                from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
+
+                exporter = YoloV6R1Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version == YOLOV6R3_CONVERSION:
+                from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
+
+                exporter = YoloV6R3Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version == GOLD_YOLO_CONVERSION:
+                from tools.yolov6r3.gold_yolo_exporter import GoldYoloExporter
+
+                exporter = GoldYoloExporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version == YOLOV6R4_CONVERSION:
+                from tools.yolo.yolov6_exporter import YoloV6R4Exporter
+
+                exporter = YoloV6R4Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version == YOLOV7_CONVERSION:
+                from tools.yolov7.yolov7_exporter import YoloV7Exporter
+
+                exporter = YoloV7Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version in [
+                YOLOV5U_CONVERSION,
+                YOLOV8_CONVERSION,
+                YOLOV9_CONVERSION,
+                YOLOV11_CONVERSION,
+                YOLOV12_CONVERSION,
+                YOLOV26_NMS_CONVERSION,
+            ]:
+                from tools.yolo.yolov8_exporter import YoloV8Exporter
+
+                exporter = YoloV8Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version in [YOLOV26_CONVERSION, YOLOV26_SEM_CONVERSION]:
+                from tools.yolo.yolo26_exporter import Yolo26Exporter
+
+                exporter = Yolo26Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            elif version == YOLOV10_CONVERSION:
+                from tools.yolo.yolov10_exporter import YoloV10Exporter
+
+                exporter = YoloV10Exporter(
+                    str(model_path), exporter_imgsz, config.use_rvc2
+                )
+            else:
+                logger.error("Unrecognized model version.")
+                raise SystemExit(3) from None
+            logger.info("Model loaded.")
+        except Exception as e:
+            logger.error(f"Error creating exporter: {e}")
+            raise SystemExit(4) from e
+
+        try:
+            phase = "onnx_export"
+            logger.info("Exporting model...")
+            exporter.export_onnx()
+            onnx_export_succeeded = True
+            logger.info("Model exported.")
+        except Exception as e:
+            logger.error(f"Error exporting model: {e}")
+            raise SystemExit(5) from e
+
+        try:
+            phase = "nn_archive_export"
+            logger.info("Creating NN archive...")
+            exporter.export_nn_archive(
+                class_names=config.class_names, encoding=config.encoding
+            )
+            nn_archive_export_succeeded = True
+            logger.info(f"NN archive created in {exporter.output_folder}.")
+        except Exception as e:
+            logger.error(f"Error creating NN archive: {e}")
+            raise SystemExit(6) from e
+
+        if config.output_remote_url:
+            try:
+                phase = "upload"
+                remote_upload_attempted = True
+                archive_path = exporter.f_nn_archive
+                if archive_path is None:
+                    raise RuntimeError(
+                        "NN archive path is missing after archive generation."
+                    )
+                upload_file_to_remote(
+                    archive_path, config.output_remote_url, config.put_file_plugin
+                )
+                remote_upload_succeeded = True
+                logger.info(f"Uploaded NN archive to {config.output_remote_url}")
+            except Exception as e:
+                logger.error(f"Error uploading NN archive: {e}")
+                raise SystemExit(7) from e
+    except BaseException as exc:
+        caught_exc = exc
+        if remote_upload_attempted and remote_upload_succeeded is None:
+            remote_upload_succeeded = False
+        raise
+    finally:
+        duration_ms = int((time.monotonic() - command_start) * 1000)
+        result = command_result_from_exception(caught_exc)
+
+        if conversion_summary is not None:
+            telemetry.capture(
+                RESULT_EVENT,
+                build_flow_properties(
+                    conversion_run_id,
+                    "result_recorded",
+                    {
+                        **conversion_summary,
+                        **build_conversion_result_properties(
+                            result=result,
+                            duration_ms=duration_ms,
+                            onnx_export_succeeded=onnx_export_succeeded,
+                            nn_archive_export_succeeded=nn_archive_export_succeeded,
+                            remote_upload_attempted=remote_upload_attempted,
+                            remote_upload_succeeded=remote_upload_succeeded,
+                            failure_reason=result_failure_reason_from_state(
+                                phase=phase, exc=caught_exc
+                            ),
+                        ),
+                    },
+                ),
+                include_system_metadata=True,
+                distinct_id=conversion_run_id,
+            )
+
+        telemetry.capture(
+            COMMAND_EVENT,
+            build_command_properties(
+                conversion_run_id=conversion_run_id,
+                result=result,
+                duration_ms=duration_ms,
+                failure_reason=command_failure_reason_from_state(
+                    phase=phase, exc=caught_exc
+                ),
+            ),
+            include_system_metadata=True,
+            distinct_id=conversion_run_id,
+        )
+        reset_conversion_run(conversion_run_token)
 
 
 if __name__ == "__main__":
