@@ -193,6 +193,7 @@ def convert(
         except Exception as e:
             logger.error(f"Error resolving model path: {e}")
             raise SystemExit(1) from e
+
         if version is None:
             phase = "version_detection"
             try:
