@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 
 def make_anchors(feats, strides, grid_cell_offset=0.5):
-    """Generate anchors from features."""
+    """Generate anchor points and stride tensors from feature maps."""
     anchor_points, stride_tensor = [], []
     assert feats is not None
     dtype, device = feats[0].dtype, feats[0].device
@@ -87,8 +87,7 @@ class DetectV7(nn.Module):
 
 
 class DetectV6R1(nn.Module):
-    """Efficient Decoupled Head With hardware-aware degisn, the decoupled head is
-    optimized with hybridchannels methods."""
+    """Wrap the YOLOv6 R1 detection head for export-time inference."""
 
     # def __init__(self, num_classes=80, anchors=1, num_layers=3, inplace=True, head_layers=None, use_dfl=True, reg_max=16):  # detection layer
     def __init__(self, old_detect):  # detection layer
@@ -130,8 +129,7 @@ class DetectV6R1(nn.Module):
 
 
 class DetectV6R3(nn.Module):
-    """Efficient Decoupled Head for YOLOv6 R2&R3 With hardware-aware degisn, the
-    decoupled head is optimized with hybridchannels methods."""
+    """Wrap the YOLOv6 R2/R3 detection head for export-time inference."""
 
     def __init__(self, old_detect, use_rvc2: bool):  # detection layer
         super().__init__()
@@ -201,8 +199,7 @@ class DetectV6R3(nn.Module):
 
 
 class DetectV6R4s(nn.Module):
-    """Efficient Decoupled Head for YOLOv6 R4 nano & small With hardware-aware design,
-    the decoupled head is optimized with hybridchannels methods."""
+    """Wrap the YOLOv6 R4 nano/small detection head for export-time inference."""
 
     def __init__(self, old_detect, use_rvc2: bool):  # detection layer
         super().__init__()

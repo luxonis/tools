@@ -9,6 +9,8 @@ from tools.utils.constants import Encoding
 
 
 class Config(LuxonisConfig):
+    """Configuration for a model conversion run."""
+
     model: str = Field(..., description="Path to the model's weights")
     imgsz: List[int] = Field(
         default=[416, 416],
@@ -32,6 +34,17 @@ class Config(LuxonisConfig):
     @field_validator("imgsz", mode="before")
     @classmethod
     def check_imgsz(cls, value):
+        """Validate that the image size is positive and stride-compatible.
+
+        Args:
+            value: Candidate width and height values.
+
+        Returns:
+            The validated image size values.
+
+        Raises:
+            ValueError: If any dimension is non-positive or not divisible by 32.
+        """
         if any([v <= 0 for v in value]):
             raise ValueError("Image size values must be greater than 0.")
         if any([v % 32 != 0 for v in value]):

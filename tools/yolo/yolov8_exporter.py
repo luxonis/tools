@@ -50,13 +50,13 @@ POSE_MODE = 4
 
 
 def get_output_names(mode: int) -> List[str]:
-    """Get the output names based on the mode.
+    """Return the full exported output names for a YOLOv8 task mode.
 
     Args:
-        mode (int): Mode of the model
+        mode: Model task mode identifier.
 
     Returns:
-        List[str]: List of output names
+        The exported output tensor names for the task mode.
     """
     if mode == DETECT_MODE:
         return ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
@@ -85,13 +85,13 @@ def get_output_names(mode: int) -> List[str]:
 
 
 def get_yolo_output_names(mode: int) -> List[str]:
-    """Get the output names based on the mode.
+    """Return the core YOLO head output names for a YOLOv8 task mode.
 
     Args:
-        mode (int): Mode of the model
+        mode: Model task mode identifier.
 
     Returns:
-        List[str]: List of output names
+        The YOLO head output tensor names for the task mode.
     """
     if mode == DETECT_MODE:
         return ["output1_yolov6r2", "output2_yolov6r2", "output3_yolov6r2"]
@@ -184,7 +184,7 @@ class YoloV8Exporter(Exporter):
         self.model = model
 
     def export_stage2_multiplier(self):
-        """Export the stage 2 multiplier to ONNX format."""
+        """Export the stage-2 mask multiplier helper to ONNX format."""
         stage2_w = self.imgsz[0] // 4
         stage2_h = self.imgsz[1] // 4
         self.stage2_filename = f"mult_{str(self.imgsz[0])}x{str(self.imgsz[1])}.onnx"
@@ -200,11 +200,11 @@ class YoloV8Exporter(Exporter):
     def export_nn_archive(
         self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
     ):
-        """Export the model to NN archive format.
+        """Create an NN archive for the loaded YOLOv8-family model.
 
         Args:
-            class_list (Optional[List[str]], optional): List of class names. Defaults to None.
-            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
+            class_names: Optional replacement class names for the archive.
+            encoding: Color encoding used by the input model.
         """
         names = list(self.model.names.values())
 
@@ -265,12 +265,12 @@ class YoloV8Exporter(Exporter):
     def make_cls_nn_archive(
         self, class_list: List[str], n_classes: int, encoding: Encoding = Encoding.RGB
     ):
-        """Export the model to NN archive format.
+        """Create an NN archive for a classification model.
 
         Args:
-            class_list (List[str], optional): List of class names
-            n_classes (int): Number of classes
-            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
+            class_list: Class names included in the archive metadata.
+            n_classes: Number of classes produced by the model.
+            encoding: Color encoding used by the input model.
         """
         output_specs = self.get_output_specs()
 

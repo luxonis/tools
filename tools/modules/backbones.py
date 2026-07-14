@@ -4,10 +4,10 @@ from torch import nn
 
 
 class YoloV6BackBone(nn.Module):
-    """Backbone of YoloV6 model, it takes the model's original backbone and wraps it in
-    this universal class.
+    """Wrap a YOLOv6 backbone behind a uniform interface.
 
-    This was created for backwards compatibility with R2 models.
+    This adapter preserves the feature map layout expected by the exporter code across
+    multiple YOLOv6 backbone variants.
     """
 
     def __init__(

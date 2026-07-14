@@ -25,13 +25,16 @@ UNRECOGNIZED = "none"
 
 
 def _extract_archive(archive_path: str, extract_to: str) -> None:
-    """Extract an archive to a specified directory.
+    """Extract a supported archive into a target directory.
 
-    Supports both tar and zip formats, automatically detecting the format.
+    Tar archives are attempted first, followed by zip archives.
 
     Args:
-        archive_path (str): Path to the archive file
-        extract_to (str): Directory to extract to
+        archive_path: Path to the archive file.
+        extract_to: Directory where the archive should be extracted.
+
+    Raises:
+        ValueError: If the archive format is not supported.
     """
     # Try tar first
     if tarfile.is_tarfile(archive_path):
@@ -50,13 +53,21 @@ def _extract_archive(archive_path: str, extract_to: str) -> None:
 
 
 def detect_version(path: str, debug: bool = False) -> str:
-    """Detect the version of the model weights.
+    """Detect the YOLO variant encoded in an exported model archive.
+
+    The detector extracts the archive, inspects the extracted folder name, and
+    then scans ``data.pkl`` for architecture-specific markers.
 
     Args:
-        path (str): Path to the model weights
+        path: Path to the model archive.
+        debug: Whether to print the decoded archive payload for inspection.
 
     Returns:
-        str: The detected version
+        The detected conversion identifier, or ``UNRECOGNIZED`` when no known
+        marker matches.
+
+    Raises:
+        RuntimeError: If the archive cannot be extracted or read.
     """
     # Create a temporary directory
     temp_dir = TemporaryDirectory()

@@ -10,10 +10,17 @@ MISC_DIR: Final[Path] = SHARED_DIR / "misc"
 
 
 class Encoding(str, Enum):
+    """Supported color encodings for model inputs."""
+
     RGB = "RGB"
     BGR = "BGR"
 
     def get_dai_type(self):
+        """Return the corresponding DepthAI image type string.
+
+        Returns:
+            The DepthAI image type for the encoding.
+        """
         if self == Encoding.RGB:
             return "RGB888p"
         elif self == Encoding.BGR:
