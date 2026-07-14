@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import pathlib
 from pathlib import Path
-from typing import Optional, Union
 
 from luxonis_ml.utils import LuxonisFileSystem
 
@@ -51,7 +50,7 @@ def resolve_path(string: str, dest: Path) -> Path:
     return path
 
 
-def download_from_remote(url: str, dest: Union[Path, str], max_files: int = -1) -> Path:
+def download_from_remote(url: str, dest: Path | str, max_files: int = -1) -> Path:
     """Download a file or directory from remote bucket storage.
 
     If ``url`` points to a directory, files are downloaded under ``dest`` while
@@ -89,7 +88,7 @@ def download_from_remote(url: str, dest: Union[Path, str], max_files: int = -1) 
 
 
 def upload_file_to_remote(
-    local_path: Union[Path, str], url: str, put_file_plugin: Optional[str] = None
+    local_path: Path | str, url: str, put_file_plugin: str | None = None
 ) -> None:
     """Upload a local file to remote bucket storage.
 

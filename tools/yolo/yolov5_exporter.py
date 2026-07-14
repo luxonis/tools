@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -90,7 +89,7 @@ class YoloV5Exporter(Exporter):
     def __init__(
         self,
         model_path: str,
-        imgsz: Tuple[int, int],
+        imgsz: tuple[int, int],
         use_rvc2: bool,
     ):
         super().__init__(
@@ -154,7 +153,7 @@ class YoloV5Exporter(Exporter):
         self.num_branches = len(self.m.anchor_grid)
 
     def export_nn_archive(
-        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+        self, class_names: list[str] | None = None, encoding: Encoding = Encoding.RGB
     ):
         """Create an NN archive for the loaded YOLOv5 model.
 

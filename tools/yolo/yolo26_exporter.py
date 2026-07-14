@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import List, Optional, Tuple
 
 from loguru import logger
 
@@ -51,7 +50,7 @@ def get_yolo_output_names(mode: int = 0):
 
 
 class Yolo26Exporter(Exporter):
-    def __init__(self, model_path: str, imgsz: Tuple[int, int], use_rvc2: bool):
+    def __init__(self, model_path: str, imgsz: tuple[int, int], use_rvc2: bool):
         super().__init__(
             model_path,
             imgsz,
@@ -113,7 +112,7 @@ class Yolo26Exporter(Exporter):
         self.model = model
 
     def export_nn_archive(
-        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+        self, class_names: list[str] | None = None, encoding: Encoding = Encoding.RGB
     ):
         names = list(self.model.names.values())
 
