@@ -19,7 +19,7 @@ from tools.utils.constants import OUTPUTS_DIR, Encoding
 
 
 class Exporter:
-    """Exporter class to export models to ONNX and NN archive formats."""
+    """Base exporter for ONNX and NN archive generation."""
 
     def __init__(
         self,
@@ -30,15 +30,16 @@ class Exporter:
         output_names: List[str] = None,
         all_output_names: Optional[List[str]] = None,
     ):
-        """Initialize the Exporter class.
+        """Initialize the exporter state and output paths.
 
         Args:
-            model_path (str): Path to the model's weights
-            imgsz (Tuple[int, int]): Image size [width, height]
-            use_rvc2 (bool): Whether to use RVC2
-            subtype (str): Subtype of the model
-            output_names (List[str]): List of output names. Defaults to ["output"].
-            all_output_names (Optional[List[str]]): List of all output names. Defaults to None.
+            model_path: Path to the model weights.
+            imgsz: Input image size as ``(width, height)``.
+            use_rvc2: Whether the target platform is RVC2.
+            subtype: Model subtype identifier used in archive metadata.
+            output_names: Primary output tensor names.
+            all_output_names: Complete output tensor names. When omitted,
+                ``output_names`` is reused.
         """
         # Set up variables
         self.model_path = model_path
@@ -67,7 +68,7 @@ class Exporter:
         """Export the model to ONNX format.
 
         Returns:
-            Path: Path to the exported ONNX model
+            Path to the exported ONNX model.
         """
         self.f_onnx = (self.output_folder / f"{self.model_name}.onnx").resolve()
         im = torch.zeros(1, self.number_of_channels, *self.imgsz[::-1])
@@ -116,7 +117,14 @@ class Exporter:
         return None
 
     def get_output_specs(self) -> Dict[str, Dict[str, Any]]:
-        """Collect output shape and layout for all ONNX outputs by name."""
+        """Collect output shape and layout metadata for all ONNX outputs.
+
+        Returns:
+            A mapping from output name to output shape and inferred layout.
+
+        Raises:
+            RuntimeError: If the ONNX model has not been exported yet.
+        """
         if self.f_onnx is None:
             raise RuntimeError("ONNX must be exported before reading output specs.")
 
@@ -157,23 +165,23 @@ class Exporter:
         output_kwargs: Optional[dict] = None,
         encoding: Encoding = Encoding.RGB,
     ):
-        """Export the model to NN archive format.
+        """Create an NN archive for a detection-style model.
 
         Args:
-            class_list (List[str], optional): List of class names
-            n_classes (int): Number of classes
-            iou_threshold (float): Intersection over Union threshold
-            conf_threshold (float): Confidence threshold
-            max_det (int): Maximum number of detections
-            parser (str): Parser type, defaults to "YOLO"
-            2stage_executable_path (Optional[str], optional): Path to the executables. Defaults to None.
-            postprocessor_path (Optional[str], optional): Path to the postprocessor. Defaults to None.
-            n_prototypes (Optional[int], optional): Number of prototypes. Defaults to None.
-            n_keypoints (Optional[int], optional): Number of keypoints. Defaults to None.
-            is_softmax (Optional[bool], optional): Whether to use softmax. Defaults to None.
-            anchors (Optional[List[List[List[float]]]], optional): Anchors. Defaults to None.
-            output_kwargs (Optional[dict], optional): Output keyword arguments. Defaults to None.
-            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
+            class_list: Class names included in the archive metadata.
+            n_classes: Number of classes produced by the model.
+            iou_threshold: Intersection-over-union threshold for postprocessing.
+            conf_threshold: Confidence threshold for postprocessing.
+            max_det: Maximum number of detections per inference.
+            parser: Parser name used in the archive head metadata.
+            stage2_executable_path: Optional path to a second-stage executable.
+            postprocessor_path: Optional path to a postprocessor asset.
+            n_prototypes: Optional number of segmentation prototypes.
+            n_keypoints: Optional number of pose keypoints.
+            is_softmax: Whether the model outputs should be treated as softmaxed.
+            anchors: Optional anchor definitions for the detection head.
+            output_kwargs: Additional output metadata forwarded to the head.
+            encoding: Color encoding used by the input model.
         """
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
         if stage2_executable_path is not None:
@@ -251,13 +259,13 @@ class Exporter:
         is_softmax: bool = False,
         encoding: Encoding = Encoding.RGB,
     ):
-        """Export the semantic segmentation model to NN archive format.
+        """Create an NN archive for a semantic segmentation model.
 
         Args:
-            class_list (List[str]): List of class names
-            n_classes (int): Number of classes
-            is_softmax (bool): Whether the model output is softmaxed. Defaults to False.
-            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
+            class_list: Class names included in the archive metadata.
+            n_classes: Number of classes produced by the model.
+            is_softmax: Whether the model output is already softmaxed.
+            encoding: Color encoding used by the input model.
         """
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
         output_specs = self.get_output_specs()
@@ -314,11 +322,11 @@ class Exporter:
     def export_nn_archive(
         self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
     ):
-        """Export the model to NN archive format.
+        """Create an NN archive for the currently loaded model.
 
         Args:
-            class_list (Optional[List[str]], optional): List of class names. Defaults to None.
-            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
+            class_names: Optional replacement class names for the archive.
+            encoding: Color encoding used by the input model.
         """
         nc = self.model.detect.nc
         # If class names are provided, use them

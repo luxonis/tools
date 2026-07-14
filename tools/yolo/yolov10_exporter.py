@@ -75,11 +75,11 @@ class YoloV10Exporter(Exporter):
     def export_nn_archive(
         self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
     ):
-        """Export the model to NN archive format.
+        """Create an NN archive for the loaded YOLOv10 model.
 
         Args:
-            class_list (Optional[List[str]], optional): List of class names. Defaults to None.
-            encoding (Encoding): Color encoding used in the input model. Defaults to RGB.
+            class_names: Optional replacement class names for the archive.
+            encoding: Color encoding used by the input model.
         """
         names = list(self.model.names.values())
 

@@ -11,6 +11,11 @@ from tools.utils.constants import SHARED_DIR
 
 
 def patch_pathlib_for_cross_platform():
+    """Patch ``pathlib`` path classes for cross-platform pickle loading.
+
+    This allows objects pickled on Windows to be loaded on POSIX systems and vice versa
+    by aliasing the platform-specific path implementation.
+    """
     if os.name == "nt":  # Windows
         pathlib.PosixPath = pathlib.WindowsPath
     else:  # Linux macOS and WSL
@@ -18,7 +23,22 @@ def patch_pathlib_for_cross_platform():
 
 
 def resolve_path(string: str, dest: Path) -> Path:
-    """Downloads the file from remote or returns the path otherwise."""
+    """Resolve a local or remote model path to an existing local file.
+
+    Remote paths are downloaded into ``dest``. Local paths are used directly.
+    If the path is relative and does not exist, ``SHARED_DIR`` is used as a
+    fallback root.
+
+    Args:
+        string: Local path or remote URI.
+        dest: Directory used for remote downloads.
+
+    Returns:
+        A local path that exists on disk.
+
+    Raises:
+        ValueError: If the resolved path does not exist.
+    """
     protocol = get_protocol(string)
     if protocol != "file":
         path = download_from_remote(string, dest)
@@ -32,9 +52,20 @@ def resolve_path(string: str, dest: Path) -> Path:
 
 
 def download_from_remote(url: str, dest: Union[Path, str], max_files: int = -1) -> Path:
-    """Downloads file(s) from remote bucket storage.
+    """Download a file or directory from remote bucket storage.
 
-    It could be single file, entire direcory, or `max_files` within a directory
+    If ``url`` points to a directory, files are downloaded under ``dest`` while
+    preserving the remote subpath. When ``max_files`` is set, only that many
+    files are fetched from the directory walk.
+
+    Args:
+        url: Remote filesystem URL.
+        dest: Local destination directory.
+        max_files: Maximum number of files to download from a directory. Use
+            ``-1`` to download all files.
+
+    Returns:
+        The local path to the downloaded file or directory root.
     """
 
     absolute_path, remote_path = LuxonisFileSystem.split_full_path(url)
@@ -60,7 +91,13 @@ def download_from_remote(url: str, dest: Union[Path, str], max_files: int = -1) 
 def upload_file_to_remote(
     local_path: Union[Path, str], url: str, put_file_plugin: Optional[str] = None
 ) -> None:
-    """Uploads a file to remote bucket storage."""
+    """Upload a local file to remote bucket storage.
+
+    Args:
+        local_path: Path to the local file.
+        url: Remote destination URL.
+        put_file_plugin: Optional filesystem plugin override used for upload.
+    """
 
     absolute_path, remote_path = LuxonisFileSystem.split_full_path(url)
     fs = LuxonisFileSystem(absolute_path, put_file_plugin=put_file_plugin)
@@ -69,6 +106,13 @@ def upload_file_to_remote(
 
 
 def get_protocol(url: str) -> str:
-    """Returns LuxonisFileSystem protocol."""
+    """Return the filesystem protocol for a URL.
+
+    Args:
+        url: Local path or remote filesystem URL.
+
+    Returns:
+        The resolved filesystem protocol.
+    """
 
     return LuxonisFileSystem.get_protocol(url)
