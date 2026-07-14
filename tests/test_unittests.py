@@ -123,7 +123,7 @@ def test_wrong_explicit_input_size(input_size: str):
     )
 
 
-@pytest.mark.parametrize("encoding", ["RGB", "BGR"])
+@pytest.mark.parametrize("encoding", ["RGB", "BGR", "rgb", "bgr"])
 def test_explicit_encoding(encoding: str):
     """Tests setting explicit encoding."""
     model_name = "yolov8n"
@@ -143,13 +143,13 @@ def test_explicit_encoding(encoding: str):
     extra_keys_to_check = [
         (
             ["model", "inputs", 0, "preprocessing", "dai_type"],
-            "RGB888p" if encoding == "RGB" else "BGR888p",
+            "RGB888p" if encoding.lower() == "rgb" else "BGR888p",
         )
     ]
     nn_archive_checker(extra_keys_to_check=extra_keys_to_check)
 
 
-@pytest.mark.parametrize("encoding", ["rgb", "gray", "a"])
+@pytest.mark.parametrize("encoding", ["gray", "a"])
 def test_wrong_explicit_encoding(encoding: str):
     """Tests setting wrong explicit encoding."""
     model_name = "yolov8n"
