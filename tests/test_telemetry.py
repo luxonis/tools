@@ -287,6 +287,7 @@ def test_convert_emits_configured_result_and_command_events_on_success(
     main_module.convert(
         "weights.pt",
         version=YOLOV8_CONVERSION,
+        imgsz=" 416\t416 ",
         output_remote_url="s3://bucket/output",
         put_file_plugin="custom-fs",
         class_names="person,car",

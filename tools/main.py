@@ -151,9 +151,13 @@ def convert(
             raise SystemExit(1) from None
 
         try:
-            imgsz_list = (
-                list(map(int, imgsz.split(" "))) if " " in imgsz else [int(imgsz)] * 2
-            )
+            imgsz_parts = imgsz.split()
+            if len(imgsz_parts) == 1:
+                imgsz_list = [int(imgsz_parts[0])] * 2
+            elif len(imgsz_parts) == 2:
+                imgsz_list = list(map(int, imgsz_parts))
+            else:
+                raise ValueError("Image size must have one or two dimensions.")
         except ValueError as e:
             logger.error('Invalid image size format. Must be "width height" or "size".')
             raise SystemExit(2) from e
