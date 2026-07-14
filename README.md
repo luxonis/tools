@@ -43,7 +43,7 @@ tools yolov6nr4.pt --imgsz "416"
 
 ### Using Docker or Docker Compose
 
-This option requires you to have Docker installed on your device. Additionally, to export a local model, please put it inside a `shared-component/models/` folder in the root folder of the project.
+This option requires you to have Docker installed on your device. Additionally, to export a local model, please put it inside a `shared_with_container/models/` folder in the root folder of the project.
 
 #### Using Docker
 
@@ -63,38 +63,41 @@ docker compose build
 docker compose run tools_cli shared_with_container/models/yolov6nr4.pt
 ```
 
-The output files are going to be in `shared-component/output` folder.
+The output files are going to be in the `shared_with_container/outputs/` folder.
 
 <a name="arguments"></a>
 
 ## ⚙️ Arguments
 
 ```
+Usage: tools [OPTIONS] MODEL
 
- Usage: tools [OPTIONS] MODEL
+Tools CLI
 
-╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ *    model      TEXT  Path to the model file.                                                                                                                               │
-│                       [default: None]                                                                                                                                       │
-│                       [required]                                                                                                                                            │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --imgsz                                 TEXT       Input image size in width height string format or size format where 'size' will be used for both width and height.       │
-│                                                    [default: 416 416]                                                                                                       │
-│ --version                               TEXT       YOLO version (e.g. "yolov8"). If None, the toolkit will run an automatic version detector.                               │
-│                                                    [default: None]                                                                                                          │
-│ --encoding                              [RGB|BGR]  Color encoding used in the input model. Must be RGB or BGR.                                                              │
-│                                                    [default: RGB]                                                                                                           │
-│ --use-rvc2             --no-use-rvc2               Whether the target platform is RVC2 or RVC3.                                                                             │
-│                                                    [default: use-rvc2]                                                                                                      │
-│ --class-names                           TEXT       A list of class names the model is capable of recognizing (e.g. "person, bicycle, car").                                 │
-│                                                    [default: None]                                                                                                          │
-│ --output-remote-url                     TEXT       An URL to upload the output to.                                                                                          │
-│                                                    [default: None]                                                                                                          │
-│ --put-file-plugin                       TEXT       The name of a registered function under the PUT_FILE_REGISTRY.                                                           │
-│                                                    [default: None]                                                                                                          │
-│ --help                                             Show this message and exit.                                                                                              │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ --help (-h)  Display this message and exit.                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│ *  MODEL  Path or remote URI to the model file to convert. [required]        │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Parameters ─────────────────────────────────────────────────────────────────╮
+│ --imgsz                   Input image size as either "width height" or a     │
+│                           single "size" value applied to both dimensions.    │
+│                           [default: 416 416]                                 │
+│ --version                 YOLO variant to force, such as "yolov8". When      │
+│                           omitted, the command runs automatic version        │
+│                           detection. [default: None]                         │
+│ --encoding                Color encoding used by the input model. Must be    │
+│                           RGB or BGR. [choices: rgb, bgr] [default: rgb]     │
+│ --use-rvc2 --no-use-rvc2  Whether to target RVC2 instead of RVC3. [default:  │
+│                           True]                                              │
+│ --class-names             Comma-separated class names recognized by the      │
+│                           model. [default: None]                             │
+│ --output-remote-url       Remote destination URL for uploading the generated │
+│                           NN archive. [default: None]                        │
+│ --put-file-plugin         Name of a function registered in PUT_FILE_REGISTRY │
+│                           for uploads. [default: None]                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
 
 ```
 

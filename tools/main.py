@@ -57,7 +57,7 @@ YOLO_VERSIONS = [
 ]
 
 
-@app.command()
+@app.default
 def convert(
     model: Annotated[str, Parameter()],
     /,
