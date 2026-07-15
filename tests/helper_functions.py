@@ -6,6 +6,7 @@ import logging
 import os
 import tarfile
 from pathlib import Path
+from typing import Optional
 
 import requests
 from constants import MODEL_TYPE2URL
@@ -47,9 +48,13 @@ def download_private_model(model_name: str, filename: str, folder: str) -> str:
     return str(final_path)
 
 
-def nn_archive_checker(extra_keys_to_check: list = []):  # noqa: B006
+def nn_archive_checker(
+    extra_keys_to_check: Optional[list] = None,
+    output_dir: str = "shared_with_container/outputs",
+):
     """Tests the content of the exported NNArchive."""
-    output_dir = "shared_with_container/outputs"
+    if extra_keys_to_check is None:
+        extra_keys_to_check = []
     subdirs = [
         d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))
     ]

@@ -1,6 +1,6 @@
 import logging
-import os
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -68,21 +68,42 @@ def test_config(pytestconfig):
     }
 
 
+@pytest.fixture(scope="session")
+def test_workspace(tmp_path_factory, request) -> Path:
+    """Create one isolated conversion workspace per pytest worker."""
+    worker_id = getattr(request.config, "workerinput", {}).get("workerid", "master")
+    workspace = tmp_path_factory.mktemp(f"tools-tests-{worker_id}")
+    (workspace / "weights").mkdir(exist_ok=True)
+    return workspace
+
+
+def _artifact_path(request: pytest.FixtureRequest, name: str) -> Path:
+    """Resolve cleanup paths without changing E2E behavior."""
+    if "test_workspace" in request.fixturenames:
+        workspace = request.getfixturevalue("test_workspace")
+        return Path(workspace) / name
+
+    return Path(name)
+
+
 @pytest.fixture(scope="function", autouse=True)
-def cleanup_output_after_tests(test_config):
+def cleanup_output_after_tests(test_config, request):
     yield  # Tests run here
     if test_config["delete_output"]:
-        folder_to_delete = "shared_with_container"
-        if os.path.exists(folder_to_delete):
+        folder_to_delete = _artifact_path(
+            request,
+            "shared_with_container",
+        )
+        if folder_to_delete.exists():
             shutil.rmtree(folder_to_delete)
             logger.info(f"Removed test artifacts from {folder_to_delete}")
 
 
 @pytest.fixture(scope="function", autouse=True)
-def cleanup_weights_after_tests(test_config):
+def cleanup_weights_after_tests(test_config, request):
     yield  # Tests run here
     if test_config["delete_weights_now"]:
-        folder_to_delete = "weights"
-        if os.path.exists(folder_to_delete):
+        folder_to_delete = _artifact_path(request, "weights")
+        if folder_to_delete.exists():
             shutil.rmtree(folder_to_delete)
             logger.info(f"Removed test artifacts from {folder_to_delete}")
