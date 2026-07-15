@@ -18,7 +18,7 @@ Unit tests download the preset weights from original repositories and check if t
 
 Here is an example of the call to run:
 
-```
+```bash
 pytest tests/test_unittests.py -n 2 --dist load --download-weights --log-cli-level=INFO --log-file=out.log --log-file-level=DEBUG
 ```
 
