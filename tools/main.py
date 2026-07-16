@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 from cyclopts import App, Parameter
 from loguru import logger
 from luxonis_ml.utils import setup_logging
 from typing_extensions import Annotated
 
+from tools.conversion_registry import (
+    create_exporter,
+    get_exporter_family,
+    is_supported_version,
+)
 from tools.utils import (
     Config,
     resolve_path,
@@ -16,62 +21,30 @@ from tools.utils import (
 )
 from tools.utils.constants import MISC_DIR, Encoding
 from tools.utils.telemetry import (
-    COMMAND_EVENT,
-    CONFIGURED_EVENT,
-    RESULT_EVENT,
+    ConversionSummaryProperties,
+    ExitCode,
+    Phase,
+    VersionSource,
     build_command_properties,
     build_conversion_result_properties,
     build_conversion_summary,
-    build_flow_properties,
-    command_failure_reason_from_state,
+    capture_command_event,
+    capture_conversion_configured,
+    capture_conversion_result,
     command_result_from_exception,
+    failure_reason_from_state,
     get_component_telemetry,
-    get_exporter_family,
     reset_conversion_run,
-    result_failure_reason_from_state,
     start_conversion_run,
 )
 from tools.version_detection import (
-    GOLD_YOLO_CONVERSION,
-    YOLOV5_CONVERSION,
     YOLOV5U_CONVERSION,
-    YOLOV6R1_CONVERSION,
-    YOLOV6R3_CONVERSION,
-    YOLOV6R4_CONVERSION,
-    YOLOV7_CONVERSION,
-    YOLOV8_CONVERSION,
-    YOLOV9_CONVERSION,
-    YOLOV10_CONVERSION,
-    YOLOV11_CONVERSION,
-    YOLOV12_CONVERSION,
-    YOLOV26_CONVERSION,
-    YOLOV26_NMS_CONVERSION,
-    YOLOV26_SEM_CONVERSION,
     detect_version,
 )
 
 setup_logging()
 
 app = App(help="Tools CLI", help_format="markdown", version_flags=())
-
-
-YOLO_VERSIONS = [
-    GOLD_YOLO_CONVERSION,
-    YOLOV5_CONVERSION,
-    YOLOV5U_CONVERSION,
-    YOLOV6R1_CONVERSION,
-    YOLOV6R3_CONVERSION,
-    YOLOV6R4_CONVERSION,
-    YOLOV7_CONVERSION,
-    YOLOV8_CONVERSION,
-    YOLOV9_CONVERSION,
-    YOLOV10_CONVERSION,
-    YOLOV11_CONVERSION,
-    YOLOV12_CONVERSION,
-    YOLOV26_CONVERSION,
-    YOLOV26_NMS_CONVERSION,
-    YOLOV26_SEM_CONVERSION,
-]
 
 
 @app.default
@@ -136,19 +109,23 @@ def convert(
     command_start = time.monotonic()
     telemetry = get_component_telemetry()
     conversion_run_id, conversion_run_token = start_conversion_run()
-    version_source = "user_provided" if version is not None else "auto_detected"
-    conversion_summary: dict[str, Any] | None = None
+    version_source = (
+        VersionSource.USER_PROVIDED
+        if version is not None
+        else VersionSource.AUTO_DETECTED
+    )
+    conversion_summary: ConversionSummaryProperties | None = None
     onnx_export_succeeded = False
     nn_archive_export_succeeded = False
     remote_upload_attempted = False
     remote_upload_succeeded: bool | None = None
-    phase = "validation"
+    phase = Phase.VALIDATION
     caught_exc: BaseException | None = None
 
     try:
-        if version is not None and version not in YOLO_VERSIONS:
+        if version is not None and not is_supported_version(version):
             logger.error("Wrong YOLO version selected!")
-            raise SystemExit(1) from None
+            raise SystemExit(ExitCode.VALIDATION_FAILED.value) from None
 
         try:
             imgsz_parts = imgsz.split()
@@ -160,7 +137,7 @@ def convert(
                 raise ValueError("Image size must have one or two dimensions.")
         except ValueError as e:
             logger.error('Invalid image size format. Must be "width height" or "size".')
-            raise SystemExit(2) from e
+            raise SystemExit(ExitCode.INVALID_IMAGE_SIZE.value) from e
 
         if class_names:
             class_names_list = [
@@ -184,26 +161,26 @@ def convert(
             )
         except Exception as e:
             logger.error(f"Invalid configuration: {e}")
-            raise SystemExit(1) from e
+            raise SystemExit(ExitCode.VALIDATION_FAILED.value) from e
         exporter_imgsz = cast(tuple[int, int], tuple(config.imgsz))
 
-        phase = "path_resolution"
+        phase = Phase.PATH_RESOLUTION
         try:
             model_path = resolve_path(config.model, MISC_DIR)
         except Exception as e:
             logger.error(f"Error resolving model path: {e}")
-            raise SystemExit(1) from e
+            raise SystemExit(ExitCode.PATH_RESOLUTION_FAILED.value) from e
 
         if version is None:
-            phase = "version_detection"
+            phase = Phase.VERSION_DETECTION
             try:
                 version = detect_version(str(model_path))
             except Exception as e:
                 logger.error(f"Error detecting model version: {e}")
-                raise SystemExit(3) from e
-            if version not in YOLO_VERSIONS:
+                raise SystemExit(ExitCode.VERSION_DETECTION_FAILED.value) from e
+            if not is_supported_version(version):
                 logger.error("Unrecognized model version.")
-                raise SystemExit(3) from None
+                raise SystemExit(ExitCode.UNSUPPORTED_VERSION.value) from None
             version_note = (
                 "(This is an anchor-free version of the YOLOv5 model obtained by a more recent version of Ultralytics. Therefore, YOLOv8 conversion will be used instead of the standard YOLOv5 conversion)"
                 if version == YOLOV5U_CONVERSION
@@ -211,108 +188,46 @@ def convert(
             )
             logger.info(f"Detected version: {version} {version_note}")
 
+        if version is None:
+            raise RuntimeError("Version must be resolved before telemetry capture.")
+
         conversion_summary = build_conversion_summary(
             config=config,
             effective_version=version,
             exporter_family=get_exporter_family(version),
             version_source=version_source,
         )
-        telemetry.capture(
-            CONFIGURED_EVENT,
-            build_flow_properties(
-                conversion_run_id,
-                "configuration_resolved",
-                conversion_summary,
-            ),
-            include_system_metadata=True,
-            distinct_id=conversion_run_id,
+        capture_conversion_configured(
+            telemetry,
+            conversion_run_id=conversion_run_id,
+            properties=conversion_summary,
         )
-        phase = "configuration_resolved"
-
-        phase = "exporter_creation"
+        phase = Phase.EXPORTER_CREATION
         try:
             logger.info("Loading model...")
-            if version == YOLOV5_CONVERSION:
-                from tools.yolo.yolov5_exporter import YoloV5Exporter
-
-                exporter = YoloV5Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version == YOLOV6R1_CONVERSION:
-                from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
-
-                exporter = YoloV6R1Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version == YOLOV6R3_CONVERSION:
-                from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
-
-                exporter = YoloV6R3Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version == GOLD_YOLO_CONVERSION:
-                from tools.yolov6r3.gold_yolo_exporter import GoldYoloExporter
-
-                exporter = GoldYoloExporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version == YOLOV6R4_CONVERSION:
-                from tools.yolo.yolov6_exporter import YoloV6R4Exporter
-
-                exporter = YoloV6R4Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version == YOLOV7_CONVERSION:
-                from tools.yolov7.yolov7_exporter import YoloV7Exporter
-
-                exporter = YoloV7Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version in [
-                YOLOV5U_CONVERSION,
-                YOLOV8_CONVERSION,
-                YOLOV9_CONVERSION,
-                YOLOV11_CONVERSION,
-                YOLOV12_CONVERSION,
-                YOLOV26_NMS_CONVERSION,
-            ]:
-                from tools.yolo.yolov8_exporter import YoloV8Exporter
-
-                exporter = YoloV8Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version in [YOLOV26_CONVERSION, YOLOV26_SEM_CONVERSION]:
-                from tools.yolo.yolo26_exporter import Yolo26Exporter
-
-                exporter = Yolo26Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            elif version == YOLOV10_CONVERSION:
-                from tools.yolo.yolov10_exporter import YoloV10Exporter
-
-                exporter = YoloV10Exporter(
-                    str(model_path), exporter_imgsz, config.use_rvc2
-                )
-            else:
-                logger.error("Unrecognized model version.")
-                raise SystemExit(3) from None
+            exporter = create_exporter(
+                version,
+                str(model_path),
+                exporter_imgsz,
+                config.use_rvc2,
+            )
             logger.info("Model loaded.")
         except Exception as e:
             logger.error(f"Error creating exporter: {e}")
-            raise SystemExit(4) from e
+            raise SystemExit(ExitCode.EXPORTER_CREATION_FAILED.value) from e
 
         try:
-            phase = "onnx_export"
+            phase = Phase.ONNX_EXPORT
             logger.info("Exporting model...")
             exporter.export_onnx()
             onnx_export_succeeded = True
             logger.info("Model exported.")
         except Exception as e:
             logger.error(f"Error exporting model: {e}")
-            raise SystemExit(5) from e
+            raise SystemExit(ExitCode.ONNX_EXPORT_FAILED.value) from e
 
         try:
-            phase = "nn_archive_export"
+            phase = Phase.NN_ARCHIVE_EXPORT
             logger.info("Creating NN archive...")
             exporter.export_nn_archive(
                 class_names=config.class_names, encoding=config.encoding
@@ -321,11 +236,11 @@ def convert(
             logger.info(f"NN archive created in {exporter.output_folder}.")
         except Exception as e:
             logger.error(f"Error creating NN archive: {e}")
-            raise SystemExit(6) from e
+            raise SystemExit(ExitCode.NN_ARCHIVE_EXPORT_FAILED.value) from e
 
         if config.output_remote_url:
             try:
-                phase = "upload"
+                phase = Phase.UPLOAD
                 remote_upload_attempted = True
                 archive_path = exporter.f_nn_archive
                 if archive_path is None:
@@ -339,7 +254,7 @@ def convert(
                 logger.info(f"Uploaded NN archive to {config.output_remote_url}")
             except Exception as e:
                 logger.error(f"Error uploading NN archive: {e}")
-                raise SystemExit(7) from e
+                raise SystemExit(ExitCode.UPLOAD_FAILED.value) from e
     except BaseException as exc:
         caught_exc = exc
         if remote_upload_attempted and remote_upload_succeeded is None:
@@ -350,42 +265,32 @@ def convert(
         result = command_result_from_exception(caught_exc)
 
         if conversion_summary is not None:
-            telemetry.capture(
-                RESULT_EVENT,
-                build_flow_properties(
-                    conversion_run_id,
-                    "result_recorded",
-                    {
-                        **conversion_summary,
-                        **build_conversion_result_properties(
-                            result=result,
-                            duration_ms=duration_ms,
-                            onnx_export_succeeded=onnx_export_succeeded,
-                            nn_archive_export_succeeded=nn_archive_export_succeeded,
-                            remote_upload_attempted=remote_upload_attempted,
-                            remote_upload_succeeded=remote_upload_succeeded,
-                            failure_reason=result_failure_reason_from_state(
-                                phase=phase, exc=caught_exc
-                            ),
-                        ),
-                    },
+            capture_conversion_result(
+                telemetry,
+                conversion_run_id=conversion_run_id,
+                conversion_summary=conversion_summary,
+                result_properties=build_conversion_result_properties(
+                    result=result,
+                    duration_ms=duration_ms,
+                    onnx_export_succeeded=onnx_export_succeeded,
+                    nn_archive_export_succeeded=nn_archive_export_succeeded,
+                    remote_upload_attempted=remote_upload_attempted,
+                    remote_upload_succeeded=remote_upload_succeeded,
+                    failure_reason=failure_reason_from_state(
+                        phase=phase, exc=caught_exc
+                    ),
                 ),
-                include_system_metadata=True,
-                distinct_id=conversion_run_id,
             )
 
-        telemetry.capture(
-            COMMAND_EVENT,
-            build_command_properties(
+        capture_command_event(
+            telemetry,
+            conversion_run_id=conversion_run_id,
+            properties=build_command_properties(
                 conversion_run_id=conversion_run_id,
                 result=result,
                 duration_ms=duration_ms,
-                failure_reason=command_failure_reason_from_state(
-                    phase=phase, exc=caught_exc
-                ),
+                failure_reason=failure_reason_from_state(phase=phase, exc=caught_exc),
             ),
-            include_system_metadata=True,
-            distinct_id=conversion_run_id,
         )
         reset_conversion_run(conversion_run_token)
 

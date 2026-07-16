@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import contextvars
+from enum import Enum, IntEnum
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 from uuid import uuid4
 
 from luxonis_ml.telemetry import (
@@ -12,54 +13,125 @@ from luxonis_ml.telemetry import (
     get_or_init,
     system_context_provider,
 )
+from typing_extensions import NotRequired, TypedDict
 
 from tools.utils.config import Config
-from tools.version_detection import (
-    GOLD_YOLO_CONVERSION,
-    YOLOV5_CONVERSION,
-    YOLOV5U_CONVERSION,
-    YOLOV6R1_CONVERSION,
-    YOLOV6R3_CONVERSION,
-    YOLOV6R4_CONVERSION,
-    YOLOV7_CONVERSION,
-    YOLOV8_CONVERSION,
-    YOLOV9_CONVERSION,
-    YOLOV10_CONVERSION,
-    YOLOV11_CONVERSION,
-    YOLOV12_CONVERSION,
-    YOLOV26_CONVERSION,
-    YOLOV26_NMS_CONVERSION,
-    YOLOV26_SEM_CONVERSION,
-)
 
-FLOW_NAME = "tools_conversion_lifecycle"
-COMMAND_EVENT = "tools_command_ran"
-CONFIGURED_EVENT = "tools_conversion_configured"
-RESULT_EVENT = "tools_conversion_result_recorded"
+
+class EventName(str, Enum):
+    COMMAND_RAN = "tools_command_ran"
+    CONVERSION_CONFIGURED = "tools_conversion_configured"
+    CONVERSION_RESULT_RECORDED = "tools_conversion_result_recorded"
+
+
+class FlowName(str, Enum):
+    TOOLS_CONVERSION_LIFECYCLE = "tools_conversion_lifecycle"
+
+
+class FlowStep(str, Enum):
+    CONFIGURATION_RESOLVED = "configuration_resolved"
+    RESULT_RECORDED = "result_recorded"
+
+
+class Phase(str, Enum):
+    VALIDATION = "validation"
+    PATH_RESOLUTION = "path_resolution"
+    VERSION_DETECTION = "version_detection"
+    EXPORTER_CREATION = "exporter_creation"
+    ONNX_EXPORT = "onnx_export"
+    NN_ARCHIVE_EXPORT = "nn_archive_export"
+    UPLOAD = "upload"
+
+
+class CommandName(str, Enum):
+    CONVERT = "convert"
+
+
+class CommandResult(str, Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+    INTERRUPTED = "interrupted"
+
+
+class FailureReason(str, Enum):
+    USER_INTERRUPT = "user_interrupt"
+    VALIDATION_FAILED = "validation_failed"
+    PATH_RESOLUTION_FAILED = "path_resolution_failed"
+    VERSION_DETECTION_FAILED = "version_detection_failed"
+    UNSUPPORTED_VERSION = "unsupported_version"
+    EXPORTER_CREATION_FAILED = "exporter_creation_failed"
+    ONNX_EXPORT_FAILED = "onnx_export_failed"
+    NN_ARCHIVE_EXPORT_FAILED = "nn_archive_export_failed"
+    UPLOAD_FAILED = "upload_failed"
+    UNKNOWN = "unknown"
+
+
+class VersionSource(str, Enum):
+    USER_PROVIDED = "user_provided"
+    AUTO_DETECTED = "auto_detected"
+
+
+class TargetPlatform(str, Enum):
+    RVC2 = "rvc2"
+    RVC3 = "rvc3"
+
+
+class ExitCode(IntEnum):
+    VALIDATION_FAILED = 1
+    INVALID_IMAGE_SIZE = 2
+    UNSUPPORTED_VERSION = 3
+    EXPORTER_CREATION_FAILED = 4
+    ONNX_EXPORT_FAILED = 5
+    NN_ARCHIVE_EXPORT_FAILED = 6
+    UPLOAD_FAILED = 7
+    PATH_RESOLUTION_FAILED = 8
+    VERSION_DETECTION_FAILED = 9
+
+
+class CommandProperties(TypedDict):
+    conversion_run_id: str
+    command_name: str
+    result: str
+    duration_ms: int
+    failure_reason: NotRequired[str]
+
+
+class ConversionSummaryProperties(TypedDict):
+    effective_version: str
+    exporter_family: str
+    version_source: str
+    target_platform: str
+    encoding: str
+    imgsz_width: int
+    imgsz_height: int
+    class_names_provided: bool
+    remote_upload_requested: bool
+    upload_plugin_override_provided: bool
+    class_name_count_bucket: NotRequired[str]
+
+
+class ConversionResultProperties(TypedDict):
+    result: str
+    duration_ms: int
+    onnx_export_succeeded: bool
+    nn_archive_export_succeeded: bool
+    remote_upload_attempted: bool
+    remote_upload_succeeded: NotRequired[bool]
+    failure_reason: NotRequired[str]
+
+
+class FlowProperties(TypedDict):
+    flow_name: str
+    conversion_run_id: str
+    flow_step: str
+
+
 TOOLS_TELEMETRY_DEFAULTS = TelemetryDefaults(
     enabled=True,
     backend="posthog",
     api_key="phc_ojEByaCiZZ5eigzaM43PaEVbfLfFDF5NgkXEMPabrT9a",
     endpoint="https://us.i.posthog.com",
 )
-
-EXPORTER_FAMILIES = {
-    GOLD_YOLO_CONVERSION: "goldyolo",
-    YOLOV5_CONVERSION: "yolov5",
-    YOLOV5U_CONVERSION: "yolov8",
-    YOLOV6R1_CONVERSION: "yolov6r1",
-    YOLOV6R3_CONVERSION: "yolov6r3",
-    YOLOV6R4_CONVERSION: "yolov6r4",
-    YOLOV7_CONVERSION: "yolov7",
-    YOLOV8_CONVERSION: "yolov8",
-    YOLOV9_CONVERSION: "yolov8",
-    YOLOV10_CONVERSION: "yolov10",
-    YOLOV11_CONVERSION: "yolov8",
-    YOLOV12_CONVERSION: "yolov8",
-    YOLOV26_CONVERSION: "yolo26",
-    YOLOV26_NMS_CONVERSION: "yolov8",
-    YOLOV26_SEM_CONVERSION: "yolo26",
-}
 
 _conversion_run_id: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "tools_conversion_run_id", default=None
@@ -108,25 +180,20 @@ def get_tools_version() -> str | None:
         return None
 
 
-def get_exporter_family(version: str) -> str:
-    """Return the sanitized exporter family for an effective version."""
-    return EXPORTER_FAMILIES[version]
-
-
 def build_command_properties(
     *,
     conversion_run_id: str,
-    result: str,
+    result: CommandResult,
     duration_ms: int,
-    failure_reason: str | None = None,
-) -> dict[str, Any]:
+    failure_reason: FailureReason | None = None,
+) -> CommandProperties:
     """Build sanitized command-level telemetry properties."""
     return _drop_none(
         {
             "conversion_run_id": conversion_run_id,
-            "command_name": "convert",
-            "result": result,
-            "failure_reason": failure_reason,
+            "command_name": CommandName.CONVERT.value,
+            "result": result.value,
+            "failure_reason": failure_reason.value if failure_reason else None,
             "duration_ms": duration_ms,
         }
     )
@@ -137,15 +204,19 @@ def build_conversion_summary(
     config: Config,
     effective_version: str,
     exporter_family: str,
-    version_source: str,
-) -> dict[str, Any]:
+    version_source: VersionSource,
+) -> ConversionSummaryProperties:
     """Build a sanitized conversion summary aligned with the spec."""
     return _drop_none(
         {
             "effective_version": effective_version,
             "exporter_family": exporter_family,
-            "version_source": version_source,
-            "target_platform": "rvc2" if config.use_rvc2 else "rvc3",
+            "version_source": version_source.value,
+            "target_platform": (
+                TargetPlatform.RVC2.value
+                if config.use_rvc2
+                else TargetPlatform.RVC3.value
+            ),
             "encoding": config.encoding.value.lower(),
             "imgsz_width": config.imgsz[0],
             "imgsz_height": config.imgsz[1],
@@ -158,32 +229,34 @@ def build_conversion_summary(
 
 
 def build_flow_properties(
-    conversion_run_id: str, flow_step: str, properties: dict[str, Any]
+    conversion_run_id: str,
+    flow_step: FlowStep,
+    properties: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Attach flow metadata to an event property set."""
     return {
-        "flow_name": FLOW_NAME,
+        "flow_name": FlowName.TOOLS_CONVERSION_LIFECYCLE.value,
         "conversion_run_id": conversion_run_id,
-        "flow_step": flow_step,
+        "flow_step": flow_step.value,
         **properties,
     }
 
 
 def build_conversion_result_properties(
     *,
-    result: str,
+    result: CommandResult,
     duration_ms: int,
     onnx_export_succeeded: bool,
     nn_archive_export_succeeded: bool,
     remote_upload_attempted: bool,
     remote_upload_succeeded: bool | None,
-    failure_reason: str | None = None,
-) -> dict[str, Any]:
+    failure_reason: FailureReason | None = None,
+) -> ConversionResultProperties:
     """Build sanitized conversion-result telemetry properties."""
     return _drop_none(
         {
-            "result": result,
-            "failure_reason": failure_reason,
+            "result": result.value,
+            "failure_reason": failure_reason.value if failure_reason else None,
             "duration_ms": duration_ms,
             "onnx_export_succeeded": onnx_export_succeeded,
             "nn_archive_export_succeeded": nn_archive_export_succeeded,
@@ -193,47 +266,32 @@ def build_conversion_result_properties(
     )
 
 
-def command_result_from_exception(exc: BaseException | None) -> str:
+def command_result_from_exception(exc: BaseException | None) -> CommandResult:
     """Map an exception to a coarse command result."""
     if exc is None:
-        return "success"
+        return CommandResult.SUCCESS
     code = getattr(exc, "code", None)
     if isinstance(exc, SystemExit) and code in {None, 0}:
-        return "success"
+        return CommandResult.SUCCESS
     if isinstance(exc, (KeyboardInterrupt, SystemExit)) and code in {
         None,
         130,
     }:
-        return "interrupted"
-    return "failed"
+        return CommandResult.INTERRUPTED
+    return CommandResult.FAILED
 
 
-def command_failure_reason_from_state(
+def failure_reason_from_state(
     *,
-    phase: str,
+    phase: Phase,
     exc: BaseException | None,
-) -> str | None:
-    """Map an exception/phase pair to a coarse command failure reason."""
+) -> FailureReason | None:
+    """Map an exception/phase pair to a coarse failure reason."""
     result = command_result_from_exception(exc)
-    if result == "success":
+    if result is CommandResult.SUCCESS:
         return None
-    if result == "interrupted":
-        return "user_interrupt"
-
-    return _failure_reason_from_state(phase=phase, exc=exc)
-
-
-def result_failure_reason_from_state(
-    *,
-    phase: str,
-    exc: BaseException | None,
-) -> str | None:
-    """Map an exception/phase pair to a conversion-result failure reason."""
-    result = command_result_from_exception(exc)
-    if result == "success":
-        return None
-    if result == "interrupted":
-        return "user_interrupt"
+    if result is CommandResult.INTERRUPTED:
+        return FailureReason.USER_INTERRUPT
 
     return _failure_reason_from_state(phase=phase, exc=exc)
 
@@ -254,48 +312,104 @@ def bucket_class_name_count(
     return "81_plus"
 
 
-def _drop_none(properties: dict[str, Any]) -> dict[str, Any]:
+def capture_conversion_configured(
+    telemetry: Telemetry,
+    *,
+    conversion_run_id: str,
+    properties: ConversionSummaryProperties,
+) -> None:
+    telemetry.capture(
+        EventName.CONVERSION_CONFIGURED.value,
+        build_flow_properties(
+            conversion_run_id,
+            FlowStep.CONFIGURATION_RESOLVED,
+            properties,
+        ),
+        include_system_metadata=True,
+        distinct_id=conversion_run_id,
+    )
+
+
+def capture_conversion_result(
+    telemetry: Telemetry,
+    *,
+    conversion_run_id: str,
+    conversion_summary: ConversionSummaryProperties,
+    result_properties: ConversionResultProperties,
+) -> None:
+    telemetry.capture(
+        EventName.CONVERSION_RESULT_RECORDED.value,
+        build_flow_properties(
+            conversion_run_id,
+            FlowStep.RESULT_RECORDED,
+            {
+                **conversion_summary,
+                **result_properties,
+            },
+        ),
+        include_system_metadata=True,
+        distinct_id=conversion_run_id,
+    )
+
+
+def capture_command_event(
+    telemetry: Telemetry,
+    *,
+    conversion_run_id: str,
+    properties: CommandProperties,
+) -> None:
+    telemetry.capture(
+        EventName.COMMAND_RAN.value,
+        dict(properties),
+        include_system_metadata=True,
+        distinct_id=conversion_run_id,
+    )
+
+
+def _drop_none(properties: dict[str, Any]) -> Any:
     return {key: value for key, value in properties.items() if value is not None}
 
 
 def _failure_reason_from_state(
     *,
-    phase: str,
+    phase: Phase,
     exc: BaseException | None,
-) -> str:
+) -> FailureReason:
     code = _system_exit_code(exc)
-    if code == 1:
-        return "validation_failed"
-    if code == 2:
-        return "validation_failed"
-    if code == 3:
-        return "unsupported_version"
-    if code == 4:
-        return "exporter_creation_failed"
-    if code == 5:
-        return "onnx_export_failed"
-    if code == 6:
-        return "nn_archive_export_failed"
-    if code == 7:
-        return "upload_failed"
+    if code == ExitCode.VALIDATION_FAILED.value:
+        return FailureReason.VALIDATION_FAILED
+    if code == ExitCode.INVALID_IMAGE_SIZE.value:
+        return FailureReason.VALIDATION_FAILED
+    if code == ExitCode.UNSUPPORTED_VERSION.value:
+        return FailureReason.UNSUPPORTED_VERSION
+    if code == ExitCode.EXPORTER_CREATION_FAILED.value:
+        return FailureReason.EXPORTER_CREATION_FAILED
+    if code == ExitCode.ONNX_EXPORT_FAILED.value:
+        return FailureReason.ONNX_EXPORT_FAILED
+    if code == ExitCode.NN_ARCHIVE_EXPORT_FAILED.value:
+        return FailureReason.NN_ARCHIVE_EXPORT_FAILED
+    if code == ExitCode.UPLOAD_FAILED.value:
+        return FailureReason.UPLOAD_FAILED
+    if code == ExitCode.PATH_RESOLUTION_FAILED.value:
+        return FailureReason.PATH_RESOLUTION_FAILED
+    if code == ExitCode.VERSION_DETECTION_FAILED.value:
+        return FailureReason.VERSION_DETECTION_FAILED
 
-    if phase == "validation":
-        return "validation_failed"
-    if phase == "path_resolution":
-        return "path_resolution_failed"
-    if phase == "version_detection":
-        return "version_detection_failed"
-    if phase == "configuration_resolved":
-        return "exporter_creation_failed"
-    if phase == "exporter_creation":
-        return "exporter_creation_failed"
-    if phase == "onnx_export":
-        return "onnx_export_failed"
-    if phase == "nn_archive_export":
-        return "nn_archive_export_failed"
-    if phase == "upload":
-        return "upload_failed"
-    return "unknown"
+    if phase is Phase.VALIDATION:
+        return FailureReason.VALIDATION_FAILED
+    if phase is Phase.PATH_RESOLUTION:
+        return FailureReason.PATH_RESOLUTION_FAILED
+    if phase is Phase.VERSION_DETECTION:
+        return FailureReason.VERSION_DETECTION_FAILED
+    if phase is Phase.EXPORTER_CREATION:
+        return FailureReason.EXPORTER_CREATION_FAILED
+    if phase is Phase.ONNX_EXPORT:
+        return FailureReason.ONNX_EXPORT_FAILED
+    if phase is Phase.NN_ARCHIVE_EXPORT:
+        return FailureReason.NN_ARCHIVE_EXPORT_FAILED
+    if phase is Phase.UPLOAD:
+        return FailureReason.UPLOAD_FAILED
+    return FailureReason.UNKNOWN
 
 
 def _system_exit_code(exc: BaseException | None) -> int | None:

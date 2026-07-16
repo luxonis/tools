@@ -11,13 +11,14 @@ import tools.utils.telemetry as telemetry_module
 from tools.utils.config import Config
 from tools.utils.constants import Encoding
 from tools.utils.telemetry import (
-    COMMAND_EVENT,
-    CONFIGURED_EVENT,
-    RESULT_EVENT,
+    EventName,
+    ExitCode,
+    FailureReason,
+    FlowName,
+    VersionSource,
     build_conversion_summary,
-    command_failure_reason_from_state,
+    failure_reason_from_state,
     get_tools_version,
-    result_failure_reason_from_state,
 )
 from tools.version_detection import (
     UNRECOGNIZED,
@@ -84,7 +85,7 @@ def test_build_conversion_summary_matches_spec_shape() -> None:
         config=_make_config(),
         effective_version=YOLOV8_CONVERSION,
         exporter_family="yolov8",
-        version_source="user_provided",
+        version_source=VersionSource.USER_PROVIDED,
     )
 
     assert summary == {
@@ -132,7 +133,9 @@ def test_convert_emits_only_command_event_when_validation_fails(
         main_module.convert("weights.pt", version="invalid-version")
 
     assert exc_info.value.code == 1
-    assert [event["event"] for event in telemetry.events] == [COMMAND_EVENT]
+    assert [event["event"] for event in telemetry.events] == [
+        EventName.COMMAND_RAN.value
+    ]
 
     command_properties: dict = telemetry.events[0]["properties"]  # type: ignore
     assert command_properties["conversion_run_id"] == "run-123"
@@ -166,7 +169,9 @@ def test_convert_emits_only_command_event_for_unsupported_auto_detected_version(
         main_module.convert("weights.pt")
 
     assert exc_info.value.code == 3
-    assert [event["event"] for event in telemetry.events] == [COMMAND_EVENT]
+    assert [event["event"] for event in telemetry.events] == [
+        EventName.COMMAND_RAN.value
+    ]
 
     command_properties: dict = telemetry.events[0]["properties"]  # type: ignore
     assert command_properties["result"] == "failed"
@@ -175,44 +180,67 @@ def test_convert_emits_only_command_event_for_unsupported_auto_detected_version(
 
 def test_failure_reason_mapping_distinguishes_system_exit_codes() -> None:
     assert (
-        command_failure_reason_from_state(phase="validation", exc=SystemExit(1))
-        == "validation_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.VALIDATION,
+            exc=SystemExit(ExitCode.VALIDATION_FAILED.value),
+        )
+        == FailureReason.VALIDATION_FAILED
     )
     assert (
-        command_failure_reason_from_state(phase="validation", exc=SystemExit(2))
-        == "validation_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.VALIDATION,
+            exc=SystemExit(ExitCode.INVALID_IMAGE_SIZE.value),
+        )
+        == FailureReason.VALIDATION_FAILED
     )
     assert (
-        command_failure_reason_from_state(phase="exporter_creation", exc=SystemExit(3))
-        == "unsupported_version"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.EXPORTER_CREATION,
+            exc=SystemExit(ExitCode.UNSUPPORTED_VERSION.value),
+        )
+        == FailureReason.UNSUPPORTED_VERSION
     )
     assert (
-        command_failure_reason_from_state(phase="exporter_creation", exc=SystemExit(4))
-        == "exporter_creation_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.EXPORTER_CREATION,
+            exc=SystemExit(ExitCode.EXPORTER_CREATION_FAILED.value),
+        )
+        == FailureReason.EXPORTER_CREATION_FAILED
     )
     assert (
-        command_failure_reason_from_state(phase="onnx_export", exc=SystemExit(5))
-        == "onnx_export_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.ONNX_EXPORT,
+            exc=SystemExit(ExitCode.ONNX_EXPORT_FAILED.value),
+        )
+        == FailureReason.ONNX_EXPORT_FAILED
     )
     assert (
-        command_failure_reason_from_state(phase="nn_archive_export", exc=SystemExit(6))
-        == "nn_archive_export_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.NN_ARCHIVE_EXPORT,
+            exc=SystemExit(ExitCode.NN_ARCHIVE_EXPORT_FAILED.value),
+        )
+        == FailureReason.NN_ARCHIVE_EXPORT_FAILED
     )
     assert (
-        result_failure_reason_from_state(phase="onnx_export", exc=SystemExit(5))
-        == "onnx_export_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.UPLOAD,
+            exc=SystemExit(ExitCode.UPLOAD_FAILED.value),
+        )
+        == FailureReason.UPLOAD_FAILED
     )
     assert (
-        result_failure_reason_from_state(phase="nn_archive_export", exc=SystemExit(6))
-        == "nn_archive_export_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.PATH_RESOLUTION,
+            exc=SystemExit(ExitCode.PATH_RESOLUTION_FAILED.value),
+        )
+        == FailureReason.PATH_RESOLUTION_FAILED
     )
     assert (
-        command_failure_reason_from_state(phase="upload", exc=SystemExit(7))
-        == "upload_failed"
-    )
-    assert (
-        result_failure_reason_from_state(phase="upload", exc=SystemExit(7))
-        == "upload_failed"
+        failure_reason_from_state(
+            phase=telemetry_module.Phase.VERSION_DETECTION,
+            exc=SystemExit(ExitCode.VERSION_DETECTION_FAILED.value),
+        )
+        == FailureReason.VERSION_DETECTION_FAILED
     )
 
 
@@ -246,9 +274,9 @@ def test_convert_emits_result_event_when_exporter_creation_fails(
 
     assert exc_info.value.code == 4
     assert [event["event"] for event in telemetry.events] == [
-        CONFIGURED_EVENT,
-        RESULT_EVENT,
-        COMMAND_EVENT,
+        EventName.CONVERSION_CONFIGURED.value,
+        EventName.CONVERSION_RESULT_RECORDED.value,
+        EventName.COMMAND_RAN.value,
     ]
 
     result_properties: dict = telemetry.events[1]["properties"]  # type: ignore
@@ -315,9 +343,9 @@ def test_convert_emits_configured_result_and_command_events_on_success(
     )
 
     assert [event["event"] for event in telemetry.events] == [
-        CONFIGURED_EVENT,
-        RESULT_EVENT,
-        COMMAND_EVENT,
+        EventName.CONVERSION_CONFIGURED.value,
+        EventName.CONVERSION_RESULT_RECORDED.value,
+        EventName.COMMAND_RAN.value,
     ]
     assert [event["distinct_id"] for event in telemetry.events] == [
         "run-123",
@@ -330,7 +358,9 @@ def test_convert_emits_configured_result_and_command_events_on_success(
     result_properties: dict = telemetry.events[1]["properties"]  # type: ignore
     command_properties: dict = telemetry.events[2]["properties"]  # type: ignore
 
-    assert configured_properties["flow_name"] == "tools_conversion_lifecycle"
+    assert (
+        configured_properties["flow_name"] == FlowName.TOOLS_CONVERSION_LIFECYCLE.value
+    )
     assert configured_properties["flow_step"] == "configuration_resolved"
     assert configured_properties["effective_version"] == "yolov8"
     assert configured_properties["exporter_family"] == "yolov8"
@@ -400,9 +430,9 @@ def test_convert_emits_upload_failed_result_and_command_events(
 
     assert exc_info.value.code == 7
     assert [event["event"] for event in telemetry.events] == [
-        CONFIGURED_EVENT,
-        RESULT_EVENT,
-        COMMAND_EVENT,
+        EventName.CONVERSION_CONFIGURED.value,
+        EventName.CONVERSION_RESULT_RECORDED.value,
+        EventName.COMMAND_RAN.value,
     ]
 
     result_properties: dict = telemetry.events[1]["properties"]  # type: ignore
