@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import List, Optional, Tuple
 
 import torch
 from loguru import logger
@@ -49,7 +48,7 @@ CLASSIFY_MODE = 3
 POSE_MODE = 4
 
 
-def get_output_names(mode: int) -> List[str]:
+def get_output_names(mode: int) -> list[str]:
     """Return the full exported output names for a YOLOv8 task mode.
 
     Args:
@@ -84,7 +83,7 @@ def get_output_names(mode: int) -> List[str]:
     return ["output"]
 
 
-def get_yolo_output_names(mode: int) -> List[str]:
+def get_yolo_output_names(mode: int) -> list[str]:
     """Return the core YOLO head output names for a YOLOv8 task mode.
 
     Args:
@@ -104,7 +103,7 @@ class YoloV8Exporter(Exporter):
     def __init__(
         self,
         model_path: str,
-        imgsz: Tuple[int, int],
+        imgsz: tuple[int, int],
         use_rvc2: bool,
     ):
         super().__init__(
@@ -198,7 +197,7 @@ class YoloV8Exporter(Exporter):
         )
 
     def export_nn_archive(
-        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+        self, class_names: list[str] | None = None, encoding: Encoding = Encoding.RGB
     ):
         """Create an NN archive for the loaded YOLOv8-family model.
 
@@ -263,7 +262,7 @@ class YoloV8Exporter(Exporter):
             )
 
     def make_cls_nn_archive(
-        self, class_list: List[str], n_classes: int, encoding: Encoding = Encoding.RGB
+        self, class_list: list[str], n_classes: int, encoding: Encoding = Encoding.RGB
     ):
         """Create an NN archive for a classification model.
 

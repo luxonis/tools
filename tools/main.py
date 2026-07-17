@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from typing import Optional, cast
+from typing import cast
 
 from cyclopts import App, Parameter
 from loguru import logger
@@ -57,7 +57,7 @@ def convert(
         Parameter(show_default=True),
     ] = "416 416",
     version: Annotated[
-        Optional[str],
+        str | None,
         Parameter(show_default=True),
     ] = None,
     encoding: Annotated[
@@ -69,15 +69,15 @@ def convert(
         Parameter(show_default=True),
     ] = True,
     class_names: Annotated[
-        Optional[str],
+        str | None,
         Parameter(show_default=True),
     ] = None,
     output_remote_url: Annotated[
-        Optional[str],
+        str | None,
         Parameter(show_default=True),
     ] = None,
     put_file_plugin: Annotated[
-        Optional[str],
+        str | None,
         Parameter(show_default=True),
     ] = None,
 ):

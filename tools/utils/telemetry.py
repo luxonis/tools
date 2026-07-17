@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextvars
 from enum import Enum, IntEnum
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 from uuid import uuid4
 
 from luxonis_ml.telemetry import (
@@ -297,7 +297,7 @@ def failure_reason_from_state(
 
 
 def bucket_class_name_count(
-    class_names: Optional[list[str]],
+    class_names: list[str] | None,
 ) -> str | None:
     """Return the reviewed class-name count bucket."""
     if not class_names:

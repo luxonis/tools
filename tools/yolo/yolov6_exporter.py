@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Tuple
 
 import torch
 from loguru import logger
@@ -44,7 +43,7 @@ class YoloV6R4Exporter(Exporter):
     def __init__(
         self,
         model_path: str,
-        imgsz: Tuple[int, int],
+        imgsz: tuple[int, int],
         use_rvc2: bool,
     ):
         super().__init__(

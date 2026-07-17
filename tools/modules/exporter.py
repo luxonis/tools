@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import onnx
 import onnxsim
@@ -24,11 +24,11 @@ class Exporter:
     def __init__(
         self,
         model_path: str,
-        imgsz: Tuple[int, int],
+        imgsz: tuple[int, int],
         use_rvc2: bool,
         subtype: str,
-        output_names: List[str] = None,
-        all_output_names: Optional[List[str]] = None,
+        output_names: list[str] | None = None,
+        all_output_names: list[str] | None = None,
     ):
         """Initialize the exporter state and output paths.
 
@@ -104,7 +104,7 @@ class Exporter:
         return self.f_onnx
 
     @staticmethod
-    def _infer_layout_from_shape(shape: List[Any]) -> Optional[str]:
+    def _infer_layout_from_shape(shape: list[Any]) -> str | None:
         rank = len(shape)
         if rank == 4:
             return "NCHW"
@@ -116,7 +116,7 @@ class Exporter:
             return "C"
         return None
 
-    def get_output_specs(self) -> Dict[str, Dict[str, Any]]:
+    def get_output_specs(self) -> dict[str, dict[str, Any]]:
         """Collect output shape and layout metadata for all ONNX outputs.
 
         Returns:
@@ -129,10 +129,10 @@ class Exporter:
             raise RuntimeError("ONNX must be exported before reading output specs.")
 
         model_onnx = onnx.load(self.f_onnx)
-        specs: Dict[str, Dict[str, Any]] = {}
+        specs: dict[str, dict[str, Any]] = {}
 
         for output in model_onnx.graph.output:
-            shape: List[Any] = []
+            shape: list[Any] = []
             for dim in output.type.tensor_type.shape.dim:
                 if dim.HasField("dim_value"):
                     shape.append(int(dim.dim_value))
@@ -150,19 +150,19 @@ class Exporter:
 
     def make_nn_archive(
         self,
-        class_list: List[str],
+        class_list: list[str],
         n_classes: int,
         iou_threshold: float = 0.5,
         conf_threshold: float = 0.5,
         max_det: int = 300,
         parser: str = "YOLO",
-        stage2_executable_path: Optional[str] = None,
-        postprocessor_path: Optional[str] = None,
-        n_prototypes: Optional[int] = None,
-        n_keypoints: Optional[int] = None,
-        is_softmax: Optional[bool] = None,
-        anchors: Optional[List[List[List[float]]]] = None,
-        output_kwargs: Optional[dict] = None,
+        stage2_executable_path: str | None = None,
+        postprocessor_path: str | None = None,
+        n_prototypes: int | None = None,
+        n_keypoints: int | None = None,
+        is_softmax: bool | None = None,
+        anchors: list[list[list[float]]] | None = None,
+        output_kwargs: dict | None = None,
         encoding: Encoding = Encoding.RGB,
     ):
         """Create an NN archive for a detection-style model.
@@ -254,7 +254,7 @@ class Exporter:
 
     def make_semantic_seg_nn_archive(
         self,
-        class_list: List[str],
+        class_list: list[str],
         n_classes: int,
         is_softmax: bool = False,
         encoding: Encoding = Encoding.RGB,
@@ -320,7 +320,7 @@ class Exporter:
         archive.make_archive()
 
     def export_nn_archive(
-        self, class_names: Optional[List[str]] = None, encoding: Encoding = Encoding.RGB
+        self, class_names: list[str] | None = None, encoding: Encoding = Encoding.RGB
     ):
         """Create an NN archive for the currently loaded model.
 
