@@ -2,13 +2,13 @@ torch>=2.0.0 #,<2.6.0
 torchvision>=0.10.1
 Pillow>=7.1.2
 PyYAML>=5.3.1
-gcsfs
-luxonis-ml[data,nn-archive,utils]~=0.8.0
+gcsfs==2024.6.1
+luxonis-ml[data,nn-archive,utils,telemetry]~=0.9.0
 onnx==1.21.0
 numpy>=1.19.5,<2.1.0
 onnxruntime>=1.20.1
 onnxsim>=0.4.36,<0.6
-s3fs
+s3fs==2024.6.1
 tqdm
 s3transfer
 cyclopts>=4.21.0
