@@ -251,3 +251,33 @@ def test_explicit_version_detection(test_workspace: Path):
     result = _run_tools(command, test_workspace)
     if result.returncode != 0:
         pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
+
+
+def test_e2e_shard_count_three_manifest_matches_profile():
+    import importlib
+
+    e2e_shards = importlib.import_module("e2e_shards")
+
+    assignment = e2e_shards.get_e2e_shard_assignment(3)
+    counts = tuple(len(shard) for shard in assignment)
+    public_union = set().union(*assignment)
+    public_overlap = (
+        (assignment[0] & assignment[1])
+        | (assignment[0] & assignment[2])
+        | (assignment[1] & assignment[2])
+    )
+
+    assert e2e_shards.DEFAULT_E2E_SHARD_COUNT == 3
+    assert e2e_shards.supported_e2e_shard_counts() == (3,)
+    assert counts == (33, 35, 33)
+    assert len(public_union) == 101
+    assert public_overlap == set()
+
+
+def test_e2e_shard_count_requires_checked_in_assignment():
+    import importlib
+
+    e2e_shards = importlib.import_module("e2e_shards")
+
+    with pytest.raises(pytest.UsageError, match="Regenerate the shard assignment"):
+        e2e_shards.get_e2e_shard_assignment(2)

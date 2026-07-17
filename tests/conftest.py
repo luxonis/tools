@@ -1,8 +1,11 @@
 import logging
+import os
 import shutil
 from pathlib import Path
 
 import pytest
+
+pytest_plugins = ["e2e_shards"]
 
 logger = logging.getLogger()
 
