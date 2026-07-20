@@ -268,10 +268,77 @@ def test_e2e_shard_count_three_manifest_matches_profile():
     )
 
     assert e2e_shards.DEFAULT_E2E_SHARD_COUNT == 3
-    assert e2e_shards.supported_e2e_shard_counts() == (3,)
+    assert e2e_shards.supported_e2e_shard_counts() == (3, 10)
     assert counts == (33, 35, 33)
     assert len(public_union) == 101
     assert public_overlap == set()
+
+
+def test_e2e_shard_count_ten_manifest_matches_selected_profile():
+    import importlib
+
+    e2e_shards = importlib.import_module("e2e_shards")
+
+    count_three = e2e_shards.get_e2e_shard_assignment(3)
+    assignment = e2e_shards.get_e2e_shard_assignment(10)
+
+    counts = tuple(len(shard) for shard in assignment)
+    public_union = set().union(*assignment)
+    count_three_union = set().union(*count_three)
+
+    seen = set()
+    overlap = set()
+
+    for shard in assignment:
+        overlap.update(seen & shard)
+        seen.update(shard)
+
+    assert len(assignment) == 10
+    assert counts == (11, 9, 9, 11, 11, 10, 9, 11, 11, 9)
+    assert all(assignment)
+    assert len(public_union) == 101
+    assert public_union == count_three_union
+    assert overlap == set()
+
+
+def test_e2e_shard_assignment_detects_collection_drift():
+    import importlib
+
+    import pytest
+
+    e2e_shards = importlib.import_module("e2e_shards")
+    assignment = (
+        frozenset(
+            {
+                "tests/test_end2end.py::test_a",
+                "tests/test_end2end.py::test_b",
+            }
+        ),
+    )
+
+    with pytest.raises(
+        pytest.UsageError,
+        match="Missing from assignment",
+    ):
+        e2e_shards.validate_e2e_shard_assignment(
+            {
+                "tests/test_end2end.py::test_a",
+                "tests/test_end2end.py::test_b",
+                "tests/test_end2end.py::test_new",
+            },
+            assignment,
+        )
+
+    with pytest.raises(
+        pytest.UsageError,
+        match="Stale in assignment",
+    ):
+        e2e_shards.validate_e2e_shard_assignment(
+            {
+                "tests/test_end2end.py::test_a",
+            },
+            assignment,
+        )
 
 
 def test_e2e_shard_count_requires_checked_in_assignment():
