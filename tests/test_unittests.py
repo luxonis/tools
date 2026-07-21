@@ -301,31 +301,43 @@ def test_e2e_shard_count_ten_manifest_matches_selected_profile():
     assert overlap == set()
 
 
+def test_e2e_representative_shard_manifest():
+    import importlib
+
+    e2e_shards = importlib.import_module("e2e_shards")
+
+    assignment = e2e_shards.get_e2e_shard_assignment(
+        2,
+        "representative",
+    )
+    counts = tuple(len(shard) for shard in assignment)
+    representative_nodeids = set().union(*assignment)
+    full_nodeids = set().union(*e2e_shards.get_e2e_shard_assignment(10))
+
+    assert e2e_shards.supported_e2e_suites() == (
+        "full",
+        "representative",
+    )
+    assert e2e_shards.supported_e2e_shard_counts("representative") == (2,)
+    assert counts == (14, 16)
+    assert len(representative_nodeids) == 30
+    assert representative_nodeids < full_nodeids
+    assert assignment[0].isdisjoint(assignment[1])
+
+
 def test_e2e_shard_assignment_detects_collection_drift():
     import importlib
 
-    import pytest
-
     e2e_shards = importlib.import_module("e2e_shards")
-    assignment = (
-        frozenset(
-            {
-                "tests/test_end2end.py::test_a",
-                "tests/test_end2end.py::test_b",
-            }
-        ),
-    )
+    assignment = e2e_shards.get_e2e_shard_assignment(10)
+    public_nodeids = set().union(*assignment)
 
     with pytest.raises(
         pytest.UsageError,
         match="Missing from assignment",
     ):
         e2e_shards.validate_e2e_shard_assignment(
-            {
-                "tests/test_end2end.py::test_a",
-                "tests/test_end2end.py::test_b",
-                "tests/test_end2end.py::test_new",
-            },
+            public_nodeids | {"tests/test_end2end.py::test_new_public_case"},
             assignment,
         )
 
@@ -334,9 +346,7 @@ def test_e2e_shard_assignment_detects_collection_drift():
         match="Stale in assignment",
     ):
         e2e_shards.validate_e2e_shard_assignment(
-            {
-                "tests/test_end2end.py::test_a",
-            },
+            public_nodeids - {next(iter(public_nodeids))},
             assignment,
         )
 
