@@ -13,13 +13,13 @@ Unit tests download the preset weights from original repositories and check if t
                     If set then test only that specific yolo version
 --test-case=TEST_CASE
                     If set then test only that specific test case
---delete-weights-now  Clean weights after every test to save space - but longer test time.
+--delete-weights-now  Clean weights after every test to save disk space, at the cost of longer runtime.
 ```
 
 Here is an example of the call to run:
 
-```
-pytest --download-weights --log-cli-level=INFO --log-file=out.log --log-file-level=DEBUG .
+```bash
+pytest tests/test_unittests.py -n 2 --dist load --download-weights --log-cli-level=INFO --log-file=out.log --log-file-level=DEBUG
 ```
 
-This will run the full test suite on all the supported models and store the DEBUG logs into the out.log file.
+This will run the full unit test suite on all supported models and store the DEBUG logs in the out.log file.
