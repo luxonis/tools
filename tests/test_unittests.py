@@ -269,8 +269,8 @@ def test_e2e_shard_count_three_manifest_matches_profile():
 
     assert e2e_shards.DEFAULT_E2E_SHARD_COUNT == 3
     assert e2e_shards.supported_e2e_shard_counts() == (3, 10)
-    assert counts == (33, 35, 33)
-    assert len(public_union) == 101
+    assert counts == (36, 36, 36)
+    assert len(public_union) == 108
     assert public_overlap == set()
 
 
@@ -294,9 +294,9 @@ def test_e2e_shard_count_ten_manifest_matches_selected_profile():
         seen.update(shard)
 
     assert len(assignment) == 10
-    assert counts == (11, 9, 9, 11, 11, 10, 9, 11, 11, 9)
+    assert counts == (11, 11, 11, 11, 11, 11, 10, 11, 11, 10)
     assert all(assignment)
-    assert len(public_union) == 101
+    assert len(public_union) == 108
     assert public_union == count_three_union
     assert overlap == set()
 
@@ -319,10 +319,11 @@ def test_e2e_representative_shard_manifest():
         "representative",
     )
     assert e2e_shards.supported_e2e_shard_counts("representative") == (2,)
-    assert counts == (14, 16)
-    assert len(representative_nodeids) == 30
+    assert counts == (15, 16)
+    assert len(representative_nodeids) == 31
     assert representative_nodeids < full_nodeids
     assert assignment[0].isdisjoint(assignment[1])
+    assert "tests/test_end2end.py::test_cli_conversion[yoloxnano]" in assignment[0]
 
 
 def test_e2e_shard_assignment_detects_collection_drift():

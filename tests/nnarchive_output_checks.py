@@ -98,4 +98,11 @@ N_VARIANT_OUTPUT_NAME_CHECKS = [
         "yolo_outputs": ["output_yolo26"],
         "keypoints_outputs": ["kpt_output"],
     },
+    {
+        "name": "yoloxnano",
+        "version": "yolox",
+        "model_outputs": ["output1_yolov6", "output2_yolov6", "output3_yolov6"],
+        "head_outputs": ["output1_yolov6", "output2_yolov6", "output3_yolov6"],
+        "yolo_outputs": ["output1_yolov6", "output2_yolov6", "output3_yolov6"],
+    },
 ]

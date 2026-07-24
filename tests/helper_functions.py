@@ -51,10 +51,21 @@ def download_private_model(model_name: str, filename: str, folder: str) -> str:
 def nn_archive_checker(
     extra_keys_to_check: Optional[list] = None,
     output_dir: str = "shared_with_container/outputs",
+    expected_scale: Optional[list[float]] = None,
+    expected_dai_type: Optional[str] = "RGB888p",
 ):
-    """Tests the content of the exported NNArchive."""
+    """Tests the content of the exported NNArchive.
+
+    Args:
+        extra_keys_to_check: Additional archive configuration values to check.
+        output_dir: Directory containing generated NNArchive output folders.
+        expected_scale: Expected per-channel input scale. Defaults to 255.
+        expected_dai_type: Expected DepthAI input type. Defaults to RGB888p.
+    """
     if extra_keys_to_check is None:
         extra_keys_to_check = []
+    if expected_scale is None:
+        expected_scale = [255.0, 255.0, 255.0]
     subdirs = [
         d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))
     ]
@@ -105,7 +116,6 @@ def nn_archive_checker(
         ), (
             f"Inputs mean `{config_data['model']['inputs'][0]['preprocessing']['mean']}` doesn't match the expected mean `{expected_mean}`"
         )
-        expected_scale = [255.0, 255.0, 255.0]
         assert (
             config_data["model"]["inputs"][0]["preprocessing"]["scale"]
             == expected_scale
@@ -113,15 +123,14 @@ def nn_archive_checker(
             f"Inputs scale `{config_data['model']['inputs'][0]['preprocessing']['scale']}` doesn't match the expected scale `{expected_scale}`"
         )
 
-        if len(extra_keys_to_check) and not any(
-            ["dai_type" in i for i in extra_keys_to_check[0]]
-        ):  # only check if we are not already checking though "extra_keys_to_check"
-            dai_type = "RGB888p"
+        if expected_dai_type is not None and not any(
+            "dai_type" in keys for keys, _ in extra_keys_to_check
+        ):
             assert (
                 config_data["model"]["inputs"][0]["preprocessing"]["dai_type"]
-                == dai_type
+                == expected_dai_type
             ), (
-                f"Inputs dai_type `{config_data['model']['inputs'][0]['preprocessing']['dai_type']}` doesn't match the expected dai_type `{dai_type}`"
+                f"Inputs dai_type `{config_data['model']['inputs'][0]['preprocessing']['dai_type']}` doesn't match the expected dai_type `{expected_dai_type}`"
             )
 
         if extra_keys_to_check:

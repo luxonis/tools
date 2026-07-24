@@ -37,6 +37,7 @@ def pytest_addoption(parser):
             "v11",
             "v12",
             "v26",
+            "yolox",
         ],
         default=None,
         help="If set then test only that specific yolo version",

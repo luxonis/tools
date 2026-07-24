@@ -20,6 +20,7 @@ YOLOV12_CONVERSION = "yolov12"
 YOLOV26_CONVERSION = "yolov26"
 YOLOV26_NMS_CONVERSION = "yolov26_nms"
 YOLOV26_SEM_CONVERSION = "yolov26_sem"
+YOLOX_CONVERSION = "yolox"
 GOLD_YOLO_CONVERSION = "goldyolo"
 UNRECOGNIZED = "none"
 
@@ -126,6 +127,20 @@ def detect_version(path: str, debug: bool = False) -> str:
                 elif "gold_yolo" in content:
                     return GOLD_YOLO_CONVERSION
                 return YOLOV6R3_CONVERSION
+            elif all(
+                marker in content
+                for marker in (
+                    "backbone.backbone.stem.conv.conv",
+                    "backbone.lateral_conv0",
+                    "head.stems",
+                    "head.cls_convs",
+                    "head.reg_convs",
+                    "head.cls_preds",
+                    "head.reg_preds",
+                    "head.obj_preds",
+                )
+            ):
+                return YOLOX_CONVERSION
             elif "yolov7" in content:
                 return YOLOV7_CONVERSION
             elif (
