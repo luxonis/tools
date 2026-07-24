@@ -38,6 +38,9 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov8n-obb]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8n-pose]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8s]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxm]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxnano]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxx]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9c]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9e]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolo26n-pose]",
@@ -78,6 +81,7 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov8m]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8n]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8x]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxtiny]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9s]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolo26n]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolov11n-seg]",
@@ -114,11 +118,14 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov7x]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8l]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8n-seg]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxl]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxs]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9m]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9t]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolov11n-pose]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolov12n]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolov8n-seg]",
+                "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yoloxnano]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolov9t]",
             }
         ),
@@ -149,6 +156,8 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov6nr21]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8n-pose]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8s]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxm]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxnano]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolov8n-pose]",
             }
         ),
@@ -162,6 +171,8 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov5m6u]",
                 "tests/test_end2end.py::test_cli_conversion[yolov6mr2]",
                 "tests/test_end2end.py::test_cli_conversion[yolov6sr1]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxl]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxtiny]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolo26n-pose]",
             }
         ),
@@ -205,6 +216,7 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov6nr1]",
                 "tests/test_end2end.py::test_cli_conversion[yolov6sr21]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8n-seg]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxx]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9e]",
                 "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yolov8n-seg]",
             }
@@ -220,6 +232,7 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov6nr4]",
                 "tests/test_end2end.py::test_cli_conversion[yolov7t]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8x]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxs]",
             }
         ),
         frozenset(
@@ -263,6 +276,7 @@ E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], ...]] = {
                 "tests/test_end2end.py::test_cli_conversion[yolov6sr4]",
                 "tests/test_end2end.py::test_cli_conversion[yolov7]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9c]",
+                "tests/test_end2end.py::test_n_variant_nnarchive_outputs[yoloxnano]",
             }
         ),
     ),

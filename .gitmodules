@@ -25,3 +25,7 @@
 [submodule "YOLOv6R3"]
 	path = tools/yolov6r3/YOLOv6R3
 	url = https://github.com/meituan/YOLOv6
+[submodule "tools/yolox/YOLOX"]
+	path = tools/yolox/YOLOX
+	url = https://github.com/Megvii-BaseDetection/YOLOX.git
+	branch = main
