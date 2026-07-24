@@ -319,10 +319,11 @@ def test_e2e_representative_shard_manifest():
         "representative",
     )
     assert e2e_shards.supported_e2e_shard_counts("representative") == (2,)
-    assert counts == (14, 16)
-    assert len(representative_nodeids) == 30
+    assert counts == (15, 16)
+    assert len(representative_nodeids) == 31
     assert representative_nodeids < full_nodeids
     assert assignment[0].isdisjoint(assignment[1])
+    assert "tests/test_end2end.py::test_cli_conversion[yoloxnano]" in assignment[0]
 
 
 def test_e2e_shard_assignment_detects_collection_drift():

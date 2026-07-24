@@ -300,6 +300,7 @@ REPRESENTATIVE_E2E_SHARD_ASSIGNMENTS_BY_COUNT: dict[int, tuple[frozenset[str], .
                 "tests/test_end2end.py::test_cli_conversion[yolov8n-seg]",
                 "tests/test_end2end.py::test_cli_conversion[yolov8n]",
                 "tests/test_end2end.py::test_cli_conversion[yolov9t]",
+                "tests/test_end2end.py::test_cli_conversion[yoloxnano]",
             }
         ),
         frozenset(
