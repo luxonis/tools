@@ -164,6 +164,8 @@ class Exporter:
         anchors: list[list[list[float]]] | None = None,
         output_kwargs: dict | None = None,
         encoding: Encoding = Encoding.RGB,
+        mean: list[float] | None = None,
+        scale: list[float] | None = None,
     ):
         """Create an NN archive for a detection-style model.
 
@@ -182,6 +184,8 @@ class Exporter:
             anchors: Optional anchor definitions for the detection head.
             output_kwargs: Additional output metadata forwarded to the head.
             encoding: Color encoding used by the input model.
+            mean: Per-channel input mean. Defaults to ``[0, 0, 0]``.
+            scale: Per-channel input scale. Defaults to ``[255, 255, 255]``.
         """
         self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
         if stage2_executable_path is not None:
@@ -191,6 +195,10 @@ class Exporter:
 
         if output_kwargs is None:
             output_kwargs = {}
+        if mean is None:
+            mean = [0, 0, 0]
+        if scale is None:
+            scale = [255, 255, 255]
         output_specs = self.get_output_specs()
 
         archive = ArchiveGenerator(
@@ -210,8 +218,8 @@ class Exporter:
                             "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
                             "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
+                                "mean": mean,
+                                "scale": scale,
                                 "dai_type": encoding.get_dai_type(),
                             },
                         }

@@ -19,6 +19,7 @@ from tools.version_detection import (
     YOLOV26_CONVERSION,
     YOLOV26_NMS_CONVERSION,
     YOLOV26_SEM_CONVERSION,
+    YOLOX_CONVERSION,
 )
 
 ExporterFactory = Callable[[str, tuple[int, int], bool], Any]
@@ -102,6 +103,14 @@ def _build_yolov10_exporter(
     return YoloV10Exporter(model_path, imgsz, use_rvc2)
 
 
+def _build_yolox_exporter(
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+) -> Any:
+    from tools.yolox.yolox_exporter import YoloXExporter
+
+    return YoloXExporter(model_path, imgsz, use_rvc2)
+
+
 CONVERSION_SPECS: dict[str, ConversionSpec] = {
     GOLD_YOLO_CONVERSION: ConversionSpec("goldyolo", _build_goldyolo_exporter),
     YOLOV5_CONVERSION: ConversionSpec("yolov5", _build_yolov5_exporter),
@@ -118,6 +127,7 @@ CONVERSION_SPECS: dict[str, ConversionSpec] = {
     YOLOV26_CONVERSION: ConversionSpec("yolo26", _build_yolo26_exporter),
     YOLOV26_NMS_CONVERSION: ConversionSpec("yolov8", _build_yolov8_exporter),
     YOLOV26_SEM_CONVERSION: ConversionSpec("yolo26", _build_yolo26_exporter),
+    YOLOX_CONVERSION: ConversionSpec("yolox", _build_yolox_exporter),
 }
 
 

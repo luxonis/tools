@@ -89,7 +89,12 @@ def test_cli_conversion(model: dict, test_config: dict, subtests):
                 if model.get("size")
                 else []
             )
-            nn_archive_checker(extra_keys_to_check=extra_keys_to_check)
+            is_yolox = model["version"] == "yolox"
+            nn_archive_checker(
+                extra_keys_to_check=extra_keys_to_check,
+                expected_scale=[1.0, 1.0, 1.0] if is_yolox else None,
+                expected_dai_type="BGR888p" if is_yolox else "RGB888p",
+            )
 
 
 @pytest.mark.parametrize(

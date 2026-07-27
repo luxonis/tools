@@ -39,6 +39,7 @@ from tools.utils.telemetry import (
 )
 from tools.version_detection import (
     YOLOV5U_CONVERSION,
+    YOLOX_CONVERSION,
     detect_version,
 )
 
@@ -61,9 +62,9 @@ def convert(
         Parameter(show_default=True),
     ] = None,
     encoding: Annotated[
-        Encoding,
+        Encoding | None,
         Parameter(show_default=True),
-    ] = Encoding.RGB,
+    ] = None,
     use_rvc2: Annotated[
         bool,
         Parameter(show_default=True),
@@ -94,7 +95,7 @@ def convert(
         version: YOLO variant to force, such as ``"yolov8"``. When omitted, the
             command runs automatic version detection.
         encoding: Color encoding used by the input model. Must be ``RGB`` or
-            ``BGR``.
+            ``BGR``. When omitted it is selected based on version.
         use_rvc2: Whether to target RVC2 instead of RVC3.
         class_names: Comma-separated class names recognized by the model.
         output_remote_url: Remote destination URL for uploading the generated NN
@@ -147,26 +148,9 @@ def convert(
         else:
             class_names_list = class_names
 
-        try:
-            config = Config.get_config(
-                {
-                    "model": model,
-                    "imgsz": imgsz_list,
-                    "encoding": encoding,
-                    "use_rvc2": use_rvc2,
-                    "class_names": class_names_list,
-                    "output_remote_url": output_remote_url,
-                    "put_file_plugin": put_file_plugin,
-                }
-            )
-        except Exception as e:
-            logger.error(f"Invalid configuration: {e}")
-            raise SystemExit(ExitCode.VALIDATION_FAILED.value) from e
-        exporter_imgsz = cast(tuple[int, int], tuple(config.imgsz))
-
         phase = Phase.PATH_RESOLUTION
         try:
-            model_path = resolve_path(config.model, MISC_DIR)
+            model_path = resolve_path(model, MISC_DIR)
         except Exception as e:
             logger.error(f"Error resolving model path: {e}")
             raise SystemExit(ExitCode.PATH_RESOLUTION_FAILED.value) from e
@@ -188,8 +172,25 @@ def convert(
             )
             logger.info(f"Detected version: {version} {version_note}")
 
-        if version is None:
-            raise RuntimeError("Version must be resolved before telemetry capture.")
+        if encoding is None:
+            encoding = Encoding.BGR if version == YOLOX_CONVERSION else Encoding.RGB
+
+        try:
+            config = Config.get_config(
+                {
+                    "model": model,
+                    "imgsz": imgsz_list,
+                    "encoding": encoding,
+                    "use_rvc2": use_rvc2,
+                    "class_names": class_names_list,
+                    "output_remote_url": output_remote_url,
+                    "put_file_plugin": put_file_plugin,
+                }
+            )
+        except Exception as e:
+            logger.error(f"Invalid configuration: {e}")
+            raise SystemExit(ExitCode.VALIDATION_FAILED.value) from e
+        exporter_imgsz = cast(tuple[int, int], tuple(config.imgsz))
 
         conversion_summary = build_conversion_summary(
             config=config,

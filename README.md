@@ -120,6 +120,7 @@ Currently, the following models are supported:
 | `yolov11`     | **Detection, Instance Segmentation, Pose, Oriented Detection, Classification:** YOLO11n, YOLO11s, YOLO11m, YOLO11l, YOLO11x                                                                                                                                                         |
 | `yolov12`     | **Detection:** YOLO12n, YOLO12s, YOLO12m, YOLO12l, YOLO12x                                                                                                                                                                                                                          |
 | `yolo26`      | **Detection, Instance Segmentation, Pose, Semantic Segmentation:** YOLO26n, YOLO26s, YOLO26m, YOLO26l, YOLO26x                                                                                                                                                                      |
+| `yolox`       | **Detection:** YOLOX-Nano, YOLOX-Tiny, YOLOX-S, YOLOX-M, YOLOX-L, YOLOX-X                                                                                                                                                                                                           |
 | `yoloe`       | **Detection, Instance Segmentation:** YOLOE-11s, YOLOE-11m, YOLOE-11l; YOLOE-v8s, YOLOE-v8m, YOLOE-v8l                                                                                                                                                                              |
 | `goldyolo`    | Gold-YOLO-N, Gold-YOLO-S, Gold-YOLO-M, Gold-YOLO-L                                                                                                                                                                                                                                  |
 
@@ -131,7 +132,7 @@ If you don't find your model in the list, it is possible that it can be converte
 
 ## 📝 Credits
 
-This application uses source code of the following repositories: [YOLOv5](https://github.com/ultralytics/yolov5), [YOLOv6](https://github.com/meituan/YOLOv6), [GoldYOLO](https://github.com/huawei-noah/Efficient-Computing) [YOLOv7](https://github.com/WongKinYiu/yolov7), and [Ultralytics](https://github.com/ultralytics/ultralytics) (see each of them for more information).
+This application uses source code of the following repositories: [YOLOv5](https://github.com/ultralytics/yolov5), [YOLOv6](https://github.com/meituan/YOLOv6), [GoldYOLO](https://github.com/huawei-noah/Efficient-Computing), [YOLOv7](https://github.com/WongKinYiu/yolov7), [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX), and [Ultralytics](https://github.com/ultralytics/ultralytics) (see each of them for more information).
 
 <a name="license"></a>
 
