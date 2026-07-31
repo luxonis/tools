@@ -36,7 +36,9 @@ cd tools
 
 ```bash
 # Install the package
-PIP_CONSTRAINT=constraints.txt pip install .
+# (PIP_BUILD_CONSTRAINT is required with pip >= 26.2, which no longer
+# applies PIP_CONSTRAINT to isolated build environments)
+PIP_CONSTRAINT=constraints.txt PIP_BUILD_CONSTRAINT=constraints.txt pip install .
 # Running the package
 tools yolov6nr4.pt --imgsz "416"
 ```

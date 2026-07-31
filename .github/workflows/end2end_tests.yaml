@@ -45,6 +45,10 @@ jobs:
         CONSTRAINTS_FILE="$GITHUB_WORKSPACE/constraints.txt"
         echo "setuptools<82" > "$CONSTRAINTS_FILE"
         export PIP_CONSTRAINT="$CONSTRAINTS_FILE"
+        # pip >= 26.2 no longer applies PIP_CONSTRAINT to isolated build
+        # environments (needed for the mmcv sdist build, see
+        # https://github.com/open-mmlab/mmcv/issues/3325)
+        export PIP_BUILD_CONSTRAINT="$CONSTRAINTS_FILE"
         pip install -e .[dev]
 
     - name: Run full public tests
@@ -93,6 +97,10 @@ jobs:
         CONSTRAINTS_FILE="$GITHUB_WORKSPACE/constraints.txt"
         echo "setuptools<82" > "$CONSTRAINTS_FILE"
         export PIP_CONSTRAINT="$CONSTRAINTS_FILE"
+        # pip >= 26.2 no longer applies PIP_CONSTRAINT to isolated build
+        # environments (needed for the mmcv sdist build, see
+        # https://github.com/open-mmlab/mmcv/issues/3325)
+        export PIP_BUILD_CONSTRAINT="$CONSTRAINTS_FILE"
         pip install -e .[dev]
 
     - name: Run representative public tests
