@@ -60,8 +60,12 @@ jobs:
       working-directory: ${{ inputs.tools_ref != '' && 'tools' || '' }}
       run: |
         CONSTRAINTS_FILE="$GITHUB_WORKSPACE/constraints.txt"
-        echo "setuptools<81" > "$CONSTRAINTS_FILE"
+        echo "setuptools<82" > "$CONSTRAINTS_FILE"
         export PIP_CONSTRAINT="$CONSTRAINTS_FILE"
+        # pip >= 26.2 no longer applies PIP_CONSTRAINT to isolated build
+        # environments (needed for the mmcv sdist build, see
+        # https://github.com/open-mmlab/mmcv/issues/3325)
+        export PIP_BUILD_CONSTRAINT="$CONSTRAINTS_FILE"
         pip install -e .[dev]
         pip install coverage-badge>=1.1.0 pytest-cov>=4.1.0
 
@@ -72,6 +76,9 @@ jobs:
       env:
         ML_REF: ${{ inputs.ml_ref }}
       run: |
+        CONSTRAINTS_FILE="$GITHUB_WORKSPACE/constraints.txt"
+        export PIP_CONSTRAINT="$CONSTRAINTS_FILE"
+        export PIP_BUILD_CONSTRAINT="$CONSTRAINTS_FILE"
         pip uninstall luxonis-ml -y
         pip install \
           "luxonis-ml[data,nn-archive,utils] @ git+https://github.com/luxonis/luxonis-ml.git@${ML_REF}" \
