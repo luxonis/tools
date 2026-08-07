@@ -40,6 +40,14 @@ def _output_dir(test_workspace: Path) -> str:
     return str(test_workspace / "shared_with_container" / "outputs")
 
 
+def test_help(test_workspace: Path):
+    """Tests that CLI help rendering works."""
+    result = _run_tools(["tools", "--help"], test_workspace)
+
+    assert result.returncode == 0, result.stdout
+    assert "--version" in result.stdout
+
+
 MODEL_EXPLICIT_VERSION = [
     ("yolov5n", "yolov5"),
     ("yolov5nu", "yolov5u"),

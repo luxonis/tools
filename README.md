@@ -90,7 +90,7 @@ Tools CLI
 │                           omitted, the command runs automatic version        │
 │                           detection. [default: None]                         │
 │ --encoding                Color encoding used by the input model. Must be    │
-│                           RGB or BGR. [choices: rgb, bgr] [default: rgb]     │
+│                           RGB or BGR. [choices: rgb, bgr]                     │
 │ --use-rvc2 --no-use-rvc2  Whether to target RVC2 instead of RVC3. [default:  │
 │                           True]                                              │
 │ --class-names             Comma-separated class names recognized by the      │

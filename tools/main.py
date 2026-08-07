@@ -63,7 +63,7 @@ def convert(
     ] = None,
     encoding: Annotated[
         Encoding | None,
-        Parameter(show_default=True),
+        Parameter(show_default=False),
     ] = None,
     use_rvc2: Annotated[
         bool,
