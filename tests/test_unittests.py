@@ -40,6 +40,14 @@ def _output_dir(test_workspace: Path) -> str:
     return str(test_workspace / "shared_with_container" / "outputs")
 
 
+def test_help(test_workspace: Path):
+    """Tests that CLI help rendering works."""
+    result = _run_tools(["tools", "--help"], test_workspace)
+
+    assert result.returncode == 0, result.stdout
+    assert "--version" in result.stdout
+
+
 MODEL_EXPLICIT_VERSION = [
     ("yolov5n", "yolov5"),
     ("yolov5nu", "yolov5u"),
@@ -222,6 +230,46 @@ def test_explicit_class_names(test_workspace: Path):
         extra_keys_to_check=extra_keys_to_check,
         output_dir=_output_dir(test_workspace),
     )
+
+
+def test_explicit_output_dir(test_workspace: Path):
+    """Tests writing conversion artifacts to a custom output directory."""
+    model_path = _prepare_model("yolov8n", test_workspace)
+    output_dir = test_workspace / "custom-output"
+    default_output_dir = Path(_output_dir(test_workspace))
+    default_output_dir_state = (
+        default_output_dir.exists(),
+        sorted(
+            path.relative_to(default_output_dir)
+            for path in default_output_dir.rglob("*")
+        )
+        if default_output_dir.exists()
+        else [],
+    )
+    command = [
+        "tools",
+        model_path,
+        "--version",
+        "yolov8",
+        "--output-dir",
+        str(output_dir),
+    ]
+    logger.debug(f"CLI command: {command}")
+
+    result = _run_tools(command, test_workspace)
+    if result.returncode != 0:
+        pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
+
+    nn_archive_checker(output_dir=str(output_dir))
+    assert (
+        default_output_dir.exists(),
+        sorted(
+            path.relative_to(default_output_dir)
+            for path in default_output_dir.rglob("*")
+        )
+        if default_output_dir.exists()
+        else [],
+    ) == default_output_dir_state
 
 
 def test_wrong_explicit_class_names(test_workspace: Path):

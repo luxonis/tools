@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import onnx
@@ -29,6 +30,7 @@ class Exporter:
         subtype: str,
         output_names: list[str] | None = None,
         all_output_names: list[str] | None = None,
+        output_dir: str | Path | None = None,
     ):
         """Initialize the exporter state and output paths.
 
@@ -40,6 +42,8 @@ class Exporter:
             output_names: Primary output tensor names.
             all_output_names: Complete output tensor names. When omitted,
                 ``output_names`` is reused.
+            output_dir: Root directory for generated artifacts. When omitted,
+                the default ``shared_with_container/outputs`` directory is used.
         """
         # Set up variables
         self.model_path = model_path
@@ -56,8 +60,9 @@ class Exporter:
         self.all_output_names = (
             all_output_names if all_output_names is not None else output_names
         )
+        output_root = Path(output_dir) if output_dir is not None else OUTPUTS_DIR
         self.output_folder = (
-            OUTPUTS_DIR
+            output_root
             / f"{self.model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         ).resolve()
         # If output directory does not exist, create it
