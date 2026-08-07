@@ -224,6 +224,28 @@ def test_explicit_class_names(test_workspace: Path):
     )
 
 
+def test_explicit_output_dir(test_workspace: Path):
+    """Tests writing conversion artifacts to a custom output directory."""
+    model_path = _prepare_model("yolov8n", test_workspace)
+    output_dir = test_workspace / "custom-output"
+    command = [
+        "tools",
+        model_path,
+        "--version",
+        "yolov8",
+        "--output-dir",
+        str(output_dir),
+    ]
+    logger.debug(f"CLI command: {command}")
+
+    result = _run_tools(command, test_workspace)
+    if result.returncode != 0:
+        pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
+
+    nn_archive_checker(output_dir=str(output_dir))
+    assert not Path(_output_dir(test_workspace)).exists()
+
+
 def test_wrong_explicit_class_names(test_workspace: Path):
     """Tests setting wrong explicit class names."""
     model_name = "yolov8n"

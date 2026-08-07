@@ -50,13 +50,20 @@ def get_yolo_output_names(mode: int = 0):
 
 
 class Yolo26Exporter(Exporter):
-    def __init__(self, model_path: str, imgsz: tuple[int, int], use_rvc2: bool):
+    def __init__(
+        self,
+        model_path: str,
+        imgsz: tuple[int, int],
+        use_rvc2: bool,
+        output_dir: str | None = None,
+    ):
         super().__init__(
             model_path,
             imgsz,
             use_rvc2,
             subtype="yolo26",
             output_names=["output_yolo26"],
+            output_dir=output_dir,
         )
         self.load_model()
 

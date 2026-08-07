@@ -95,6 +95,8 @@ Tools CLI
 │                           True]                                              │
 │ --class-names             Comma-separated class names recognized by the      │
 │                           model. [default: None]                             │
+│ --output-dir              Directory where generated conversion artifacts are │
+│                           stored. [default: None]                            │
 │ --output-remote-url       Remote destination URL for uploading the generated │
 │                           NN archive. [default: None]                        │
 │ --put-file-plugin         Name of a function registered in PUT_FILE_REGISTRY │
