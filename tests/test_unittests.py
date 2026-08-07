@@ -236,6 +236,16 @@ def test_explicit_output_dir(test_workspace: Path):
     """Tests writing conversion artifacts to a custom output directory."""
     model_path = _prepare_model("yolov8n", test_workspace)
     output_dir = test_workspace / "custom-output"
+    default_output_dir = Path(_output_dir(test_workspace))
+    default_output_dir_state = (
+        default_output_dir.exists(),
+        sorted(
+            path.relative_to(default_output_dir)
+            for path in default_output_dir.rglob("*")
+        )
+        if default_output_dir.exists()
+        else [],
+    )
     command = [
         "tools",
         model_path,
@@ -251,7 +261,15 @@ def test_explicit_output_dir(test_workspace: Path):
         pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
 
     nn_archive_checker(output_dir=str(output_dir))
-    assert not Path(_output_dir(test_workspace)).exists()
+    assert (
+        default_output_dir.exists(),
+        sorted(
+            path.relative_to(default_output_dir)
+            for path in default_output_dir.rglob("*")
+        )
+        if default_output_dir.exists()
+        else [],
+    ) == default_output_dir_state
 
 
 def test_wrong_explicit_class_names(test_workspace: Path):
