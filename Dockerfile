@@ -6,14 +6,19 @@ WORKDIR /app
 ## Install dependencies (including required libraries)
 RUN apt-get update && apt-get install -y ffmpeg libsm6 libxext6 build-essential cmake git && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency descriptors
-COPY pyproject.toml requirements.txt /app/
+# Copy dependency descriptors and constraints used by both pip resolvers.
+COPY pyproject.toml requirements.txt constraints.txt /app/
 
 # Copy the app
 COPY tools /app/tools
 
-# Install Python dependencies without pip cache
-RUN pip install --no-cache-dir .
+# PIP_BUILD_CONSTRAINT is supported by pip 26.2 and newer.
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2"
+
+# Apply the constraint to normal and isolated dependency resolution.
+RUN PIP_CONSTRAINT=/app/constraints.txt \
+    PIP_BUILD_CONSTRAINT=/app/constraints.txt \
+    python -m pip install --no-cache-dir .
 
 ## Create non-root user and set ownership of the working directory
 RUN adduser --disabled-password --gecos "" --no-create-home non-root && \

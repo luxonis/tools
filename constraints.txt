@@ -1,1 +1,1 @@
-setuptools<82
+setuptools>=78.1.1,<82
