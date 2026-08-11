@@ -12,10 +12,13 @@ COPY pyproject.toml requirements.txt constraints.txt /app/
 # Copy the app
 COPY tools /app/tools
 
+# PIP_BUILD_CONSTRAINT is supported by pip 26.2 and newer.
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2"
+
 # Apply the constraint to normal and isolated dependency resolution.
 RUN PIP_CONSTRAINT=/app/constraints.txt \
     PIP_BUILD_CONSTRAINT=/app/constraints.txt \
-    pip install --no-cache-dir .
+    python -m pip install --no-cache-dir .
 
 ## Create non-root user and set ownership of the working directory
 RUN adduser --disabled-password --gecos "" --no-create-home non-root && \
