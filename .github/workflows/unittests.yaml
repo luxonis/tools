@@ -10,6 +10,13 @@ on:
       - '.github/workflows/unittests.yaml'
       - 'requirements*.txt'
 
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'tools ref to test (branch, tag, or SHA; defaults to the selected ref)'
+        required: false
+        type: string
+
   workflow_call:
     inputs:
       ml_ref:
@@ -45,8 +52,8 @@ jobs:
       if: ${{ inputs.tools_ref == '' && inputs.ml_ref == '' }}
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.sha }}
+        repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+        ref: ${{ inputs.ref || github.event.pull_request.head.sha || github.sha }}
         submodules: recursive  # Ensures submodules are cloned
 
     - name: Set up Python
@@ -150,8 +157,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ inputs.ref || github.event.pull_request.head.sha || github.sha }}
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
