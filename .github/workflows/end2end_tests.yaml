@@ -10,6 +10,13 @@ on:
       - '.github/workflows/end2end_tests.yaml'
       - 'requirements*.txt'
 
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'tools ref to test (branch, tag, or SHA; defaults to the selected ref)'
+        required: false
+        type: string
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -29,8 +36,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.sha }}
+        repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+        ref: ${{ inputs.ref || github.event.pull_request.head.sha || github.sha }}
         submodules: recursive
 
     - name: Set up Python
@@ -55,7 +62,7 @@ jobs:
       run: pytest tests/test_end2end.py --e2e-suite full --e2e-shard-index ${{ matrix.shard }} --e2e-shard-count 10 --download-weights -s -v
 
     - name: Authenticate to Google Cloud
-      if: matrix.shard == 0 && github.event.pull_request.head.repo.full_name == github.repository
+      if: matrix.shard == 0 && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository)
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
@@ -63,7 +70,7 @@ jobs:
         export_environment_variables: true
 
     - name: Run private model tests
-      if: matrix.shard == 0 && github.event.pull_request.head.repo.full_name == github.repository
+      if: matrix.shard == 0 && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository)
       run: pytest tests/test_end2end.py::test_private_model_conversion --test-private --delete-weights-now -s -v
 
   cross_platform_representative:
@@ -81,8 +88,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.sha }}
+        repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+        ref: ${{ inputs.ref || github.event.pull_request.head.sha || github.sha }}
         submodules: recursive
 
     - name: Set up Python
@@ -107,7 +114,7 @@ jobs:
       run: pytest tests/test_end2end.py --e2e-suite representative --e2e-shard-index ${{ matrix.shard }} --e2e-shard-count 2 --download-weights -s -v
 
     - name: Authenticate to Google Cloud
-      if: matrix.shard == 0 && github.event.pull_request.head.repo.full_name == github.repository
+      if: matrix.shard == 0 && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository)
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
@@ -115,5 +122,5 @@ jobs:
         export_environment_variables: true
 
     - name: Run private model tests
-      if: matrix.shard == 0 && github.event.pull_request.head.repo.full_name == github.repository
+      if: matrix.shard == 0 && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository)
       run: pytest tests/test_end2end.py::test_private_model_conversion --test-private --delete-weights-now -s -v
