@@ -15,6 +15,7 @@ if yolo_path not in sys.path:
     sys.path.insert(0, yolo_path)
 
 from ultralytics.nn.modules import (  # noqa: E402
+    Depth,
     Detect,
     Pose26,
     Segment26,
@@ -28,6 +29,7 @@ OBB_MODE = 2
 CLASSIFY_MODE = 3
 POSE_MODE = 4
 SEMSEG_MODE = 5
+DEPTH_MODE = 6
 
 
 def get_output_names(mode: int):
@@ -38,6 +40,8 @@ def get_output_names(mode: int):
     elif mode == POSE_MODE:
         return ["output_yolo26", "kpt_output"]
     elif mode == SEMSEG_MODE:
+        return ["output_yolo26"]
+    elif mode == DEPTH_MODE:
         return ["output_yolo26"]
     else:
         logger.warning("Unsupported task type for YOLO26, conversion may fail")
@@ -83,6 +87,9 @@ class Yolo26Exporter(Exporter):
         elif isinstance(head, SemanticSegment):
             head.export = True
             self.mode = SEMSEG_MODE
+        elif isinstance(head, Depth):
+            head.export = True
+            self.mode = DEPTH_MODE
         elif isinstance(head, Detect):
             model.model[-1] = DetectV26(head, self.use_rvc2)
             self.mode = DETECT_MODE
@@ -166,4 +173,9 @@ class Yolo26Exporter(Exporter):
                 n_classes=self.model.model[-1].nc,
                 is_softmax=False,
                 encoding=encoding,
+            )
+        elif self.mode == DEPTH_MODE:
+            self.make_map_output_nn_archive(
+                encoding=encoding,
+                min_max_scaling=False,
             )

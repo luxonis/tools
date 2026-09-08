@@ -11,6 +11,7 @@ import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
 from luxonis_ml.nn_archive.config_building_blocks import DataType, Head, InputType
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
+    HeadMetadata,
     HeadSegmentationMetadata,
     HeadYOLOMetadata,
 )
@@ -324,6 +325,87 @@ class Exporter:
                                 is_softmax=is_softmax,
                             ),
                             outputs=self.all_output_names,
+                        )
+                    ],
+                },
+            },
+            executables_paths=[str(self.f_onnx)],
+        )
+        archive.make_archive()
+
+    def make_map_output_nn_archive(
+        self,
+        encoding: Encoding = Encoding.RGB,
+        min_max_scaling: bool = False,
+    ):
+        """Create an NN archive with a MapOutputParser head.
+
+        Args:
+            encoding: Color encoding used by the input model.
+            min_max_scaling: Whether MapOutputParser should scale map values
+                into ``[0, 1]``.
+
+        Raises:
+            ValueError: If the MapOutputParser head does not resolve to exactly
+                one model output.
+        """
+        if self.output_names is None or len(self.output_names) != 1:
+            raise ValueError(
+                "MapOutputParser requires exactly one selected model output."
+            )
+
+        if self.all_output_names is None:
+            raise ValueError(
+                "Model outputs must be defined before creating a map-output NN archive."
+            )
+
+        map_output_name = self.output_names[0]
+        if map_output_name not in self.all_output_names:
+            raise ValueError(
+                f"Map output `{map_output_name}` is not present in model outputs "
+                f"{self.all_output_names}."
+            )
+
+        self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
+        output_specs = self.get_output_specs()
+
+        archive = ArchiveGenerator(
+            archive_name=self.model_name,
+            save_path=str(self.output_folder),
+            cfg_dict={
+                "config_version": "1.0",
+                "model": {
+                    "metadata": {
+                        "name": self.model_name,
+                        "path": f"{self.model_name}.onnx",
+                    },
+                    "inputs": [
+                        {
+                            "name": "images",
+                            "dtype": DataType.FLOAT32,
+                            "input_type": InputType.IMAGE,
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
+                            "preprocessing": {
+                                "mean": [0, 0, 0],
+                                "scale": [255, 255, 255],
+                                "dai_type": encoding.get_dai_type(),
+                            },
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "name": output,
+                            "dtype": DataType.FLOAT32,
+                            "shape": output_specs.get(output, {}).get("shape"),
+                            "layout": output_specs.get(output, {}).get("layout"),
+                        }
+                        for output in self.all_output_names
+                    ],
+                    "heads": [
+                        Head(
+                            parser="MapOutputParser",
+                            metadata=HeadMetadata(min_max_scaling=min_max_scaling),
+                            outputs=self.output_names,
                         )
                     ],
                 },
