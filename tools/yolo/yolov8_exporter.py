@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import Literal
 
 import torch
 from loguru import logger
@@ -263,6 +264,13 @@ class YoloV8Exporter(Exporter):
                 class_list=names, n_classes=len(self.model.names), encoding=encoding
             )
 
+    def _get_resize_mode(self) -> Literal["CROP", "STRETCH", "LETTERBOX"] | None:
+        if self.mode == CLASSIFY_MODE:
+            # Ultralytics classify_transforms preserves aspect ratio and
+            # center-crops square inputs; rectangular inputs are stretched.
+            return "CROP" if self.imgsz[0] == self.imgsz[1] else "STRETCH"
+        return super()._get_resize_mode()
+
     def make_cls_nn_archive(
         self, class_list: list[str], n_classes: int, encoding: Encoding = Encoding.RGB
     ):
@@ -291,11 +299,7 @@ class YoloV8Exporter(Exporter):
                             "dtype": DataType.FLOAT32,
                             "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
-                                "dai_type": encoding.get_dai_type(),
-                            },
+                            "preprocessing": self._get_preprocessing(encoding),
                         }
                     ],
                     "outputs": [
