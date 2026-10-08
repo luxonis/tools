@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import Literal
 
 from loguru import logger
 
@@ -179,3 +180,9 @@ class Yolo26Exporter(Exporter):
                 encoding=encoding,
                 min_max_scaling=False,
             )
+
+    def _get_resize_mode(self) -> Literal["CROP", "STRETCH", "LETTERBOX"] | None:
+        if self.mode == DEPTH_MODE:
+            # DepthDataset uses scale_fill=True during evaluation.
+            return "STRETCH"
+        return super()._get_resize_mode()

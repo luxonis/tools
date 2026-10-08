@@ -3,13 +3,18 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import onnx
 import onnxsim
 import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
-from luxonis_ml.nn_archive.config_building_blocks import DataType, Head, InputType
+from luxonis_ml.nn_archive.config_building_blocks import (
+    DataType,
+    Head,
+    InputType,
+    PreprocessingBlock,
+)
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
     HeadMetadata,
     HeadSegmentationMetadata,
@@ -154,6 +159,31 @@ class Exporter:
 
         return specs
 
+    def _get_resize_mode(self) -> Literal["CROP", "STRETCH", "LETTERBOX"] | None:
+        """Return the default deployment geometry from the model's recipe.
+
+        YOLOv5, YOLOv6 R1/R2/R3/R4, Gold-YOLO, YOLOv7 and Ultralytics detection tasks
+        use centered letterboxing. Task-specific exporters override this when their
+        preprocessing differs.
+        """
+        return "LETTERBOX"
+
+    def _get_preprocessing(
+        self,
+        encoding: Encoding,
+        mean: list[float] | None = None,
+        scale: list[float] | None = None,
+    ) -> dict[str, Any]:
+        """Build preprocessing metadata supported by the installed archive schema."""
+        preprocessing: dict[str, Any] = {
+            "mean": [0, 0, 0] if mean is None else mean,
+            "scale": [255, 255, 255] if scale is None else scale,
+            "dai_type": encoding.get_dai_type(),
+        }
+        if "resize_mode" in PreprocessingBlock.model_fields:
+            preprocessing["resize_mode"] = self._get_resize_mode()
+        return preprocessing
+
     def make_nn_archive(
         self,
         class_list: list[str],
@@ -201,10 +231,6 @@ class Exporter:
 
         if output_kwargs is None:
             output_kwargs = {}
-        if mean is None:
-            mean = [0, 0, 0]
-        if scale is None:
-            scale = [255, 255, 255]
         output_specs = self.get_output_specs()
 
         archive = ArchiveGenerator(
@@ -223,11 +249,9 @@ class Exporter:
                             "dtype": DataType.FLOAT32,
                             "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": mean,
-                                "scale": scale,
-                                "dai_type": encoding.get_dai_type(),
-                            },
+                            "preprocessing": self._get_preprocessing(
+                                encoding, mean, scale
+                            ),
                         }
                     ],
                     "outputs": [
@@ -300,11 +324,7 @@ class Exporter:
                             "dtype": DataType.FLOAT32,
                             "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
-                                "dai_type": encoding.get_dai_type(),
-                            },
+                            "preprocessing": self._get_preprocessing(encoding),
                         }
                     ],
                     "outputs": [
@@ -385,11 +405,7 @@ class Exporter:
                             "dtype": DataType.FLOAT32,
                             "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
-                                "dai_type": encoding.get_dai_type(),
-                            },
+                            "preprocessing": self._get_preprocessing(encoding),
                         }
                     ],
                     "outputs": [
