@@ -36,7 +36,9 @@ cd tools
 
 ```bash
 # Install the package
-PIP_CONSTRAINT=constraints.txt pip install .
+# (PIP_BUILD_CONSTRAINT is required with pip >= 26.2, which no longer
+# applies PIP_CONSTRAINT to isolated build environments)
+PIP_CONSTRAINT=constraints.txt PIP_BUILD_CONSTRAINT=constraints.txt pip install .
 # Running the package
 tools yolov6nr4.pt --imgsz "416"
 ```
@@ -88,11 +90,13 @@ Tools CLI
 │                           omitted, the command runs automatic version        │
 │                           detection. [default: None]                         │
 │ --encoding                Color encoding used by the input model. Must be    │
-│                           RGB or BGR. [choices: rgb, bgr] [default: rgb]     │
+│                           RGB or BGR. [choices: rgb, bgr]                     │
 │ --use-rvc2 --no-use-rvc2  Whether to target RVC2 instead of RVC3. [default:  │
 │                           True]                                              │
 │ --class-names             Comma-separated class names recognized by the      │
 │                           model. [default: None]                             │
+│ --output-dir              Directory where generated conversion artifacts are │
+│                           stored. [default: None]                            │
 │ --output-remote-url       Remote destination URL for uploading the generated │
 │                           NN archive. [default: None]                        │
 │ --put-file-plugin         Name of a function registered in PUT_FILE_REGISTRY │

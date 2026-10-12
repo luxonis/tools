@@ -1,0 +1,45 @@
+name: Docker Smoke Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - '.gitmodules'
+      - 'tests/**'
+      - 'tools/**'
+      - 'pyproject.toml'
+      - 'requirements*.txt'
+      - 'constraints.txt'
+      - '.github/workflows/docker_smoke_test.yaml'
+
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'tools ref to test (branch, tag, or SHA; defaults to the selected ref)'
+        required: false
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-smoke-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ inputs.ref || github.event.pull_request.head.sha || github.sha }}
+          submodules: recursive
+
+      - name: Build Docker image
+        run: docker build --pull --tag tools-cli:test .
+
+      - name: Smoke-test Docker image
+        run: docker run --rm tools-cli:test --help

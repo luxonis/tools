@@ -44,6 +44,7 @@ class YoloV6R1Exporter(Exporter):
         model_path: str,
         imgsz: tuple[int, int],
         use_rvc2: bool,
+        output_dir: str | None = None,
     ):
         super().__init__(
             model_path,
@@ -51,6 +52,7 @@ class YoloV6R1Exporter(Exporter):
             use_rvc2,
             subtype="yolov6",
             output_names=["output1_yolov6", "output2_yolov6", "output3_yolov6"],
+            output_dir=output_dir,
         )
         self.load_model()
 

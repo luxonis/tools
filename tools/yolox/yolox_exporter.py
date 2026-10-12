@@ -174,6 +174,7 @@ class YoloXExporter(Exporter):
         model_path: str,
         imgsz: tuple[int, int],
         use_rvc2: bool,
+        output_dir: str | None = None,
     ):
         super().__init__(
             model_path,
@@ -182,6 +183,7 @@ class YoloXExporter(Exporter):
             # YOLOX uses the same grid decode as this already-supported subtype.
             subtype="yolov6r1",
             output_names=self.output_names,
+            output_dir=output_dir,
         )
         self.load_model()
 

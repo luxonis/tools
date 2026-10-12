@@ -198,6 +198,53 @@ def test_yolo26_semseg_nnarchive_head(test_config: dict):
     assert metadata["is_softmax"] is False
 
 
+def test_yolo26_depth_nnarchive_head(test_config: dict):
+    """Checks YOLO26 depth NNArchive head configuration."""
+    model_name = "yolo26n-depth"
+
+    if test_config["test_case"] is not None and model_name != test_config["test_case"]:
+        pytest.skip(
+            f"Test case ({model_name}) doesn't match selected test case ({test_config['test_case']})."
+        )
+
+    if test_config["yolo_version"] is not None and test_config["yolo_version"] != "v26":
+        pytest.skip(
+            f"Model version (v26) doesn't match selected version ({test_config['yolo_version']})."
+        )
+
+    model_path = os.path.join(SAVE_FOLDER, f"{model_name}.pt")
+    if not os.path.exists(model_path):
+        if test_config["download_weights"]:
+            model_path = download_model(model_name, SAVE_FOLDER)
+        else:
+            pytest.skip("Weights missing and `download_weights` not set")
+
+    command = ["tools", model_path]
+    logger.debug(f"CLI command: {command}")
+
+    result = subprocess.run(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    if result.returncode != 0:
+        pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
+
+    cfg = load_latest_nn_archive_config()
+    output_names = [output["name"] for output in cfg["model"]["outputs"]]
+    output = cfg["model"]["outputs"][0]
+    head = cfg["model"]["heads"][0]
+    metadata = head["metadata"]
+
+    assert output_names == ["output_yolo26"]
+    assert output["shape"] == [1, 1, 416, 416]
+    assert output["layout"] == "NCHW"
+    assert head["parser"] == "MapOutputParser"
+    assert head["outputs"] == ["output_yolo26"]
+    assert metadata["min_max_scaling"] is False
+    assert "classes" not in metadata
+    assert "n_classes" not in metadata
+    assert "yolo_outputs" not in metadata
+
+
 @pytest.mark.parametrize(
     "model",
     PRIVATE_TEST_MODELS,

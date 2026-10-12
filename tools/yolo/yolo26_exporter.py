@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import Literal
 
 from loguru import logger
 
@@ -15,6 +16,7 @@ if yolo_path not in sys.path:
     sys.path.insert(0, yolo_path)
 
 from ultralytics.nn.modules import (  # noqa: E402
+    Depth,
     Detect,
     Pose26,
     Segment26,
@@ -28,6 +30,7 @@ OBB_MODE = 2
 CLASSIFY_MODE = 3
 POSE_MODE = 4
 SEMSEG_MODE = 5
+DEPTH_MODE = 6
 
 
 def get_output_names(mode: int):
@@ -38,6 +41,8 @@ def get_output_names(mode: int):
     elif mode == POSE_MODE:
         return ["output_yolo26", "kpt_output"]
     elif mode == SEMSEG_MODE:
+        return ["output_yolo26"]
+    elif mode == DEPTH_MODE:
         return ["output_yolo26"]
     else:
         logger.warning("Unsupported task type for YOLO26, conversion may fail")
@@ -50,13 +55,20 @@ def get_yolo_output_names(mode: int = 0):
 
 
 class Yolo26Exporter(Exporter):
-    def __init__(self, model_path: str, imgsz: tuple[int, int], use_rvc2: bool):
+    def __init__(
+        self,
+        model_path: str,
+        imgsz: tuple[int, int],
+        use_rvc2: bool,
+        output_dir: str | None = None,
+    ):
         super().__init__(
             model_path,
             imgsz,
             use_rvc2,
             subtype="yolo26",
             output_names=["output_yolo26"],
+            output_dir=output_dir,
         )
         self.load_model()
 
@@ -76,6 +88,9 @@ class Yolo26Exporter(Exporter):
         elif isinstance(head, SemanticSegment):
             head.export = True
             self.mode = SEMSEG_MODE
+        elif isinstance(head, Depth):
+            head.export = True
+            self.mode = DEPTH_MODE
         elif isinstance(head, Detect):
             model.model[-1] = DetectV26(head, self.use_rvc2)
             self.mode = DETECT_MODE
@@ -160,3 +175,14 @@ class Yolo26Exporter(Exporter):
                 is_softmax=False,
                 encoding=encoding,
             )
+        elif self.mode == DEPTH_MODE:
+            self.make_map_output_nn_archive(
+                encoding=encoding,
+                min_max_scaling=False,
+            )
+
+    def _get_resize_mode(self) -> Literal["CROP", "STRETCH", "LETTERBOX"] | None:
+        if self.mode == DEPTH_MODE:
+            # DepthDataset uses scale_fill=True during evaluation.
+            return "STRETCH"
+        return super()._get_resize_mode()

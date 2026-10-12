@@ -23,6 +23,10 @@ class Config(LuxonisConfig):
     )
     class_names: list[str] | None = Field(None, description="List of class names.")
     use_rvc2: Literal[False, True] = Field(True, description="Whether to use RVC2.")
+    output_dir: str | None = Field(
+        None,
+        description="Directory where generated conversion artifacts are stored.",
+    )
     output_remote_url: str | None = Field(
         None, description="URL to upload the output to."
     )

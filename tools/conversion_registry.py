@@ -17,12 +17,13 @@ from tools.version_detection import (
     YOLOV11_CONVERSION,
     YOLOV12_CONVERSION,
     YOLOV26_CONVERSION,
+    YOLOV26_DEPTH_CONVERSION,
     YOLOV26_NMS_CONVERSION,
     YOLOV26_SEM_CONVERSION,
     YOLOX_CONVERSION,
 )
 
-ExporterFactory = Callable[[str, tuple[int, int], bool], Any]
+ExporterFactory = Callable[[str, tuple[int, int], bool, str | None], Any]
 
 
 @dataclass(frozen=True)
@@ -32,83 +33,83 @@ class ConversionSpec:
 
 
 def _build_yolov5_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolo.yolov5_exporter import YoloV5Exporter
 
-    return YoloV5Exporter(model_path, imgsz, use_rvc2)
+    return YoloV5Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolov6r1_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolov6r1.yolov6_r1_exporter import YoloV6R1Exporter
 
-    return YoloV6R1Exporter(model_path, imgsz, use_rvc2)
+    return YoloV6R1Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolov6r3_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolov6r3.yolov6_r3_exporter import YoloV6R3Exporter
 
-    return YoloV6R3Exporter(model_path, imgsz, use_rvc2)
+    return YoloV6R3Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_goldyolo_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolov6r3.gold_yolo_exporter import GoldYoloExporter
 
-    return GoldYoloExporter(model_path, imgsz, use_rvc2)
+    return GoldYoloExporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolov6r4_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolo.yolov6_exporter import YoloV6R4Exporter
 
-    return YoloV6R4Exporter(model_path, imgsz, use_rvc2)
+    return YoloV6R4Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolov7_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolov7.yolov7_exporter import YoloV7Exporter
 
-    return YoloV7Exporter(model_path, imgsz, use_rvc2)
+    return YoloV7Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolov8_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolo.yolov8_exporter import YoloV8Exporter
 
-    return YoloV8Exporter(model_path, imgsz, use_rvc2)
+    return YoloV8Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolo26_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolo.yolo26_exporter import Yolo26Exporter
 
-    return Yolo26Exporter(model_path, imgsz, use_rvc2)
+    return Yolo26Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolov10_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolo.yolov10_exporter import YoloV10Exporter
 
-    return YoloV10Exporter(model_path, imgsz, use_rvc2)
+    return YoloV10Exporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 def _build_yolox_exporter(
-    model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    model_path: str, imgsz: tuple[int, int], use_rvc2: bool, output_dir: str | None
 ) -> Any:
     from tools.yolox.yolox_exporter import YoloXExporter
 
-    return YoloXExporter(model_path, imgsz, use_rvc2)
+    return YoloXExporter(model_path, imgsz, use_rvc2, output_dir)
 
 
 CONVERSION_SPECS: dict[str, ConversionSpec] = {
@@ -125,6 +126,7 @@ CONVERSION_SPECS: dict[str, ConversionSpec] = {
     YOLOV11_CONVERSION: ConversionSpec("yolov8", _build_yolov8_exporter),
     YOLOV12_CONVERSION: ConversionSpec("yolov8", _build_yolov8_exporter),
     YOLOV26_CONVERSION: ConversionSpec("yolo26", _build_yolo26_exporter),
+    YOLOV26_DEPTH_CONVERSION: ConversionSpec("yolo26", _build_yolo26_exporter),
     YOLOV26_NMS_CONVERSION: ConversionSpec("yolov8", _build_yolov8_exporter),
     YOLOV26_SEM_CONVERSION: ConversionSpec("yolo26", _build_yolo26_exporter),
     YOLOX_CONVERSION: ConversionSpec("yolox", _build_yolox_exporter),
@@ -144,6 +146,12 @@ def get_exporter_family(version: str) -> str:
 
 
 def create_exporter(
-    version: str, model_path: str, imgsz: tuple[int, int], use_rvc2: bool
+    version: str,
+    model_path: str,
+    imgsz: tuple[int, int],
+    use_rvc2: bool,
+    output_dir: str | None = None,
 ) -> Any:
-    return CONVERSION_SPECS[version].exporter_factory(model_path, imgsz, use_rvc2)
+    return CONVERSION_SPECS[version].exporter_factory(
+        model_path, imgsz, use_rvc2, output_dir
+    )

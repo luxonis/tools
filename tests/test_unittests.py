@@ -40,6 +40,14 @@ def _output_dir(test_workspace: Path) -> str:
     return str(test_workspace / "shared_with_container" / "outputs")
 
 
+def test_help(test_workspace: Path):
+    """Tests that CLI help rendering works."""
+    result = _run_tools(["tools", "--help"], test_workspace)
+
+    assert result.returncode == 0, result.stdout
+    assert "--version" in result.stdout
+
+
 MODEL_EXPLICIT_VERSION = [
     ("yolov5n", "yolov5"),
     ("yolov5nu", "yolov5u"),
@@ -224,6 +232,46 @@ def test_explicit_class_names(test_workspace: Path):
     )
 
 
+def test_explicit_output_dir(test_workspace: Path):
+    """Tests writing conversion artifacts to a custom output directory."""
+    model_path = _prepare_model("yolov8n", test_workspace)
+    output_dir = test_workspace / "custom-output"
+    default_output_dir = Path(_output_dir(test_workspace))
+    default_output_dir_state = (
+        default_output_dir.exists(),
+        sorted(
+            path.relative_to(default_output_dir)
+            for path in default_output_dir.rglob("*")
+        )
+        if default_output_dir.exists()
+        else [],
+    )
+    command = [
+        "tools",
+        model_path,
+        "--version",
+        "yolov8",
+        "--output-dir",
+        str(output_dir),
+    ]
+    logger.debug(f"CLI command: {command}")
+
+    result = _run_tools(command, test_workspace)
+    if result.returncode != 0:
+        pytest.fail(f"Exit code: {result.returncode}, Output: {result.stdout}")
+
+    nn_archive_checker(output_dir=str(output_dir))
+    assert (
+        default_output_dir.exists(),
+        sorted(
+            path.relative_to(default_output_dir)
+            for path in default_output_dir.rglob("*")
+        )
+        if default_output_dir.exists()
+        else [],
+    ) == default_output_dir_state
+
+
 def test_wrong_explicit_class_names(test_workspace: Path):
     """Tests setting wrong explicit class names."""
     model_name = "yolov8n"
@@ -269,8 +317,8 @@ def test_e2e_shard_count_three_manifest_matches_profile():
 
     assert e2e_shards.DEFAULT_E2E_SHARD_COUNT == 3
     assert e2e_shards.supported_e2e_shard_counts() == (3, 10)
-    assert counts == (36, 36, 36)
-    assert len(public_union) == 108
+    assert counts == (36, 36, 38)
+    assert len(public_union) == 110
     assert public_overlap == set()
 
 
@@ -294,9 +342,9 @@ def test_e2e_shard_count_ten_manifest_matches_selected_profile():
         seen.update(shard)
 
     assert len(assignment) == 10
-    assert counts == (11, 11, 11, 11, 11, 11, 10, 11, 11, 10)
+    assert counts == (13, 11, 11, 11, 11, 11, 10, 11, 11, 10)
     assert all(assignment)
-    assert len(public_union) == 108
+    assert len(public_union) == 110
     assert public_union == count_three_union
     assert overlap == set()
 
@@ -319,8 +367,8 @@ def test_e2e_representative_shard_manifest():
         "representative",
     )
     assert e2e_shards.supported_e2e_shard_counts("representative") == (2,)
-    assert counts == (15, 16)
-    assert len(representative_nodeids) == 31
+    assert counts == (16, 16)
+    assert len(representative_nodeids) == 32
     assert representative_nodeids < full_nodeids
     assert assignment[0].isdisjoint(assignment[1])
     assert "tests/test_end2end.py::test_cli_conversion[yoloxnano]" in assignment[0]

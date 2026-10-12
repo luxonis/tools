@@ -63,13 +63,17 @@ def convert(
     ] = None,
     encoding: Annotated[
         Encoding | None,
-        Parameter(show_default=True),
+        Parameter(show_default=False),
     ] = None,
     use_rvc2: Annotated[
         bool,
         Parameter(show_default=True),
     ] = True,
     class_names: Annotated[
+        str | None,
+        Parameter(show_default=True),
+    ] = None,
+    output_dir: Annotated[
         str | None,
         Parameter(show_default=True),
     ] = None,
@@ -98,6 +102,7 @@ def convert(
             ``BGR``. When omitted it is selected based on version.
         use_rvc2: Whether to target RVC2 instead of RVC3.
         class_names: Comma-separated class names recognized by the model.
+        output_dir: Directory where generated conversion artifacts are stored.
         output_remote_url: Remote destination URL for uploading the generated NN
             archive.
         put_file_plugin: Name of a function registered in
@@ -183,6 +188,7 @@ def convert(
                     "encoding": encoding,
                     "use_rvc2": use_rvc2,
                     "class_names": class_names_list,
+                    "output_dir": output_dir,
                     "output_remote_url": output_remote_url,
                     "put_file_plugin": put_file_plugin,
                 }
@@ -211,6 +217,7 @@ def convert(
                 str(model_path),
                 exporter_imgsz,
                 config.use_rvc2,
+                config.output_dir,
             )
             logger.info("Model loaded.")
         except Exception as e:

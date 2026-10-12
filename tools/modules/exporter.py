@@ -2,14 +2,21 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import Any
+from pathlib import Path
+from typing import Any, Literal
 
 import onnx
 import onnxsim
 import torch
 from luxonis_ml.nn_archive import ArchiveGenerator
-from luxonis_ml.nn_archive.config_building_blocks import DataType, Head, InputType
+from luxonis_ml.nn_archive.config_building_blocks import (
+    DataType,
+    Head,
+    InputType,
+    PreprocessingBlock,
+)
 from luxonis_ml.nn_archive.config_building_blocks.base_models.head_metadata import (
+    HeadMetadata,
     HeadSegmentationMetadata,
     HeadYOLOMetadata,
 )
@@ -29,6 +36,7 @@ class Exporter:
         subtype: str,
         output_names: list[str] | None = None,
         all_output_names: list[str] | None = None,
+        output_dir: str | Path | None = None,
     ):
         """Initialize the exporter state and output paths.
 
@@ -40,6 +48,8 @@ class Exporter:
             output_names: Primary output tensor names.
             all_output_names: Complete output tensor names. When omitted,
                 ``output_names`` is reused.
+            output_dir: Root directory for generated artifacts. When omitted,
+                the default ``shared_with_container/outputs`` directory is used.
         """
         # Set up variables
         self.model_path = model_path
@@ -56,8 +66,9 @@ class Exporter:
         self.all_output_names = (
             all_output_names if all_output_names is not None else output_names
         )
+        output_root = Path(output_dir) if output_dir is not None else OUTPUTS_DIR
         self.output_folder = (
-            OUTPUTS_DIR
+            output_root
             / f"{self.model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         ).resolve()
         # If output directory does not exist, create it
@@ -148,6 +159,31 @@ class Exporter:
 
         return specs
 
+    def _get_resize_mode(self) -> Literal["CROP", "STRETCH", "LETTERBOX"] | None:
+        """Return the default deployment geometry from the model's recipe.
+
+        YOLOv5, YOLOv6 R1/R2/R3/R4, Gold-YOLO, YOLOv7 and Ultralytics detection tasks
+        use centered letterboxing. Task-specific exporters override this when their
+        preprocessing differs.
+        """
+        return "LETTERBOX"
+
+    def _get_preprocessing(
+        self,
+        encoding: Encoding,
+        mean: list[float] | None = None,
+        scale: list[float] | None = None,
+    ) -> dict[str, Any]:
+        """Build preprocessing metadata supported by the installed archive schema."""
+        preprocessing: dict[str, Any] = {
+            "mean": [0, 0, 0] if mean is None else mean,
+            "scale": [255, 255, 255] if scale is None else scale,
+            "dai_type": encoding.get_dai_type(),
+        }
+        if "resize_mode" in PreprocessingBlock.model_fields:
+            preprocessing["resize_mode"] = self._get_resize_mode()
+        return preprocessing
+
     def make_nn_archive(
         self,
         class_list: list[str],
@@ -195,10 +231,6 @@ class Exporter:
 
         if output_kwargs is None:
             output_kwargs = {}
-        if mean is None:
-            mean = [0, 0, 0]
-        if scale is None:
-            scale = [255, 255, 255]
         output_specs = self.get_output_specs()
 
         archive = ArchiveGenerator(
@@ -217,11 +249,9 @@ class Exporter:
                             "dtype": DataType.FLOAT32,
                             "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": mean,
-                                "scale": scale,
-                                "dai_type": encoding.get_dai_type(),
-                            },
+                            "preprocessing": self._get_preprocessing(
+                                encoding, mean, scale
+                            ),
                         }
                     ],
                     "outputs": [
@@ -294,11 +324,7 @@ class Exporter:
                             "dtype": DataType.FLOAT32,
                             "input_type": InputType.IMAGE,
                             "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
-                            "preprocessing": {
-                                "mean": [0, 0, 0],
-                                "scale": [255, 255, 255],
-                                "dai_type": encoding.get_dai_type(),
-                            },
+                            "preprocessing": self._get_preprocessing(encoding),
                         }
                     ],
                     "outputs": [
@@ -319,6 +345,83 @@ class Exporter:
                                 is_softmax=is_softmax,
                             ),
                             outputs=self.all_output_names,
+                        )
+                    ],
+                },
+            },
+            executables_paths=[str(self.f_onnx)],
+        )
+        archive.make_archive()
+
+    def make_map_output_nn_archive(
+        self,
+        encoding: Encoding = Encoding.RGB,
+        min_max_scaling: bool = False,
+    ):
+        """Create an NN archive with a MapOutputParser head.
+
+        Args:
+            encoding: Color encoding used by the input model.
+            min_max_scaling: Whether MapOutputParser should scale map values
+                into ``[0, 1]``.
+
+        Raises:
+            ValueError: If the MapOutputParser head does not resolve to exactly
+                one model output.
+        """
+        if self.output_names is None or len(self.output_names) != 1:
+            raise ValueError(
+                "MapOutputParser requires exactly one selected model output."
+            )
+
+        if self.all_output_names is None:
+            raise ValueError(
+                "Model outputs must be defined before creating a map-output NN archive."
+            )
+
+        map_output_name = self.output_names[0]
+        if map_output_name not in self.all_output_names:
+            raise ValueError(
+                f"Map output `{map_output_name}` is not present in model outputs "
+                f"{self.all_output_names}."
+            )
+
+        self.f_nn_archive = (self.output_folder / f"{self.model_name}.tar.xz").resolve()
+        output_specs = self.get_output_specs()
+
+        archive = ArchiveGenerator(
+            archive_name=self.model_name,
+            save_path=str(self.output_folder),
+            cfg_dict={
+                "config_version": "1.0",
+                "model": {
+                    "metadata": {
+                        "name": self.model_name,
+                        "path": f"{self.model_name}.onnx",
+                    },
+                    "inputs": [
+                        {
+                            "name": "images",
+                            "dtype": DataType.FLOAT32,
+                            "input_type": InputType.IMAGE,
+                            "shape": [1, self.number_of_channels, *self.imgsz[::-1]],
+                            "preprocessing": self._get_preprocessing(encoding),
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "name": output,
+                            "dtype": DataType.FLOAT32,
+                            "shape": output_specs.get(output, {}).get("shape"),
+                            "layout": output_specs.get(output, {}).get("layout"),
+                        }
+                        for output in self.all_output_names
+                    ],
+                    "heads": [
+                        Head(
+                            parser="MapOutputParser",
+                            metadata=HeadMetadata(min_max_scaling=min_max_scaling),
+                            outputs=self.output_names,
                         )
                     ],
                 },
