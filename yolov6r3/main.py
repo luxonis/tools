@@ -71,7 +71,7 @@ async def upload_file(request):
     filename = request.files["file"][0].name
 
     conv_path = app.config.workdir / conv_id
-    conv_path.mkdir(exist_ok=True)
+    conv_path.mkdir(parents=True, exist_ok=True)
     async with aiofiles.open(conv_path / filename, "wb") as f:
         await f.write(request.files["file"][0].body)
 
