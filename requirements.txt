@@ -3,13 +3,12 @@ torch>=2.0.0 #,<2.6.0
 torchvision>=0.10.1
 Pillow>=7.1.2
 PyYAML>=5.3.1
-gcsfs==2024.6.1
-luxonis-ml[data,nn-archive,utils,telemetry]~=0.10.0
+# Test the upcoming ML release; restore a released version constraint before merging.
+luxonis-ml[data,nn-archive,utils,telemetry,gcs,s3] @ git+https://github.com/luxonis/luxonis-ml.git@2a50e51b49d8956d9d24f91570c856677945556e
 onnx==1.21.0
 numpy~=2.2
 onnxruntime>=1.20.1
 onnxsim>=0.4.36,<0.6
-s3fs==2024.6.1
 tqdm
 s3transfer
 cyclopts>=4.21.0
