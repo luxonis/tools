@@ -8,7 +8,8 @@ luxonis-ml[data,nn-archive,utils,telemetry]~=0.10.0
 onnx==1.22.0
 numpy~=2.2
 onnxruntime>=1.20.1
-onnxsim>=0.4.36,<0.6
+# Older wheels crash with ONNX 1.22 on macOS; 0.8 requires Python >=3.11.
+onnxsim>=0.7.3,<0.8
 s3fs==2024.6.1
 tqdm
 s3transfer
